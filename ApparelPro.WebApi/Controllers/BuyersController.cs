@@ -1,5 +1,8 @@
 ﻿using apparelPro.BusinessLogic.Services;
+using apparelPro.BusinessLogic.Services.Implementation.Reference;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBuyerService;
+using apparelPro.BusinessLogic.Services.Models.Reference.IBuyerService;
+using ApparelPro.Shared.LookupConstants.ApparelProContext;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.Misc;
@@ -16,6 +19,14 @@ namespace ApparelPro.WebApi.Controllers
         private readonly IMapper _mapper;
         private readonly IBuyerService _buyerService;
         public BuyersController(IMapper mapper, IBuyerService buyerService) {
+            if (mapper == null)
+            {
+                throw new ArgumentNullException(nameof(mapper));
+            }
+            if (buyerService == null)
+            {
+                throw new ArgumentNullException(nameof(buyerService));
+            }
             _mapper = mapper;
             _buyerService = buyerService;
         }       
@@ -50,7 +61,7 @@ namespace ApparelPro.WebApi.Controllers
 
         }
 
-       [HttpPost]
+        [HttpPost]
         [ProducesResponseType(HttpStatusCodes.Created)]
         public async Task<IActionResult> AddBuyerAsync([FromBody] CreateBuyerAPIModel createBuyerAPIModel)
         {
@@ -71,6 +82,47 @@ namespace ApparelPro.WebApi.Controllers
             }
             var buyerAPIModel = _mapper.Map<BuyerAPIModel>(buyer);
             return Ok(buyerAPIModel);
+        }
+
+        [HttpDelete("{buyerCode}")]
+        [ProducesResponseType(HttpStatusCodes.NoContent)]
+        [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        public async Task<IActionResult> DeleteBuyerAsync(int buyerCode)
+        {
+            var buyer = await _buyerService.GetBuyerByBuyerCodeAsync(buyerCode);
+            if (buyer == null)
+            {
+                return UnprocessableEntity("Buyer is not available for code :" + buyerCode);
+            }
+            await _buyerService.DeleteBuyerAsync(buyerCode);
+            return NoContent();
+        }
+
+        [HttpPut()]
+        [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
+        //  [ServiceFilter(typeof(ValidationFilterAttribute))]
+        public async Task<IActionResult> UpdateBuyerAsync([FromQuery] int buyerCode, [FromBody] UpdateBuyerAPIModel
+            updateBuyerAPIModel)
+        {
+            var resultBuyerAPIModel = _mapper.Map<BuyerAPIModel>(await _buyerService.GetBuyerByBuyerCodeAsync(buyerCode));
+            
+            if (resultBuyerAPIModel == null)
+            {
+                return UnprocessableEntity("Buyer is not available for code :" + buyerCode);
+            }
+            updateBuyerAPIModel.BuyerCode = resultBuyerAPIModel.BuyerCode;
+            var updateBuyerSeviceModel = _mapper.Map<UpdateBuyerServiceModel>(updateBuyerAPIModel);
+            await _buyerService.UpdateBuyerAsync(updateBuyerSeviceModel);
+            return NoContent();
+        }
+
+        [HttpPatch()]
+        [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
+        public async Task<IActionResult> UpdateBuyerAsync()
+        {
+            return NoContent();
         }
     }
 }

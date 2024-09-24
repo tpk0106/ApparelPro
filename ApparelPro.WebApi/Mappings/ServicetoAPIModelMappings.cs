@@ -17,8 +17,8 @@ using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.OrderManagement;
 using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.APIModels.Registration;
-using ApparelPro.WebApi.APIModels.Shared;
 using AutoMapper;
+
 namespace ApparelPro.WebApi.Mappings
 {
     public class ServicetoAPIModelMappings : Profile
@@ -159,14 +159,36 @@ namespace ApparelPro.WebApi.Mappings
                 .ForMember(src => src.TelephoneNos, opt => opt.MapFrom(src => src.TelephoneNos))
                 .ForMember(src => src.MobileNos, opt => opt.MapFrom(src => src.MobileNos))
                 .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
-                .ForMember(src => src.CUSDEC, opt => opt.MapFrom(src => src.CUSDEC))
-                .ForMember(src => src.Addresses, opt => opt.MapFrom(src => src.Addresses))
+                .ForMember(src => src.CUSDEC, opt => opt.MapFrom(src => src.CUSDEC))              
                 .ReverseMap()
                 .ForAllMembers(opt => opt.Ignore());
+
+            CreateMap<CreateBuyerAPIModel, CreateBuyerServiceModel>()
+             .ForMember(src => src.BuyerCode, opt => opt.MapFrom(src => src.BuyerCode))
+             .ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.AddressId))
+             .ForMember(src => src.Fax, opt => opt.MapFrom(src => src.Fax))
+             .ForMember(src => src.TelephoneNos, opt => opt.MapFrom(src => src.TelephoneNos))
+             .ForMember(src => src.MobileNos, opt => opt.MapFrom(src => src.MobileNos))
+             .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
+             .ForMember(src => src.CUSDEC, opt => opt.MapFrom(src => src.CUSDEC));
+
+            CreateMap<CreateBuyerServiceModel,Buyer>()
+            //.ForMember(src => src.BuyerCode, opt => opt.MapFrom(src => src.BuyerCode))
+            //.ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.AddressId))
+            .ForMember(src => src.Fax, opt => opt.MapFrom(src => src.Fax))
+            .ForMember(src => src.TelephoneNos, opt => opt.MapFrom(src => src.TelephoneNos))
+            .ForMember(src => src.MobileNos, opt => opt.MapFrom(src => src.MobileNos))
+            .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
+            .ForMember(src => src.CUSDEC, opt => opt.MapFrom(src => src.CUSDEC));
+
+            CreateMap<UpdateBuyerAPIModel, UpdateBuyerServiceModel>();            
 
             // address
             CreateMap<AddressServiceModel, AddressAPIModel>()
                 .ReverseMap();
+            CreateMap<UpdateAddressAPIModel, UpdateAddressServiceModel>();
+            CreateMap<CreateAddressAPIModel, CreateAddressServiceModel>();
+            
 
             // User
             CreateMap<UserAPIModel, UserServiceModel>()

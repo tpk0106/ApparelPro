@@ -1,6 +1,7 @@
 ﻿using ApparelPro.Data.Models.References;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ApparelPro.WebApi.APIModels.Shared
+namespace ApparelPro.WebApi.APIModels.Reference
 {
     public class AddressAPIModel
     {
@@ -12,9 +13,9 @@ namespace ApparelPro.WebApi.APIModels.Shared
         public int? PostCode { get; set; }
         public string? State { get; set; }
         public string? CountryCode { get; set; }
-        public string Country { get; set; }
+        [NotMapped]
+        public string? Country { get; set; }
         public bool? Default { get; set; }
-        public Buyer? Buyer { get; set; }
         public int? BuyerCode { get; set; }
     }
 }

@@ -165,6 +165,9 @@ namespace apparelPro.BusinessLogic.Services.Mappings
                 .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode))
                 .ReverseMap();
 
+            CreateMap<CreateAddressServiceModel, Address>();
+            CreateMap<UpdateAddressServiceModel, Address>();
+
             // user
 
             CreateMap<RegisterUserServiceModel, User>()

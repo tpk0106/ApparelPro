@@ -1,6 +1,7 @@
 ﻿using apparelPro.BusinessLogic.Services;
+using apparelPro.BusinessLogic.Services.Implementation.Shared;
 using ApparelPro.WebApi.APIModels;
-using ApparelPro.WebApi.APIModels.Shared;
+using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -27,12 +28,12 @@ namespace ApparelPro.WebApi.Controllers
         // [Authorize("RegisteredUser")]
         [ProducesResponseType(typeof(PaginationAPIModel<AddressAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetCountriesAsync(
-         [FromQuery] int pageSize,
-         [FromQuery] int pageNumber,
-         [FromQuery] string? sortColumn = null,
-         [FromQuery] string? sortOrder = null,
-         [FromQuery] string? filterColumn = null,
-         [FromQuery] string? filterQuery = null)
+             [FromQuery] int pageSize,
+             [FromQuery] int pageNumber,
+             [FromQuery] string? sortColumn = null,
+             [FromQuery] string? sortOrder = null,
+             [FromQuery] string? filterColumn = null,
+             [FromQuery] string? filterQuery = null)
         {
             var addressServiceModels = await _addresService.GetAddressesAsync(pageNumber, pageSize,
                 sortColumn, sortOrder, filterColumn, filterQuery);
@@ -40,20 +41,63 @@ namespace ApparelPro.WebApi.Controllers
             return Ok(addresses);
         }
 
-
-        [HttpGet("list/{addressId}", Name = "GetAddressesByAddressIdAsync")]
+        [HttpGet("list/byAddressId/", Name = "GetAddressesByAddressIdAsync")]
         [Authorize("Merchandising")]
-        [ProducesResponseType(typeof(IEnumerable<AddressAPIModel>), HttpStatusCodes.OK)]
+        [ProducesResponseType(typeof(PaginationAPIModel<AddressAPIModel>), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
-        public async Task<IActionResult> GetAddressesByAddressIdAsync([FromRoute] Guid addressId)
+        public async Task<IActionResult> GetAddressesByAddressIdAsync(
+             [FromQuery] Guid addressId,
+             [FromQuery] int pageSize,
+             [FromQuery] int pageNumber,
+             [FromQuery] string? sortColumn = null,
+             [FromQuery] string? sortOrder = null,
+             [FromQuery] string? filterColumn = null,
+             [FromQuery] string? filterQuery = null
+        )           
         {
-            var addresses = await _addresService.GetAddressesByAddresIdAsync(addressId);
-            if (addresses == null)
+            var addresseServiceModels = await _addresService.GetAddressesByAddresIdAsync(addressId,pageNumber, pageSize,
+                sortColumn, sortOrder, filterColumn, filterQuery);
+            var addresses = _mapper.Map<PaginationAPIModel<AddressAPIModel>>(addresseServiceModels);
+            return Ok(addresses);
+        }
+
+        [HttpGet("list/byIdAndAddressId/", Name = "GetAddressByIdAndAddresIdAsync")]
+        [Authorize("Merchandising")]
+        [ProducesResponseType(typeof(AddressAPIModel), HttpStatusCodes.OK)]
+        [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        public async Task<IActionResult> GetAddressByIdAndAddresIdAsync([FromQuery] Guid addressId, [FromQuery] int id)
+        {
+            var addresseServiceModel = await _addresService.GetAddressByIdAndAddresIdAsync(id, addressId);
+            var address = _mapper.Map<AddressAPIModel>(addresseServiceModel);
+            return Ok(address);
+        }
+
+        [HttpPost]
+        [ProducesResponseType(HttpStatusCodes.Created)]
+        public async Task<IActionResult> AddAddressAsync([FromBody] CreateAddressAPIModel createAddressAPIModel)
+        {
+            var createAddressServiceModel = _mapper.Map<CreateAddressServiceModel>(createAddressAPIModel);
+            var addedAddress = await _addresService.AddAddressAsync(createAddressServiceModel);
+            return CreatedAtRoute(nameof(GetAddressesByAddressIdAsync), new {  addedAddress.Id, addedAddress.AddressId }, null);
+        }
+
+        [HttpPut()]
+        [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
+        //  [ServiceFilter(typeof(ValidationFilterAttribute))]
+        public async Task<IActionResult> UpdateAddressAsync([FromQuery] int id, Guid addressId, [FromBody] UpdateAddressAPIModel
+            updateAddressAPIModel)
+        {
+            var resultAddressAPIModel = _mapper.Map<AddressAPIModel>(await _addresService.GetAddressByIdAndAddresIdAsync(id, addressId));
+
+            if (resultAddressAPIModel == null)
             {
-                return UnprocessableEntity("Addresses are not available for AddressId :" + addressId);
-            }
-            var addressesAPIModel = _mapper.Map<IEnumerable<AddressAPIModel>>(addresses);
-            return Ok(addressesAPIModel);
+                return UnprocessableEntity("Address is not available for code :" + addressId);
+            }           
+          
+            var updateAddressSeviceModel = _mapper.Map<UpdateAddressServiceModel>(updateAddressAPIModel);
+            await _addresService.UpdateAddressAsync(updateAddressSeviceModel);
+            return NoContent();
         }
     }
 }

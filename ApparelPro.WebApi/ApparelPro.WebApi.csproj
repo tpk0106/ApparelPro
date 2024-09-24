@@ -28,4 +28,8 @@
     <ProjectReference Include="..\ApparelPro.Data\ApparelPro.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="APIModels\Shared\" />
+  </ItemGroup>
+
 </Project>

@@ -5,6 +5,7 @@ using ApparelPro.Data.Models.References;
 using ApparelPro.Shared.Extensions;
 using ApparelPro.Shared.LookupConstants;
 using AutoMapper;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Linq.Dynamic.Core;
@@ -51,7 +52,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Shared
             throw new NotImplementedException();
         }
      
-        public async Task<PaginationResult<AddressServiceModel>> GetAddressesAsync(int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery)
+        public async Task<PaginationResult<AddressServiceModel>> GetAddressesAsync(int pageNumber, 
+            int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery)
         {
 
             var filteredAddressAndCountryAndBuyerJoined = _apparelProDbContext.Addresses
@@ -120,24 +122,59 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Shared
             }
 
             var filteredDbAddresses= result; // await AddressPagination.ToListAsync();
-            var AddressServiceModels = _mapper.Map<IList<AddressServiceModel>>(filteredDbAddresses);
-
-            return new PaginationResult<AddressServiceModel>(pageSize, pageNumber, counter, AddressServiceModels,
-                sortColumn, sortOrder, filterColumn, filterQuery);
-        }
-
-        public async Task<IEnumerable<AddressServiceModel>> GetAddressesByAddresIdAsync(Guid addressId)
-        {
-            var filteredDbAddresses = await _apparelProDbContext.Addresses
-                .Where(address => address.AddressId == addressId)
-                .ToListAsync();
             var addressServiceModels = _mapper.Map<IList<AddressServiceModel>>(filteredDbAddresses);
-            return addressServiceModels;
+
+            return new PaginationResult<AddressServiceModel>(pageSize, pageNumber, counter, addressServiceModels,
+                sortColumn, sortOrder, filterColumn, filterQuery);
+        }      
+
+        public async Task<PaginationResult<AddressServiceModel>> GetAddressesByAddresIdAsync
+        (
+            Guid addressId, 
+            int pageNumber, 
+            int pageSize, 
+            string? sortColumn, 
+            string? sortOrder, 
+            string? filterColumn, 
+            string? filterQuery
+        )
+        {
+            var addressPagination = _apparelProDbContext.Addresses
+                .Where(address => address.AddressId == addressId)
+                .AsNoTracking()
+                .AsQueryable();              
+
+            FilterResult fr = new();
+            fr.searchPattern = "{0}.Contains(@0)";
+            fr.FilterColumn = filterColumn;
+            fr.FilterQuery = filterQuery;
+            if (filterColumn != null && filterQuery != null)
+            {
+                fr = InputValidator.Validate(filterColumn!, filterQuery!, typeof(Address));
+                addressPagination = addressPagination.Where(string.Format(fr.searchPattern!, fr.FilterColumn), fr.FilterQuery);
+            }
+
+            int counter = 0;
+            counter = await addressPagination.CountAsync();
+
+            if (sortColumn != null)
+            {
+                sortOrder = !string.IsNullOrEmpty(sortOrder) && sortOrder.ToUpper() == "ASC" ? "ASC" : "DESC";
+                addressPagination = addressPagination.OrderBy(string.Format("{0} {1}", sortColumn, sortOrder));
+            }        
+
+            var filteredDbAddresses = await addressPagination.ToListAsync();
+            var addressServiceModels = _mapper.Map<IList<AddressServiceModel>>(filteredDbAddresses);
+
+            return new PaginationResult<AddressServiceModel>(pageSize, pageNumber, counter, addressServiceModels,
+                sortColumn, sortOrder, filterColumn, filterQuery);            
         }       
 
-        public Task UpdateAddressAsync(UpdateAddressServiceModel updateAddressServiceModel)
+        public async Task UpdateAddressAsync(UpdateAddressServiceModel updateAddressServiceModel)
         {
-            throw new NotImplementedException();
+            var addressDbModel = _mapper.Map<Address>(updateAddressServiceModel);
+            _apparelProDbContext.Addresses.Update(addressDbModel);
+            await _apparelProDbContext.SaveChangesAsync();
         }
         public Task<bool> DoesAddressExistAsync(string code)
         {
@@ -152,6 +189,22 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Shared
         public Task<AddressServiceModel> GetAddressByCodeAsync(string code)
         {
             throw new NotImplementedException();
+        }      
+
+        public Task DeleteAddressAsync(int id, Guid addressId)
+        {
+            throw new NotImplementedException();
         }
+
+        public async Task<AddressServiceModel> GetAddressByIdAndAddresIdAsync(int id, Guid addressId)
+        {
+            var addresDbModel = await _apparelProDbContext.Addresses
+               .Where(address => address.Id == id && address.AddressId == addressId)
+               .AsNoTracking()
+               .FirstOrDefaultAsync();
+
+            var addresSrviceModel = _mapper.Map<AddressServiceModel>(addresDbModel);
+            return addresSrviceModel;
+        }      
     }
 }
