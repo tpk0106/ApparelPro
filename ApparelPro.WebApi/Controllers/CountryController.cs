@@ -6,6 +6,7 @@ using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace ApparelPro.WebApi.Controllers
 {
@@ -29,8 +30,12 @@ namespace ApparelPro.WebApi.Controllers
         [HttpGet("list")]
       //  [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
         [Authorize("Merchandising")] // policy applied
-        //[Authorize(Roles = "Inventory")]
-       // [Authorize("RegisteredUser")]
+                                     //[Authorize(Roles = "Inventory")]
+                                     // [Authorize("RegisteredUser")]
+        [SwaggerOperation(Tags = new[] { "Country Endpoints" },
+            Summary = "list all country details with paging and filtering.",
+            Description = "Returns 200 - OK with PaginationAPIModel with Country list.")
+        ]
         [ProducesResponseType(typeof(PaginationAPIModel<CountryAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetCountriesAsync(
             [FromQuery] int pageSize, 
@@ -49,6 +54,10 @@ namespace ApparelPro.WebApi.Controllers
         [HttpGet("list/{code}", Name = "GetCountryByCodeAsync")]
         [ProducesResponseType(typeof(CountryAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        [SwaggerOperation(Tags = new[] { "Country Endpoints" },
+            Summary = "list a country details for a given Country Code",
+            Description = "Returns 200 - OK with Country model.")
+        ]
         public async Task<IActionResult> GetCountryByCodeAsync(string code)
         {          
             var country = await _countryService.GetCountryByCodeAsync(code);
@@ -61,13 +70,21 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/does-country-exist/{code}", Name = "DoesCountryExistAsync")]
-        [ProducesResponseType(typeof(bool), HttpStatusCodes.OK)]       
+        [ProducesResponseType(typeof(bool), HttpStatusCodes.OK)]
+        [SwaggerOperation(Tags = new[] { "Country Endpoints" },
+            Summary = "check whether the given country exist.",
+            Description = "Returns 200 - OK with Country model.")
+        ]
         public async Task<IActionResult> DoesCountryExistAsync(string code)
         {
             var exist = await _countryService.DoesCountryExistAsync(code);            
             return Ok(exist);
         }
 
+        [SwaggerOperation(Tags = new[] { "Country Endpoints" },
+           Summary = "list a country details for a given Country Code",
+           Description = "Returns 200 - OK with Country model.")
+       ]
 
         [HttpGet("list/paging/{pageSize}-{pageNumber}", Name = "GetCountryByPageNumberAsync")]
         [ProducesResponseType(typeof(IEnumerable<CountryAPIModel>), HttpStatusCodes.OK)]        
@@ -80,6 +97,10 @@ namespace ApparelPro.WebApi.Controllers
 
         [HttpGet("list/filter/{pageSize}-{pageNumber}", Name = "FilterCountriesByCodeAsync")]
         [ProducesResponseType(typeof(IEnumerable<CountryAPIModel>), HttpStatusCodes.OK)]
+        [SwaggerOperation(Tags = new[] { "Country Endpoints" },
+            Summary = "list a country details for a given Country Code",
+            Description = "Returns 200 - OK with Country model.")
+        ]
         public async Task<IActionResult> FilterCountriesByCodeAsync([FromQuery] string? filter, int pageNumber=1, int pageSize = 10)
         {            
             if(pageSize == 0)
@@ -94,6 +115,10 @@ namespace ApparelPro.WebApi.Controllers
 
         [HttpPost]
         [ProducesResponseType(HttpStatusCodes.Created)]
+        [SwaggerOperation(Tags = new[] { "Country Endpoints" },
+            Summary = "Add a country.",
+            Description = "Returns 200 - OK with No content")
+        ]
         public async Task<IActionResult> AddCountryAsync([FromBody] CreateCountryAPIModel createCountryAPIModel )
         {
             var createCountryServiceModel = _mapper.Map<CreateCountryServiceModel>(createCountryAPIModel);
@@ -104,6 +129,10 @@ namespace ApparelPro.WebApi.Controllers
         [HttpDelete("{code}")]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        [SwaggerOperation(Tags = new[] { "Country Endpoints" },
+            Summary = "Delete a country.",
+            Description = "Returns 200 - OK with No content")
+        ]
         public async Task<IActionResult> DeleteCountryAsync(string code)
         {
             var country = await _countryService.GetCountryByCodeAsync(code);
@@ -118,7 +147,11 @@ namespace ApparelPro.WebApi.Controllers
         [HttpPut()]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
-      //  [ServiceFilter(typeof(ValidationFilterAttribute))]
+        [SwaggerOperation(Tags = new[] { "Country Endpoints" },
+            Summary = "Update a country.",
+            Description = "Returns 200 - OK with No content")
+        ]
+        //  [ServiceFilter(typeof(ValidationFilterAttribute))]
         public async Task<IActionResult> UpdateCountryAsync([FromQuery] string code, [FromBody] UpdateCountryAPIModel  
             updateCountryAPIModel)
         {

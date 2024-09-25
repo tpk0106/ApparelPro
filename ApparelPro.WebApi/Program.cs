@@ -63,7 +63,6 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 // authorization
 ServiceExtensions.AddAuthorization(builder.Services, builder.Configuration);
-// end authorization
 
 // authentication
 
@@ -88,8 +87,6 @@ builder.Services.AddAuthentication(options =>
     };
     opt.IncludeErrorDetails = true;
 });
-
-// end authentication
 
 // handle CORS
 // https://stackoverflow.com/questions/42199757/enable-options-header-for-cors-on-net-core-web-api
@@ -148,7 +145,7 @@ builder.Services.AddSwaggerGen(options =>
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
     {
         In = ParameterLocation.Header,
-        Description = "Please enter token",
+        Description = "Please enter token to login to ApparelPro",
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
         BearerFormat = "JWT",
@@ -212,7 +209,7 @@ app.Use(async (context, next) =>
         // below is working for react
         //context.Response.Headers["Access-Control-Allow-Methods"] = " DELETE";
 
-        // below is changed for angular 
+        // change for angular 
         context.Response.Headers["Access-Control-Allow-Methods"] = "DELETE, PUT, POST";
         // end of change
         context.Response.Headers["Access-Control-Allow-Headers"] = "X-Requested-With, Accept, Access-Control-Allow-Origin, Content-Type, Authorization";

@@ -5,7 +5,6 @@ using ApparelPro.Data.Models.References;
 using ApparelPro.Shared.Extensions;
 using ApparelPro.Shared.LookupConstants;
 using AutoMapper;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Linq.Dynamic.Core;
@@ -68,8 +67,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Shared
                 new Address
                 {
                     AddressId = addressAndCountry.address.AddressId,
-                    AddressType = addressAndCountry.address.AddressType,
-                 //   Buyer = buyer,
+                    AddressType = addressAndCountry.address.AddressType,                 
                     BuyerCode =buyer.BuyerCode,
                     City = addressAndCountry.address.City,
                     Default = addressAndCountry.address.Default,
@@ -175,26 +173,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Shared
             var addressDbModel = _mapper.Map<Address>(updateAddressServiceModel);
             _apparelProDbContext.Addresses.Update(addressDbModel);
             await _apparelProDbContext.SaveChangesAsync();
-        }
-        public Task<bool> DoesAddressExistAsync(string code)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<IEnumerable<AddressServiceModel>> FilterAddressesByCodeAsync(string filter, int pageNumber, int pageSize)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<AddressServiceModel> GetAddressByCodeAsync(string code)
-        {
-            throw new NotImplementedException();
         }      
-
-        public Task DeleteAddressAsync(int id, Guid addressId)
-        {
-            throw new NotImplementedException();
-        }
 
         public async Task<AddressServiceModel> GetAddressByIdAndAddresIdAsync(int id, Guid addressId)
         {
@@ -205,6 +184,19 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Shared
 
             var addresSrviceModel = _mapper.Map<AddressServiceModel>(addresDbModel);
             return addresSrviceModel;
-        }      
+        }
+        public Task<bool> DoesAddressExistAsync(string code)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<AddressServiceModel>> FilterAddressesByCodeAsync(string filter, int pageNumber, int pageSize)
+        {
+            throw new NotImplementedException();
+        }
+        public Task DeleteAddressAsync(int id, Guid addressId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

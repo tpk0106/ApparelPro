@@ -7,6 +7,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 using System.Text.Json;
 
 namespace ApparelPro.WebApi.Controllers
@@ -26,6 +27,15 @@ namespace ApparelPro.WebApi.Controllers
             _userManager = userManager;
         }
 
+
+        /// <summary>
+        /// Registers a new user 
+        /// </summary>
+        /// <param name="UserAPIModel">A DTO containing a user data</param>
+        /// <returns>A 200 - list of DTO with success.</returns>
+        /// <response code="200">List of Users</response>
+        /// /// <response code="400">Invalid data</response>
+        /// <response code="500">An error occurred</response>
         [HttpGet("list")]        
         [ProducesResponseType(typeof(IEnumerable<UserAPIModel>),HttpStatusCodes.OK)]
         public async Task<IActionResult> GetUsersAsync()
@@ -89,6 +99,11 @@ namespace ApparelPro.WebApi.Controllers
         [ProducesResponseType(typeof(BadRequestResult), HttpStatusCodes.BadRequest)]
         [ProducesResponseType(typeof(UnauthorizedResult), HttpStatusCodes.Unauthorized)]
         [AllowAnonymous]
+        [SwaggerOperation(Tags = new[] { "Authentication" },
+            Summary = "'login (authenticate users).",
+            Description = "Returns 200 - OK if called by an authenticated user regardless of its role(s).")
+        ]
+
         public async Task<ActionResult> Login(LoginUserAPIModel loginUserAPIModel)
         {           
             var user = await _userManager.FindByNameAsync(loginUserAPIModel.Email);
@@ -112,7 +127,11 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost("refresh-token")]
-     //   [AllowAnonymous]
+        [SwaggerOperation(Tags = new[] { "Authentication" },
+            Summary = "refresh token using existing token when token expires.",
+            Description = "Returns 200 - OK if called by an authenticated user regardless of its role(s).")
+        ]
+        //   [AllowAnonymous]
         [ProducesResponseType(typeof(string), HttpStatusCodes.OK)]        
         public IActionResult RefreshToken([FromBody] object token)
         {            

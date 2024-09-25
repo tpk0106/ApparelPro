@@ -190,6 +190,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             BuyerDbModel.MobileNos = updateBuyerServiceModel.MobileNos;
             BuyerDbModel.CUSDEC = updateBuyerServiceModel.CUSDEC;
             BuyerDbModel.Fax = updateBuyerServiceModel.Fax;
+            BuyerDbModel.Status = updateBuyerServiceModel.Status;
             _apparelProDbContext.Update(BuyerDbModel);
             await _apparelProDbContext.SaveChangesAsync();
         }      
