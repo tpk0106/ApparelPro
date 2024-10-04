@@ -6,7 +6,7 @@ ApparelPro is a fully supported application system in Apparel Industry sector. I
 5 PO creation.
 6 Style creation 
 7 Material consumption.
-8 Color/Zize breakdown
+8 Color/Size breakdown
 9 Order confirmation
 10 Production Control (Cut/saw/pack)
 11 Line Allocation
