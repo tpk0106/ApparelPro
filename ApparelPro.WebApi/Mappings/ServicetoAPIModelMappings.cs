@@ -7,7 +7,10 @@ using apparelPro.BusinessLogic.Services.Models.Reference.IBuyerService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICountryService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyExchangeService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyService;
+using apparelPro.BusinessLogic.Services.Models.Reference.IFeatureService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IGarmentTypeService;
+using apparelPro.BusinessLogic.Services.Models.Reference.IPortDestinationService;
+using apparelPro.BusinessLogic.Services.Models.Reference.ISupplierService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitService;
 using apparelPro.BusinessLogic.Services.Models.Registration.IUserService;
 using ApparelPro.Data.Models.References;
@@ -26,7 +29,7 @@ namespace ApparelPro.WebApi.Mappings
         public ServicetoAPIModelMappings()
         {
             // currency
-            CreateMap<CurrencyServiceModel, CurrencyAPIModel>()
+            CreateMap<CurrencyServiceModel, CurrencyAPIModel>().MaxDepth(2)
                 .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
                 .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
@@ -36,39 +39,39 @@ namespace ApparelPro.WebApi.Mappings
                 .ForMember(src => src.CurrencyDetails, opt => opt.MapFrom(src => src.CurrencyDetails)).ReverseMap()
                 .ForAllMembers(opt => opt.Ignore());
 
-            CreateMap<CurrencyAPIModel,UpdateCurrencyServiceModel>()
+            CreateMap<CurrencyAPIModel, UpdateCurrencyServiceModel>().MaxDepth(2)
                 .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
                 .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
-                .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode))            
-                .ForMember(src => src.Minor, opt => opt.MapFrom(src => src.Minor))            
+                .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode))
+                .ForMember(src => src.Minor, opt => opt.MapFrom(src => src.Minor))
                 .ForAllMembers(opt => opt.Ignore());
-            
-            CreateMap<UpdateCurrencyAPIModel, UpdateCurrencyServiceModel>()
+
+            CreateMap<UpdateCurrencyAPIModel, UpdateCurrencyServiceModel>().MaxDepth(2)
                 .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
                 .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
                 .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode))
                 .ForMember(src => src.Minor, opt => opt.MapFrom(src => src.Minor));
-                // .ForAllMembers(opt => opt.Ignore());
+            // .ForAllMembers(opt => opt.Ignore());
 
-            CreateMap<CreateCurrencyAPIModel, CreateCurrencyServiceModel>()
-                .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
-                .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
-                .ForMember(src => src.Minor, opt => opt.MapFrom(src => src.Minor))
-                .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode));            
+            CreateMap<CreateCurrencyAPIModel, CreateCurrencyServiceModel>().MaxDepth(2)
+            .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
+            .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
+            .ForMember(src => src.Minor, opt => opt.MapFrom(src => src.Minor))
+            .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode));
 
-            // country
-            CreateMap<CreateCountryAPIModel, CreateCountryServiceModel>()
-              .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
-              .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
-              .ForMember(src => src.Flag, opt => opt.MapFrom(src => src.Flag));
+            // Bank
+            CreateMap<CreateCountryAPIModel, CreateCountryServiceModel>().MaxDepth(2)
+           .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
+           .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
+           .ForMember(src => src.Flag, opt => opt.MapFrom(src => src.Flag));
 
-            CreateMap<UpdateCountryAPIModel, UpdateCountryServiceModel>()
+            CreateMap<UpdateCountryAPIModel, UpdateCountryServiceModel>().MaxDepth(2)
                 .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
                 .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
                 .ForMember(src => src.Flag, opt => opt.MapFrom(src => src.Flag));
-            
+
             CreateMap<CountryServiceModel, CountryAPIModel>()
                 .ReverseMap();
 
@@ -80,52 +83,100 @@ namespace ApparelPro.WebApi.Mappings
             //    .ReverseMap();
 
             // garment type
+            CreateMap<CreateGarmentTypeAPIModel,  CreateGarmentTypeServiceModel>()
+                .ReverseMap();
+
             CreateMap<GarmentTypeServiceModel, GarmentTypeAPIModel>()
                 .ReverseMap();
 
-            CreateMap<UpdateGarmentTypeAPIModel, UpdateGarmentTypeServiceModel>()
-                .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(src => src.TypeName, opt => opt.MapFrom(src => src.TypeName));
+            CreateMap<UpdateGarmentTypeAPIModel, UpdateGarmentTypeServiceModel>().MaxDepth(2)
+             .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
+             .ForMember(src => src.TypeName, opt => opt.MapFrom(src => src.TypeName));
 
 
             // unit
-            CreateMap<UnitServiceModel, UnitAPIModel>()
+            CreateMap<UnitServiceModel, UnitAPIModel>().MaxDepth(2)
                 .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
                 .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description))
                 .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
                 .ReverseMap();
 
-            CreateMap<UpdateUnitAPIModel,UpdateUnitServiceModel>()
+            CreateMap<UpdateUnitAPIModel, UpdateUnitServiceModel>().MaxDepth(2)
                 .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
                 .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description))
                 .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
                 .ReverseMap();
 
-            CreateMap<CreateUnitAPIModel, CreateUnitServiceModel>()
+            CreateMap<CreateUnitAPIModel, CreateUnitServiceModel>().MaxDepth(2)
                 .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
                 .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description))
                 .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
                 .ReverseMap();
 
             // bank
-            CreateMap<BankAPIModel, BankServiceModel>()
-                .ForMember(src => src.BankCode, opt => opt.MapFrom(src => src.BankCode))        
-                .ForMember(src => src.SwiftCode   , opt => opt.MapFrom(src => src.SwiftCode))
+            CreateMap<BankAPIModel, BankServiceModel>().MaxDepth(2)
+                .ForMember(src => src.BankCode, opt => opt.MapFrom(src => src.BankCode))
+                .ForMember(src => src.SwiftCode, opt => opt.MapFrom(src => src.SwiftCode))
                 .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
                 .ForMember(src => src.CurrencyCode, opt => opt.MapFrom(src => src.CurrencyCode))
                 .ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.AddressId))
                 .ForMember(src => src.LoanLimit, opt => opt.MapFrom(src => src.LoanLimit))
+                .ForMember(src => src.TelephoneNos, opt => opt.MapFrom(src => src.TelephoneNos))
                 .ReverseMap();
 
+            CreateMap<CreateBankAPIModel, CreateBankServiceModel>().MaxDepth(2)
+                .ForMember(src => src.BankCode, opt => opt.MapFrom(src => src.BankCode))
+                .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
+                .ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.AddressId))
+                .ForMember(src => src.TelephoneNos, opt => opt.MapFrom(src => src.TelephoneNos))
+                .ForMember(src => src.LoanLimit, opt => opt.MapFrom(src => src.LoanLimit))
+                .ForMember(src => src.SwiftCode, opt => opt.MapFrom(src => src.SwiftCode))
+                .ForMember(src => src.CurrencyCode, opt => opt.MapFrom(src => src.CurrencyCode))
+                .ReverseMap();
+
+            CreateMap<UpdateBankAPIModel, UpdateBankServiceModel>().MaxDepth(2)
+              .ForMember(src => src.BankCode, opt => opt.MapFrom(src => src.BankCode))
+              .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
+              .ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.AddressId))
+              .ForMember(src => src.TelephoneNos, opt => opt.MapFrom(src => src.TelephoneNos))
+              .ForMember(src => src.LoanLimit, opt => opt.MapFrom(src => src.LoanLimit))
+              .ForMember(src => src.SwiftCode, opt => opt.MapFrom(src => src.SwiftCode))
+              .ForMember(src => src.CurrencyCode, opt => opt.MapFrom(src => src.CurrencyCode))
+              .ReverseMap();
+
             // basis
-            CreateMap<BasisServiceModel, BasisAPIModel>()
+            CreateMap<BasisServiceModel, BasisAPIModel>().MaxDepth(2)
                 .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
                 .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description))
                 .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
                 .ReverseMap();
 
+            // destination
+            CreateMap<PortDestinationAPIModel, PortDestinationServiceModel>().MaxDepth(2)
+                .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode))
+                .ForMember(src => src.DestinationName, opt => opt.MapFrom(src => src.DestinationName))
+                .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
+                .ReverseMap();
+
+            CreateMap<CreatePortDestinationAPIModel, CreatePortDestinationServiceModel>().MaxDepth(2)
+                .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode))
+                .ForMember(src => src.DestinationName, opt => opt.MapFrom(src => src.DestinationName))
+                .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id));
+
+            CreateMap<CreatePortDestinationServiceModel, Destination>().MaxDepth(2)
+              .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode))
+              .ForMember(src => src.DestinationName, opt => opt.MapFrom(src => src.DestinationName))
+              .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
+              .ReverseMap();
+
+            CreateMap<UpdatePortDestinationAPIModel, UpdatePortDestinationServiceModel>().MaxDepth(2)
+              .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode))
+              .ForMember(src => src.DestinationName, opt => opt.MapFrom(src => src.DestinationName))
+              .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id));
+            //.ReverseMap();
+
             // PO
-            CreateMap<PurchaseOrderServiceModel, POAPIModel>()
+            CreateMap<PurchaseOrderServiceModel, POAPIModel>().MaxDepth(2)
                 .ForMember(src => src.BuyerCode, opt => opt.MapFrom(src => src.BuyerCode))
                 .ForMember(src => src.BasisValue, opt => opt.MapFrom(src => src.BasisValue))
                 .ForMember(src => src.CurrencyCode, opt => opt.MapFrom(src => src.CurrencyCode))
@@ -136,10 +187,10 @@ namespace ApparelPro.WebApi.Mappings
                 .ForMember(src => src.Order, opt => opt.MapFrom(src => src.Order))
                 .ForMember(src => src.OrderDate, opt => opt.MapFrom(src => src.OrderDate))
                 .ForMember(src => src.Season, opt => opt.MapFrom(src => src.Season))
-                .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode))            
+                .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode))
                 .ReverseMap();
-            
-            CreateMap<CreatePOAPIModel, CreatePurchaseOrderServiceModel>()
+
+            CreateMap<CreatePOAPIModel, CreatePurchaseOrderServiceModel>().MaxDepth(2)
                 .ForMember(src => src.BuyerCode, opt => opt.MapFrom(src => src.BuyerCode))
                 .ForMember(src => src.BasisValue, opt => opt.MapFrom(src => src.BasisValue))
                 .ForMember(src => src.CurrencyCode, opt => opt.MapFrom(src => src.CurrencyCode))
@@ -152,18 +203,19 @@ namespace ApparelPro.WebApi.Mappings
                 .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode));
 
             // buyer
-            CreateMap<BuyerServiceModel, BuyerAPIModel>()
+            CreateMap<BuyerServiceModel, BuyerAPIModel>().MaxDepth(2)
                 .ForMember(src => src.BuyerCode, opt => opt.MapFrom(src => src.BuyerCode))
                 .ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.AddressId))
                 .ForMember(src => src.Fax, opt => opt.MapFrom(src => src.Fax))
                 .ForMember(src => src.TelephoneNos, opt => opt.MapFrom(src => src.TelephoneNos))
                 .ForMember(src => src.MobileNos, opt => opt.MapFrom(src => src.MobileNos))
                 .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
-                .ForMember(src => src.CUSDEC, opt => opt.MapFrom(src => src.CUSDEC))              
+                .ForMember(src => src.CUSDEC, opt => opt.MapFrom(src => src.CUSDEC))
+                .ForMember(src => src.Addresses, opt => opt.MapFrom(src => src.Addresses))
                 .ReverseMap()
                 .ForAllMembers(opt => opt.Ignore());
 
-            CreateMap<CreateBuyerAPIModel, CreateBuyerServiceModel>()
+            CreateMap<CreateBuyerAPIModel, CreateBuyerServiceModel>().MaxDepth(2)
              .ForMember(src => src.BuyerCode, opt => opt.MapFrom(src => src.BuyerCode))
              .ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.AddressId))
              .ForMember(src => src.Fax, opt => opt.MapFrom(src => src.Fax))
@@ -172,7 +224,7 @@ namespace ApparelPro.WebApi.Mappings
              .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
              .ForMember(src => src.CUSDEC, opt => opt.MapFrom(src => src.CUSDEC));
 
-            CreateMap<CreateBuyerServiceModel,Buyer>()
+            CreateMap<CreateBuyerServiceModel, Buyer>().MaxDepth(2)
             //.ForMember(src => src.BuyerCode, opt => opt.MapFrom(src => src.BuyerCode))
             //.ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.AddressId))
             .ForMember(src => src.Fax, opt => opt.MapFrom(src => src.Fax))
@@ -181,65 +233,168 @@ namespace ApparelPro.WebApi.Mappings
             .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
             .ForMember(src => src.CUSDEC, opt => opt.MapFrom(src => src.CUSDEC));
 
-            CreateMap<UpdateBuyerAPIModel, UpdateBuyerServiceModel>();            
+            CreateMap<UpdateBuyerAPIModel, UpdateBuyerServiceModel>().MaxDepth(2);
 
             // address
-            CreateMap<AddressServiceModel, AddressAPIModel>()
+            CreateMap<AddressServiceModel, AddressAPIModel>().MaxDepth(2)
                 .ReverseMap();
-            CreateMap<UpdateAddressAPIModel, UpdateAddressServiceModel>();
-            CreateMap<CreateAddressAPIModel, CreateAddressServiceModel>();
-            
+            CreateMap<UpdateAddressAPIModel, UpdateAddressServiceModel>().MaxDepth(2);
+            CreateMap<CreateAddressAPIModel, CreateAddressServiceModel>().MaxDepth(2);
+
+
+            // Supplier
+
+            CreateMap<SupplierServiceModel, SupplierAPIModel>().MaxDepth(2)
+                .ForMember(src => src.SupplierCode, opt => opt.MapFrom(src => src.SupplierCode))
+                .ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.AddressId))
+                .ForMember(src => src.Fax, opt => opt.MapFrom(src => src.Fax))
+                .ForMember(src => src.TelephoneNos, opt => opt.MapFrom(src => src.TelephoneNos))
+                .ForMember(src => src.MobileNos, opt => opt.MapFrom(src => src.MobileNos))
+                .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
+                //   .ForMember(src => src.Addresses, opt => opt.MapFrom(src => src.Addresses))
+                .ReverseMap()
+                .ForAllMembers(opt => opt.Ignore());
+
+            CreateMap<CreateSupplierAPIModel, CreateSupplierServiceModel>().MaxDepth(2)
+            .ForMember(src => src.SupplierCode, opt => opt.MapFrom(src => src.SupplierCode))
+                .ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.AddressId))
+                .ForMember(src => src.Fax, opt => opt.MapFrom(src => src.Fax))
+                .ForMember(src => src.TelephoneNos, opt => opt.MapFrom(src => src.TelephoneNos))
+                .ForMember(src => src.MobileNos, opt => opt.MapFrom(src => src.MobileNos))
+                .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name));
+
+            CreateMap<UpdateSupplierAPIModel, UpdateSupplierServiceModel>().MaxDepth(2)
+              .ForMember(src => src.SupplierCode, opt => opt.MapFrom(src => src.SupplierCode))
+              .ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.AddressId))
+              .ForMember(src => src.Fax, opt => opt.MapFrom(src => src.Fax))
+              .ForMember(src => src.TelephoneNos, opt => opt.MapFrom(src => src.TelephoneNos))
+              .ForMember(src => src.MobileNos, opt => opt.MapFrom(src => src.MobileNos))
+              .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
+              .ReverseMap()
+              .ForAllMembers(opt => opt.Ignore());
+
+            // Feature
+
+            CreateMap<FeatureServiceModel, FeatureAPIModel>().MaxDepth(2)
+                .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description))
+                 .ReverseMap()
+                .ForAllMembers(opt => opt.Ignore());
+
+            CreateMap<CreateFeatureAPIModel, CreateFeatureServiceModel>().MaxDepth(2)
+                    .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description));
+
+            CreateMap<UpdateFeatureAPIModel, UpdateFeatureServiceModel>().MaxDepth(2)
+                      .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description))
+                .ReverseMap()
+              .ForAllMembers(opt => opt.Ignore());
+
 
             // User
-            CreateMap<UserAPIModel, UserServiceModel>()
-                .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(src => src.Email, opt => opt.MapFrom(src => src.Email))
-                .ForMember(src => src.UserName, opt => opt.MapFrom(src => src.UserName))
-                .ForMember(src => src.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth))
-                .ForMember(src => src.Gender, opt => opt.MapFrom(src => src.Gender))
-                .ForMember(src => src.KnownAs, opt => opt.MapFrom(src => src.KnownAs))
-                .ForMember(src => src.City, opt => opt.MapFrom(src => src.City))
-                .ForMember(src => src.Country, opt => opt.MapFrom(src => src.Country))
-                .ForMember(src => src.Photo, opt => opt.MapFrom(src => src.ProfilePhoto))
-                .ForMember(src => src.Created, opt => opt.MapFrom(src => src.Created))
-                .ForMember(src => src.LastActive, opt => opt.MapFrom(src => src.LastActive))
-                .ReverseMap();
+            //CreateMap<User, UserAPIModel>()
+            //CreateMap<UserAPIModel, UserServiceModel>().MaxDepth(2)
+            //    //  .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
+            //    .ForMember(src => src.Email, opt => opt.MapFrom(src => src.Email))
+            //    .ForMember(src => src.UserName, opt => opt.MapFrom(src => src.UserName))
+            //    .ForMember(src => src.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth))
+            //    .ForMember(src => src.Gender, opt => opt.MapFrom(src => src.Gender))
+            //    .ForMember(src => src.KnownAs, opt => opt.MapFrom(src => src.KnownAs))
+            //    .ForMember(src => src.Photo, opt => opt.MapFrom(src => src.ProfilePhoto))
+            //    .ForMember(src => src.Created, opt => opt.MapFrom(src => src.Created))
+            //    .ForMember(src => src.LastActive, opt => opt.MapFrom(src => src.LastActive));
+            //.ReverseMap();
 
-            CreateMap<CreateUserAPIModel, UserServiceModel>()
-               .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
+            CreateMap<UserServiceModel, UserAPIModel>()
+                .MaxDepth(2)
                .ForMember(src => src.Email, opt => opt.MapFrom(src => src.Email))
                .ForMember(src => src.UserName, opt => opt.MapFrom(src => src.UserName))
                .ForMember(src => src.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth))
                .ForMember(src => src.Gender, opt => opt.MapFrom(src => src.Gender))
                .ForMember(src => src.KnownAs, opt => opt.MapFrom(src => src.KnownAs))
-               .ForMember(src => src.City, opt => opt.MapFrom(src => src.City))
-               .ForMember(src => src.Country, opt => opt.MapFrom(src => src.Country))
+               .ForMember(src => src.Address, opt => opt.MapFrom(src => src.Address))
+               .ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.Address.AddressId))
+               .ForMember(src => src.LastActive, opt => opt.Ignore())
+               .ForMember(src => src.PasswordHash, opt => opt.Ignore())
+               .ForMember(src => src.Id, opt => opt.Ignore())
+               .ReverseMap();
+
+            CreateMap<CreateUserAPIModel, UserServiceModel>()
+                .MaxDepth(2)               
+               .ForMember(src => src.Email, opt => opt.MapFrom(src => src.Email))
+               .ForMember(src => src.UserName, opt => opt.MapFrom(src => src.UserName))
+               .ForMember(src => src.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth))
+               .ForMember(src => src.Gender, opt => opt.MapFrom(src => src.Gender))
+               .ForMember(src => src.KnownAs, opt => opt.MapFrom(src => src.KnownAs))
+               //.ForMember(src => src.City, opt => opt.MapFrom(src => src.City))
+               //.ForMember(src => src.Country, opt => opt.MapFrom(src => src.Country))
                .ForMember(src => src.Photo, opt => opt.MapFrom(src => src.Photo))
                .ForMember(src => src.Created, opt => opt.MapFrom(src => src.Created))
                .ForMember(src => src.LastActive, opt => opt.MapFrom(src => src.LastActive))
                .ReverseMap();
 
-            CreateMap<RegisterUserAPIModel, RegisterUserServiceModel>()
+            CreateMap<UpdateUserAPIModel, UserServiceModel>()
+                .MaxDepth(2)
                 .ForMember(src => src.Email, opt => opt.MapFrom(src => src.Email))
-                .ForMember(src => src.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth))
-                .ForMember(src => src.Gender, opt => opt.MapFrom(src => src.Gender))
-                .ForMember(src => src.KnownAs, opt => opt.MapFrom(src => src.KnownAs))
-                .ForMember(src => src.City, opt => opt.MapFrom(src => src.City))
-                .ForMember(src => src.Country, opt => opt.MapFrom(src => src.Country));            
+               .ForMember(src => src.UserName, opt => opt.MapFrom(src => src.UserName))
+               .ForMember(src => src.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth))
+               .ForMember(src => src.Gender, opt => opt.MapFrom(src => src.Gender))
+               .ForMember(src => src.KnownAs, opt => opt.MapFrom(src => src.KnownAs))
+               .ForMember(src => src.Photo, opt => opt.MapFrom(src => src.ProfilePhoto))
+               .ForMember(src => src.Created, opt => opt.MapFrom(src => src.Created))
+               .ForMember(src => src.LastActive, opt => opt.MapFrom(src => src.LastActive))
+               .ForMember(src => src.Address, opt => opt.MapFrom(src => src.Address));
 
-            CreateMap<ApparelProUser, RegisteredUserAPIModel>()
+
+
+            CreateMap<UpdateUserAPIModel, UpdateUserServiceModel>()
+               .MaxDepth(2)
+               .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+               .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
+               .ForMember(dest => dest.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth))
+               .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.Gender))
+               .ForMember(dest => dest.KnownAs, opt => opt.MapFrom(src => src.KnownAs))
+               .ForMember(dest => dest.ProfilePhoto, opt => opt.MapFrom(src => src.ProfilePhoto))
+               .ForMember(dest => dest.Created, opt => opt.MapFrom(src => src.Created))
+               .ForMember(dest => dest.LastActive, opt => opt.MapFrom(src => src.LastActive))
+               .ForPath(dest => dest.Address.StreetAddress, opt => opt.MapFrom(src => src.Address.StreetAddress))               
+               .ForPath(dest => dest.Address.City, opt => opt.MapFrom(src => src.Address.City))
+               .ForPath(dest => dest.Address.PostCode, opt => opt.MapFrom(src => src.Address.PostCode))
+               .ForPath(dest => dest.Address.State, opt => opt.MapFrom(src => src.Address.State))
+               .ForPath(dest => dest.Address.CountryCode, opt => opt.MapFrom(src => src.Address.CountryCode))
+               .ForPath(dest => dest.Address.AddressId, opt => opt.MapFrom(src => src.Address.AddressId))
+               .ForPath(dest => dest.Address.Default, opt => opt.MapFrom(src => src.Address.Default))
+               .ForPath(dest => dest.Address.AddressType, opt => opt.MapFrom(src => src.Address.AddressType));
+            
+
+            //CreateMap<UserServiceModel, UpdateUserServiceModel>().MaxDepth(2).ReverseMap();
+
+            // From API DTO to Service DTO
+            CreateMap<RegisterUserAPIModel, RegisterUserServiceModel>().MaxDepth(2); // same as below mappings
+
+            //CreateMap<RegisterUserAPIModel, RegisterUserServiceModel>()
+            //    .ForMember(src => src.Email, opt => opt.MapFrom(src => src.Email))
+            //    //     .ForMember(src => src.Password, opt => opt.MapFrom(src => src.Password)) // added by thusith on 16/02/25
+            //    .ForMember(src => src.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth))
+            //    .ForMember(src => src.Gender, opt => opt.MapFrom(src => src.Gender))
+            //    .ForMember(src => src.KnownAs, opt => opt.MapFrom(src => src.KnownAs))
+            //    .ForMember(src => src.PhoneNumber, opt => opt.MapFrom(src => src.phoneNumber));
+
+
+            CreateMap<ApparelProUser, RegisteredUserAPIModel>().MaxDepth(2)
                 .ForMember(src => src.Email, opt => opt.MapFrom(src => src.Email))
                 .ForMember(src => src.KnownAs, opt => opt.MapFrom(src => src.KnownAs))
                 .ForMember(src => src.Photo, opt => opt.MapFrom(src => src.ProfilePhoto));
-                //.ForMember(src => src.Success, opt => opt.MapFrom(src => (src.Token != null && src.Token.Trim().Length > 0)));
+            //.ForMember(src => src.Success, opt => opt.MapFrom(src => (src.Token != null && src.Token.Trim().Length > 0)));
 
-            CreateMap<RegisterUserServiceModel, RegisteredUserAPIModel>()
+            CreateMap<RegisterUserServiceModel, RegisteredUserAPIModel>().MaxDepth(2)
                 .ForMember(src => src.Email, opt => opt.MapFrom(src => src.Email))
                 .ForMember(src => src.KnownAs, opt => opt.MapFrom(src => src.KnownAs))
                 .ForMember(src => src.Photo, opt => opt.MapFrom(src => src.Photo))
                 .ForMember(src => src.Success, opt => opt.MapFrom(src => (src.Token != null && src.Token.Trim().Length > 0)));
 
-            CreateMap<RegisteredUserServiceModel, RegisteredUserAPIModel>()
+            CreateMap<RegisteredUserServiceModel, RegisteredUserAPIModel>().MaxDepth(2)
                 .ForMember(src => src.Email, opt => opt.MapFrom(src => src.Email))
                 .ForMember(src => src.KnownAs, opt => opt.MapFrom(src => src.KnownAs))
                 .ForMember(src => src.Token, opt => opt.MapFrom(src => src.Token))
@@ -248,28 +403,49 @@ namespace ApparelPro.WebApi.Mappings
                 .ForMember(src => src.Photo, opt => opt.MapFrom(src => src.Photo))
                 .ForMember(src => src.Success, opt => opt.MapFrom(src => (src.Token != null && src.Token.Trim().Length > 0)));
 
-            CreateMap<LoginUserAPIModel, LoginUserServiceModel>()
+            CreateMap<LoginUserAPIModel, LoginUserServiceModel>().MaxDepth(2)
                 .ForMember(src => src.Email, opt => opt.MapFrom(src => src.Email))
                 .ForMember(src => src.Password, opt => opt.MapFrom(src => src.Password));
 
             // currency exchange
-            CreateMap<CreateCurrencyExchangeAPIModel, CreateCurrencyExchangeServiceModel>()             
+            CreateMap<CreateCurrencyExchangeAPIModel, CreateCurrencyExchangeServiceModel>().MaxDepth(2)
                 .ForMember(src => src.BaseCurrency, opt => opt.MapFrom(src => src.BaseCurrency))
                 .ForMember(src => src.QuoteCurrency, opt => opt.MapFrom(src => src.QuoteCurrency))
                 .ForMember(src => src.ExchangeDate, opt => opt.MapFrom(src => src.ExchangeDate))
                 .ForMember(src => src.Rate, opt => opt.MapFrom(src => src.Rate))
                 .ReverseMap();
 
-            CreateMap<CurrencyExchangeAPIModel, CurrencyExchangeServiceModel>()              
+            CreateMap<CurrencyExchangeAPIModel, CurrencyExchangeServiceModel>().MaxDepth(2)
                 .ForMember(src => src.BaseCurrency, opt => opt.MapFrom(src => src.BaseCurrency))
                 .ForMember(src => src.QuoteCurrency, opt => opt.MapFrom(src => src.QuoteCurrency))
                 .ForMember(src => src.ExchangeDate, opt => opt.MapFrom(src => src.ExchangeDate))
                 .ForMember(src => src.Rate, opt => opt.MapFrom(src => src.Rate))
                 .ReverseMap();
+
+            CreateMap<CurrencyExchange, CurrencyExchangeServiceModel>().MaxDepth(2)
+              .ForMember(src => src.BaseCurrency, opt => opt.MapFrom(src => src.BaseCurrency))
+              .ForMember(src => src.QuoteCurrency, opt => opt.MapFrom(src => src.QuoteCurrency))
+              .ForMember(src => src.ExchangeDate, opt => opt.MapFrom(src => src.ExchangeDate))
+              .ForMember(src => src.Rate, opt => opt.MapFrom(src => src.Rate));
+            // .ReverseMap();
+
+            CreateMap<UpdateCurrencyExchangeAPIModel, CurrencyExchangeServiceModel>().MaxDepth(2)
+              .ForMember(src => src.BaseCurrency, opt => opt.MapFrom(src => src.BaseCurrency))
+              .ForMember(src => src.QuoteCurrency, opt => opt.MapFrom(src => src.QuoteCurrency))
+              .ForMember(src => src.ExchangeDate, opt => opt.MapFrom(src => src.ExchangeDate))
+              .ForMember(src => src.Rate, opt => opt.MapFrom(src => src.Rate))
+              .ReverseMap();
+
+            CreateMap<UpdateCurrencyExchangeAPIModel, UpdateCurrencyExchangeServiceModel>().MaxDepth(2)
+             .ForMember(src => src.BaseCurrency, opt => opt.MapFrom(src => src.BaseCurrency))
+             .ForMember(src => src.QuoteCurrency, opt => opt.MapFrom(src => src.QuoteCurrency))
+             .ForMember(src => src.ExchangeDate, opt => opt.MapFrom(src => src.ExchangeDate))
+             .ForMember(src => src.Rate, opt => opt.MapFrom(src => src.Rate))
+             .ReverseMap();
 
             //style
-            CreateMap<StyleDetailsServiceModel, StyleAPIModel>().ReverseMap();
-            CreateMap<CreateStyleDetailsAPIModel, CreateStyleDetailsServiceModel>()
+            CreateMap<StyleDetailsServiceModel, StyleAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateStyleDetailsAPIModel, CreateStyleDetailsServiceModel>().MaxDepth(2)
                 .ForMember(src => src.BuyerCode, opt => opt.MapFrom(src => src.BuyerCode))
                 .ForMember(src => src.Order, opt => opt.MapFrom(src => src.Order))
                 .ForMember(src => src.TypeCode, opt => opt.MapFrom(src => src.TypeCode))
@@ -281,12 +457,11 @@ namespace ApparelPro.WebApi.Mappings
                 .ForMember(src => src.ProductionEndDate, opt => opt.MapFrom(src => DateTime.MinValue))
                 .ForMember(src => src.EstimateApprovalDate, opt => opt.MapFrom(src => DateTime.MinValue))
                 .ForMember(src => src.ApprovedDate, opt => opt.MapFrom(src => DateTime.MinValue));
-                
-            CreateMap<UpdateStyleAPIModel,UpdateStyleDetailsServiceModel>();            
 
-            CreateMap(typeof(PaginationResult<>), typeof(PaginationAPIModel<>))
+            CreateMap<UpdateStyleAPIModel, UpdateStyleDetailsServiceModel>().MaxDepth(2);
+
+            CreateMap(typeof(PaginationResult<>), typeof(PaginationAPIModel<>)).MaxDepth(2)
                  .ConvertUsing(typeof(PaginationResultToPaginationAPITypeConverter<,>));
-
         }
 
         public class PaginationResultToPaginationAPITypeConverter<sourceT, destT> : ITypeConverter<PaginationResult<sourceT>, PaginationAPIModel<destT>>

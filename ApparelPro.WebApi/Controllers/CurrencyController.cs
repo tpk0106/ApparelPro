@@ -11,7 +11,8 @@ namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/currency")]
     [ApiController]
-    [Authorize("RegisteredUser")]
+    //[Authorize("RegisteredUser")]
+    [Authorize(Roles = "Merchandiser, Merchandiser Manager")]
     public class CurrencyController : ControllerBase
     {
         private readonly ICurrencyService _currencyService;

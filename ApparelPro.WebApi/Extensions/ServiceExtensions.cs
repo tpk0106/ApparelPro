@@ -57,6 +57,9 @@ namespace ApparelPro.WebApi.Extensions
             services.AddTransient(typeof(IBasisService), typeof(BasisService));
             services.AddTransient(typeof(IBankService), typeof(BankService));
             services.AddTransient(typeof(IAddressService), typeof(AddressService));
+            services.AddTransient(typeof(ISupplierService), typeof(SupplierService));
+            services.AddTransient(typeof(IPortDestinationService), typeof(PortDestinationService));
+            services.AddTransient(typeof(IFeatureService), typeof(FeatureService));
           //  services.AddTransient<IUnitServiceT<UnitServiceModel>>(x=> x.GetRequiredService<IUnitServiceT<UnitServiceModel>>());
         }
 

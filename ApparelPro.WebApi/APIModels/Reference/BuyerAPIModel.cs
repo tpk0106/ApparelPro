@@ -11,6 +11,7 @@ namespace ApparelPro.WebApi.APIModels.Reference
         public string? MobileNos { get; set; }
         public Guid? AddressId { get; set; }
         public string? Fax { get; set; }
-        public string? CUSDEC { get; set; }     
+        public string? CUSDEC { get; set; }
+        public ICollection<Address>? Addresses { get; set; }
     }
 }

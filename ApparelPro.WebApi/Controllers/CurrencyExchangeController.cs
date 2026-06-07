@@ -6,14 +6,12 @@ using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
-using System.Drawing.Printing;
 
 namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/currencyExchange")]
     [ApiController]
-   // [Authorize("RegisteredUser")]
+    [Authorize("RegisteredUser")]
     public class CurrencyExchangeController : ControllerBase
     {
         private readonly IMapper _mapper;
@@ -70,8 +68,9 @@ namespace ApparelPro.WebApi.Controllers
             return Ok(currencyExchangeAPIModel);
         }
 
-        [HttpPost]
+        [HttpPost()]
         [ProducesResponseType(HttpStatusCodes.Created)]
+        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
         public async Task<IActionResult> AddCurrencyExchangeAsync([FromBody] CreateCurrencyExchangeAPIModel createCurrencyExchangeAPIModel)
         {         
             var existingCurrencyExchange = await _currencyExchangeService
@@ -88,6 +87,44 @@ namespace ApparelPro.WebApi.Controllers
             var addedCurrencyExchangeService = await _currencyExchangeService.AddCurrencyExchangeAsync(createCurrencyServiceModel);
             var currencyExchangeAPIModel = _mapper.Map<CurrencyExchangeAPIModel>(addedCurrencyExchangeService);
             return CreatedAtRoute(nameof(GetCurrencyExchangeByBaseCurrencyAndQuoteCurrencyOnDateAsync), new { currencyExchangeAPIModel.BaseCurrency, currencyExchangeAPIModel.QuoteCurrency, currencyExchangeAPIModel.ExchangeDate}, null);
+        }
+
+        [HttpPut()]
+        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [ProducesResponseType(typeof(UnprocessableEntityResult), 
+            HttpStatusCodes.UnprocessableEntity)]
+        [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
+        public async Task<IActionResult> UpdateCurrencyExchangeAsync(
+            [FromQuery] string baseCurrency,
+            [FromQuery] string quoteCurrency,
+            [FromQuery] DateTime exchangeDate,
+            [FromBody] UpdateCurrencyExchangeAPIModel
+           updateCurrencyExchangeAPIModel)
+        {
+            var resultCurrencyExchangeAPIModel = _mapper.Map<UpdateCurrencyExchangeAPIModel>(
+                await _currencyExchangeService.GetCurrencyExchangeByBaseCurrencyAndQuoteCurrencyOnDateAsync(baseCurrency,quoteCurrency,exchangeDate));
+            if (resultCurrencyExchangeAPIModel == null)
+            {
+                return UnprocessableEntity("Currency is not available for base currency code :" + baseCurrency);
+            }
+            var updateCurrencyExchangeSeviceModel = _mapper.Map<UpdateCurrencyExchangeServiceModel>(updateCurrencyExchangeAPIModel);
+            await _currencyExchangeService.UpdateCurrencyExchangeAsync(updateCurrencyExchangeSeviceModel);
+            return NoContent();
+        }
+
+        [HttpDelete("{baseCurrency}/{quoteCurrency}/{exchangeDate}")]
+        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [ProducesResponseType(HttpStatusCodes.NoContent)]
+        [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        public async Task<IActionResult> DeleteCurrencyExchangeAsync([FromRoute] string baseCurrency, [FromRoute]string quoteCurrency, [FromRoute] DateTime exchangeDate)
+        {
+            var currencyExchangeServiceModel = await _currencyExchangeService.GetCurrencyExchangeByBaseCurrencyAndQuoteCurrencyOnDateAsync(baseCurrency,quoteCurrency, exchangeDate);
+            if (currencyExchangeServiceModel == null)
+            {
+                return UnprocessableEntity("Currency Exchange is not available for base currency :" + baseCurrency);
+            }
+            await _currencyExchangeService.DeleteCurrencyExchangeAsync(baseCurrency,quoteCurrency,exchangeDate);
+            return NoContent();
         }
     }
 }

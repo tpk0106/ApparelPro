@@ -1,0 +1,56 @@
+﻿
+
+How to Re-Run Your MigrationsOnce you update the connection string, you need to wipe out the current 
+empty database structure and let EF Core build it perfectly from scratch.
+
+Open your Package Manager Console in Visual Studio.Completely delete the current 
+problematic database structure by running:shell
+
+Drop-Database -Context ApparelProDbContext 
+
+Re-apply all your historical code-first migrations to build the tables fresh:shell
+
+there are 2 contetxts - ApparelProDbContext and UserIdentityDbContext
+
+Update-Database -Context ApparelProDbContext 
+Update-Database -Context UserIdentityDbContext
+
+If you are using the .NET CLI in terminal instead of Visual Studio, use these commands:shell
+
+dotnet ef database drop
+
+dotnet ef database update -Context ApparelProDbContext
+
+
+--------------------------------setup distributed Cache ----------------------------
+
+
+2 steps in order 
+
+1  install sql cache in CLI in project root folder
+
+dotnet tool install --global dotnet-sql-cache --version 8.0.8
+
+2 to create table 
+
+connection string as follow
+
+Data Source=ThusithPC\SQLExpress;Initial Catalog=ApparelPro;User Id=thusith;Password=Ayesha1966;Trusted_Connection=false;TrustServerCertificate=True
+
+command to execute in CLI
+dotnet sql-cache create "Data Source=ThusithPC\SQLExpress;Initial Catalog=ApparelPro;User Id=thusith;Password=Ayesha1966;Trusted_Connection=false;TrustServerCertificate=True" dbo AppCache
+
+for ApparelPro
+
+command to execute in CLI
+dotnet sql-cache create "Data Source=ThusithPC\SQLExpress;Initial Catalog=ApparelPro;User Id=thusith;Password=Ayesha1966;Trusted_Connection=false;TrustServerCertificate=True" dbo AppCache
+
+
+Migrations
+
+Add-Migration RemoveBankCodeFromCurrency -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi
+
+Remove-Migration -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi
+
+// Update
+Update-Database -Context UserIdentityDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi

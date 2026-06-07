@@ -33,7 +33,7 @@ namespace ApparelPro.WebApi.Controllers
         [ProducesResponseType(typeof(BadRequestResult), HttpStatusCodes.OK)]        
         public async Task<IActionResult> RefreshToken([FromBody] TokenAPIModel tokenAPIModel)
         {
-            if (tokenAPIModel == null)
+            if (tokenAPIModel == null || tokenAPIModel.Token.Length ==0 || tokenAPIModel.RefreshToken.Length ==0)
             {
                 return BadRequest("Invalid token and invalid refresh token");
             }
@@ -49,8 +49,8 @@ namespace ApparelPro.WebApi.Controllers
 
             var existingRefreshToken = tokenAPIModel.RefreshToken;
 
-            var user = _userIdentityDbContext.Users.Where(u => u.Email == email).FirstOrDefault();            
-            
+            var user = _userIdentityDbContext.Users.Where(u => u.Email == email).FirstOrDefault();          
+
             if (user == null ||   user.RefreshToken != existingRefreshToken || user.RefreshTokenExpiry <= DateTime.Now)
             {
                 return BadRequest("Refresh token expired....Please login");
@@ -67,7 +67,7 @@ namespace ApparelPro.WebApi.Controllers
             tokenAPIModel.Token = newtoken;
             tokenAPIModel.RefreshToken = newRefreshToken;
 
-            user.RefreshToken = newRefreshToken;
+            user.RefreshToken = newRefreshToken;         
 
             await _userIdentityDbContext.SaveChangesAsync();
             return Ok(tokenAPIModel);

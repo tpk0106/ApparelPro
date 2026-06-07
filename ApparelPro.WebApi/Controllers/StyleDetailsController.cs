@@ -89,12 +89,12 @@ namespace ApparelPro.WebApi.Controllers
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> GetStyleDetailsByBuyerOrderTypeStyleAsync(int buyer, string order, int type, string style)
         {
-            var country = await _styleDetailsService.GetStyleDetailsByBuyerOrderTypeStyleAsync(buyer,order,type,style);
-            if (country == null)
+            var Bank = await _styleDetailsService.GetStyleDetailsByBuyerOrderTypeStyleAsync(buyer,order,type,style);
+            if (Bank == null)
             {
-                return UnprocessableEntity("country is not available for code :" + buyer);
+                return UnprocessableEntity("Bank is not available for code :" + buyer);
             }
-            var countryAPIModel = _mapper.Map<CountryAPIModel>(country);
+            var countryAPIModel = _mapper.Map<CountryAPIModel>(Bank);
             return Ok(countryAPIModel);
         }
 

@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Text.Json;
+//using UpdateUSMAlias = apparelPro.BusinessLogic.Services.Models.Registration.IUserService;
+
 
 namespace ApparelPro.WebApi.Controllers
 {
@@ -36,7 +38,8 @@ namespace ApparelPro.WebApi.Controllers
         /// <response code="200">List of Users</response>
         /// /// <response code="400">Invalid data</response>
         /// <response code="500">An error occurred</response>
-        [HttpGet("list")]        
+        [HttpGet("list")]
+        [AllowAnonymous]
         [ProducesResponseType(typeof(IEnumerable<UserAPIModel>),HttpStatusCodes.OK)]
         public async Task<IActionResult> GetUsersAsync()
         {
@@ -48,7 +51,7 @@ namespace ApparelPro.WebApi.Controllers
         [HttpGet("list/{email}",Name = "GetUserByEmailAsync")]
         [ProducesResponseType(typeof(UserAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
-        public async Task<IActionResult> GetUserByEmailAsync([FromQuery] string email)
+        public async Task<IActionResult> GetUserByEmailAsync([FromRoute] string email)
         {
             var userServiceModel = await _userService.GetUserByEmailAsync(email);
             if (userServiceModel == null)
@@ -59,6 +62,20 @@ namespace ApparelPro.WebApi.Controllers
             return Ok(userAPIModel);
         }
 
+        //[HttpGet("list/{knownAs}", Name = "GetUserByKnownASAsync")]
+        //[ProducesResponseType(typeof(UserAPIModel), HttpStatusCodes.OK)]
+        //[ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        //public async Task<IActionResult> GetUserByKnownAsAsync([FromQuery] string knownAs)
+        //{
+        //    var userServiceModel = await _userService.GetUserByEmailAsync(knownAs);
+        //    if (userServiceModel == null)
+        //    {
+        //        return UnprocessableEntity("User is not available for email :" + knownAs);
+        //    }
+        //    var userAPIModel = _mapper.Map<UserAPIModel>(userServiceModel);
+        //    return Ok(userAPIModel);
+        //}
+
         [HttpPost("register")]
         [ProducesResponseType(typeof(RegisteredUserAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(BadRequestResult), HttpStatusCodes.BadRequest)]
@@ -66,22 +83,37 @@ namespace ApparelPro.WebApi.Controllers
         public async Task<ActionResult> Register(RegisterUserAPIModel registerUserAPIModel)
         {
             if (await UserExists(registerUserAPIModel.Email.ToLower()))
-            {
-                return BadRequest("Email is taken");
+            {                
+                return BadRequest(new { message = "Email is already registered" });
             }
 
-            var registerUserServiceModel = _mapper.Map<RegisterUserServiceModel>(registerUserAPIModel);
-            var registeredUserServiceModel = await _userService.RegisterAsync(registerUserServiceModel);
-           // var mappedUser = _mapper.Map<RegisteredUserAPIModel>(registeredUserServiceModel);
-            return CreatedAtRoute(nameof(GetUserByEmailAsync), new { email = registeredUserServiceModel.Email }, null);         
+            try
+            {
+                var registerUserServiceModel = _mapper.Map<RegisterUserServiceModel>(registerUserAPIModel);
+                var registeredUserServiceModel = await _userService.RegisterAsync(registerUserServiceModel);
+
+                // var mappedUser = _mapper.Map<RegisteredUserAPIModel>(registeredUserServiceModel);
+                return CreatedAtRoute(nameof(GetUserByEmailAsync), new { email = registeredUserServiceModel.Email }, null);
+            }
+            catch (Exception ex)
+            {
+                // 2. Catch service exceptions and format them safely into a JSON object package
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         private async Task<bool> UserExists(string email)
         {
+            // Simply fetch the service model directly
             var retUser = await _userService.GetUserByEmailAsync(email);
-            var user = _mapper.Map<UserAPIModel>(_mapper.Map<UserAPIModel>(retUser));
-            return user != null ? true : false;
-        }
+
+            // Check if the returned object is null or active without recursive mapping blocks
+            return retUser != null;
+
+            //var retUser = await _userService.GetUserByEmailAsync(email);
+            //var user = _mapper.Map<UserAPIModel>(_mapper.Map<UserAPIModel>(retUser));
+            //return user != null ? true : false;
+        }       
 
         [HttpPost]
         [ProducesResponseType(typeof(void), HttpStatusCodes.Created)]
@@ -94,6 +126,23 @@ namespace ApparelPro.WebApi.Controllers
             return CreatedAtRoute(nameof(GetUserByEmailAsync), new { email = createdUserServiceModel.Email }, null); 
         }
 
+        [HttpPut()]
+        [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
+        [AllowAnonymous]
+        public async Task<IActionResult> UpdateUserAsync([FromQuery] string email, [FromBody] UpdateUserAPIModel updateUserAPIModel)
+        {
+            var userServiceModel = _mapper.Map<UpdateUserServiceModel>(updateUserAPIModel);
+            try
+            {
+                await _userService.UpdateUserAsync(userServiceModel);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpPost("login")]
         [ProducesResponseType(typeof(RegisterUserAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(BadRequestResult), HttpStatusCodes.BadRequest)]
@@ -102,8 +151,7 @@ namespace ApparelPro.WebApi.Controllers
         [SwaggerOperation(Tags = new[] { "Authentication" },
             Summary = "'login (authenticate users).",
             Description = "Returns 200 - OK if called by an authenticated user regardless of its role(s).")
-        ]
-
+        ]        
         public async Task<ActionResult> Login(LoginUserAPIModel loginUserAPIModel)
         {           
             var user = await _userManager.FindByNameAsync(loginUserAPIModel.Email);
@@ -146,7 +194,7 @@ namespace ApparelPro.WebApi.Controllers
 
         [HttpPost("refresh-a-token")]
         [ProducesResponseType(typeof(RegisterUserAPIModel), HttpStatusCodes.OK)]
-        public async Task<IActionResult> RefreshToken1(RegisteredUserAPIModel registeredUserAPIModel)
+        public async Task<IActionResult> RefreshToken1([FromBody] RegisteredUserAPIModel registeredUserAPIModel)
         {
             var registeredUsrServiceModel = _mapper.Map<RegisteredUserServiceModel>(registeredUserAPIModel);
            // var regsiteredUserAPIModel = _mapper.Map<RegisteredUserAPIModel>(await _userService.RefreshTokenUsingExistingToken(registeredUsrServiceModel));

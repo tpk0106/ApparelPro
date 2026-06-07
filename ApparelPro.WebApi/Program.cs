@@ -2,6 +2,7 @@ using ApparelPro.Data;
 using ApparelPro.Data.Models.Registration;
 using ApparelPro.WebApi.Extensions;
 using ApparelPro.WebApi.Misc;
+using Azure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -53,7 +54,6 @@ ServiceExtensions.ConfgureAppsettings(builder.Services, builder.Configuration);
 
 //builder.Services.AddDbContextPool<ApparelProDbContext>(options => options.UseSqlServer())
 
-
 // added by thusith on 18/03/2024 due to CreatedAtAction error 
 //ref : https://www.josephguadagno.net/2020/07/01/no-route-matches-the-supplied-values
 ServiceExtensions.UpdateMvcOptions(builder.Services);
@@ -65,7 +65,6 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 ServiceExtensions.AddAuthorization(builder.Services, builder.Configuration);
 
 // authentication
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -98,8 +97,9 @@ builder.Services.AddCors(options =>
 options.AddPolicy(reactPolicyName, builder =>
 {
     builder
-    .WithOrigins("http://localhost:5173", "http://localhost:5174")
-    //.WithMethods("DELETE","PUT","GET", "POST")
+    //.WithOrigins("https://localhost:5173", "http://localhost:5174")
+    .WithOrigins("http://localhost:3000") // put react url frm the browser
+    //.WithMethods("DELETE","PUT","GET", "POST")    
     .AllowAnyMethod()
     .AllowAnyHeader()
     .AllowCredentials();
@@ -125,6 +125,14 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new JsonToByteArrayConverter()));
 builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new EverythingToStringJsonConverter()));
+
+//var options = new JsonSerializerOptions()
+//{
+//    NumberHandling = System.Text.Json.Serialization.JsonNumberHandling | System.Text.Json.Serialization.JsonNumberHandling.WriteAsString
+//};
+
+//builder.Services.AddControllers().AddJsonOptions(options);
+
 //builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
 
 //builder.Services.AddControllers().AddJsonOptions(options =>
@@ -191,47 +199,76 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors();
+// 1. MUST call UseCors FIRST and explicitly pass your policy name!
+app.UseCors(reactPolicyName);
 //app.UseOptions();
 app.Use(async (context, next) =>
 {
-    // enable for react apps below
-   // context.Response.Headers["Access-Control-Allow-Origin"] = "http://localhost:5173";
-    // end of enable
-    // enable for angular apps below
-    context.Response.Headers["Access-Control-Allow-Origin"] = "http://localhost:4200";
-    // end of enabl
-    context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, DELETE, PUT, OPTIONS";
-   
-    context.Response.Headers.Allow = "GET, POST, DELETE, PUT, OPTIONS";
-    if (HttpMethods.IsOptions(context.Request.Method))
-    {        
-        // below is working for react
-        //context.Response.Headers["Access-Control-Allow-Methods"] = " DELETE";
 
-        // change for angular 
-        context.Response.Headers["Access-Control-Allow-Methods"] = "DELETE, PUT, POST";
-        // end of change
-        context.Response.Headers["Access-Control-Allow-Headers"] = "X-Requested-With, Accept, Access-Control-Allow-Origin, Content-Type, Authorization";
-        await context.Response.CompleteAsync();
-        return;
-    }
-    await next();
-});
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.Use((context, next) =>
-{
+    // 2. Disable caching if required
     context.Response.GetTypedHeaders().CacheControl = new Microsoft.Net.Http.Headers.CacheControlHeaderValue()
     {
         NoCache = true,
         NoStore = true
     };
-    return next.Invoke();
+
+    //(Note: You can safely delete that entire chunk of custom manual
+    //context.Response.Headers["Access-Control-Allow-Origin"] = ... code completely).
+
+    // // enable for react apps below
+
+    // //context.Response.Headers["Access-Control-Allow-Origin"] = "https://localhost:5173";
+    // context.Response.Headers["Access-Control-Allow-Origin"] = "http://localhost:3000";
+
+    // // end of enable
+
+    // // enable for angular apps below
+
+    ////  context.Response.Headers["Access-Control-Allow-Origin"] = "http://localhost:4200";
+
+    // // end of enable
+
+    // context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, DELETE, PUT, OPTIONS";
+
+    // context.Response.Headers.Allow = "GET, POST, DELETE, PUT, OPTIONS";
+    // if (HttpMethods.IsOptions(context.Request.Method))
+    // {        
+    //     // below is working for react
+    //     //context.Response.Headers["Access-Control-Allow-Methods"] = " DELETE";
+    //     // added by thusith on 20/02/25 to test 
+    //     context.Response.Headers["Access-Control-Allow-Methods"] = " DELETE, PUT, POST, GET";
+    //     // end of react settings
+
+    //     // change for angular 
+    // //    context.Response.Headers["Access-Control-Allow-Methods"] = "DELETE, PUT, POST";
+    //     // end of change
+    //     context.Response.Headers["Access-Control-Allow-Headers"] = "X-Requested-With, Accept, Access-Control-Allow-Origin, Content-Type, Authorization";
+    //     await context.Response.CompleteAsync();
+    //     return;
+    // }
+    await next();
+    
 });
+app.UseHttpsRedirection();
+
+// 4. Run Authentication and Authorization AFTER CORS
+app.UseAuthentication(); // Ensure this is present if using JWT!
+
+app.UseAuthorization();
+
 
 app.MapControllers();
+
+// Temporary startup script to auto-generate the missing database file
+//using (var scope = app.Services.CreateScope())
+//{
+//    var identityContext = scope.ServiceProvider.GetRequiredService<UserIdentityDbContext>();
+//    var apparelContext = scope.ServiceProvider.GetRequiredService<ApparelProDbContext>();
+
+//    // This instructs SQL Express to create the database file and all your missing tables
+//    await identityContext.Database.EnsureCreatedAsync();
+//    await apparelContext.Database.EnsureCreatedAsync();
+//}
+
 
 app.Run();

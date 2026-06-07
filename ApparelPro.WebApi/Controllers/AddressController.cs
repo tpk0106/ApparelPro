@@ -14,11 +14,11 @@ namespace ApparelPro.WebApi.Controllers
     public class AddressController : ControllerBase
     {
         private readonly IMapper _mapper;
-        private readonly IAddressService _addresService; 
+        private readonly IAddressService _addressService; 
         public AddressController(IMapper mapper, IAddressService addressService)
         {
             _mapper = mapper;
-            _addresService = addressService;            
+            _addressService = addressService;            
         }
 
         [HttpGet("list")]
@@ -35,17 +35,30 @@ namespace ApparelPro.WebApi.Controllers
              [FromQuery] string? filterColumn = null,
              [FromQuery] string? filterQuery = null)
         {
-            var addressServiceModels = await _addresService.GetAddressesAsync(pageNumber, pageSize,
+            var addressServiceModels = await _addressService.GetAddressesAsync(pageNumber, pageSize,
                 sortColumn, sortOrder, filterColumn, filterQuery);
             var addresses = _mapper.Map<PaginationAPIModel<AddressAPIModel>>(addressServiceModels);
             return Ok(addresses);
         }
 
-        [HttpGet("list/byAddressId/", Name = "GetAddressesByAddressIdAsync")]
+        [HttpGet("list/AddressId/{addressId}", Name = "GetAddressesByAddressIdAsync")]
+        [Authorize("Merchandising")]
+        [ProducesResponseType(typeof(IEnumerable<AddressAPIModel>), HttpStatusCodes.OK)]
+        [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        public async Task<IActionResult> GetAddressesByAddressIdAsync(Guid addressId)
+        {
+            var addresseServiceModels = await _addressService.GetAddressesByAddresIdAsync(addressId);
+                
+            var addresses = _mapper.Map<IEnumerable<AddressAPIModel>>(addresseServiceModels);
+            return Ok(addresses);
+        }
+
+
+        [HttpGet("list/byAddressId/", Name = "GetAddressesForBuyerByAddressIdAsync")]
         [Authorize("Merchandising")]
         [ProducesResponseType(typeof(PaginationAPIModel<AddressAPIModel>), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
-        public async Task<IActionResult> GetAddressesByAddressIdAsync(
+        public async Task<IActionResult> GetAddressesForBuyerByAddressIdAsync(
              [FromQuery] Guid addressId,
              [FromQuery] int pageSize,
              [FromQuery] int pageNumber,
@@ -55,7 +68,7 @@ namespace ApparelPro.WebApi.Controllers
              [FromQuery] string? filterQuery = null
         )           
         {
-            var addresseServiceModels = await _addresService.GetAddressesByAddresIdAsync(addressId,pageNumber, pageSize,
+            var addresseServiceModels = await _addressService.GetAddressesByAddresIdAsync(addressId,pageNumber, pageSize,
                 sortColumn, sortOrder, filterColumn, filterQuery);
             var addresses = _mapper.Map<PaginationAPIModel<AddressAPIModel>>(addresseServiceModels);
             return Ok(addresses);
@@ -67,7 +80,7 @@ namespace ApparelPro.WebApi.Controllers
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> GetAddressByIdAndAddresIdAsync([FromQuery] Guid addressId, [FromQuery] int id)
         {
-            var addresseServiceModel = await _addresService.GetAddressByIdAndAddresIdAsync(id, addressId);
+            var addresseServiceModel = await _addressService.GetAddressByIdAndAddresIdAsync(id, addressId);
             var address = _mapper.Map<AddressAPIModel>(addresseServiceModel);
             return Ok(address);
         }
@@ -76,8 +89,8 @@ namespace ApparelPro.WebApi.Controllers
         [ProducesResponseType(HttpStatusCodes.Created)]
         public async Task<IActionResult> AddAddressAsync([FromBody] CreateAddressAPIModel createAddressAPIModel)
         {
-            var createAddressServiceModel = _mapper.Map<CreateAddressServiceModel>(createAddressAPIModel);
-            var addedAddress = await _addresService.AddAddressAsync(createAddressServiceModel);
+            var createAddressServiceModel = _mapper.Map<CreateAddressServiceModel>(createAddressAPIModel);           
+            var addedAddress = await _addressService.AddAddressAsync(createAddressServiceModel);
             return CreatedAtRoute(nameof(GetAddressesByAddressIdAsync), new {  addedAddress.Id, addedAddress.AddressId }, null);
         }
 
@@ -88,7 +101,7 @@ namespace ApparelPro.WebApi.Controllers
         public async Task<IActionResult> UpdateAddressAsync([FromQuery] int id, Guid addressId, [FromBody] UpdateAddressAPIModel
             updateAddressAPIModel)
         {
-            var resultAddressAPIModel = _mapper.Map<AddressAPIModel>(await _addresService.GetAddressByIdAndAddresIdAsync(id, addressId));
+            var resultAddressAPIModel = _mapper.Map<AddressAPIModel>(await _addressService.GetAddressByIdAndAddresIdAsync(id, addressId));
 
             if (resultAddressAPIModel == null)
             {
@@ -96,7 +109,23 @@ namespace ApparelPro.WebApi.Controllers
             }           
           
             var updateAddressSeviceModel = _mapper.Map<UpdateAddressServiceModel>(updateAddressAPIModel);
-            await _addresService.UpdateAddressAsync(updateAddressSeviceModel);
+            await _addressService.UpdateAddressAsync(updateAddressSeviceModel);
+            return NoContent();
+        }
+
+        [HttpDelete("{id}/{addressId}")]
+        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [ProducesResponseType(HttpStatusCodes.NoContent)]
+        [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        public async Task<IActionResult> DeleteBuyerAddressAsync(int id, string addressId)
+        {
+            var newAddressId = new Guid(addressId);
+            var buyerAddress = await _addressService.GetAddressByIdAndAddresIdAsync(id,newAddressId);
+            if (buyerAddress == null)
+            {
+                return UnprocessableEntity("Buyer Address is not available for AddressId :" + addressId);
+            }
+            await _addressService.DeleteAddressAsync(id, newAddressId);
             return NoContent();
         }
     }

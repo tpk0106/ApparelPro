@@ -1,9 +1,9 @@
 ﻿namespace ApparelPro.WebApi.APIModels.Reference
 {
-    public class BankAPIModel
-    {        
+    public class CreateBankAPIModel
+    {
         public string Name { get; set; }
-     //   public string Description { get; set; }
+        //public string Description { get; set; }
         public string BankCode { get; set; }
         public string? SwiftCode { get; set; }
         public string? TelephoneNos { get; set; }

@@ -1,8 +1,5 @@
 ﻿using apparelPro.BusinessLogic.Services;
-using apparelPro.BusinessLogic.Services.Implementation.Reference;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBuyerService;
-using apparelPro.BusinessLogic.Services.Models.Reference.IBuyerService;
-using ApparelPro.Shared.LookupConstants.ApparelProContext;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.Misc;
@@ -85,6 +82,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpDelete("{buyerCode}")]
+        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> DeleteBuyerAsync(int buyerCode)
@@ -99,6 +97,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut()]
+        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
         //  [ServiceFilter(typeof(ValidationFilterAttribute))]
