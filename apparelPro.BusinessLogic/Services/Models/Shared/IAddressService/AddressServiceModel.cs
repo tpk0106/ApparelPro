@@ -1,4 +1,5 @@
 ﻿using ApparelPro.Data.Models.References;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace apparelPro.BusinessLogic.Services.Implementation.Shared
 {
@@ -12,9 +13,12 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Shared
         public int? PostCode { get; set; }
         public string? State { get; set; }
         public string? CountryCode { get; set; }
+        [NotMapped]
         public string Country { get; set; }
         public bool? Default { get; set; }
-        public Buyer? Buyer { get; set; }
-        public int? BuyerCode { get; set; }
+      //  [NotMapped]
+       // public Buyer? Buyer { get; set; }
+       // [NotMapped]
+       // public int? BuyerCode { get; set; }
     }
 }

@@ -1,11 +1,12 @@
 ﻿using apparelPro.BusinessLogic.Misc;
+using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IGarmentTypeService;
-using ApparelPro.Data.Models.References;
 using ApparelPro.Data;
+using ApparelPro.Data.Models.References;
 using ApparelPro.Shared.Extensions;
-using Microsoft.EntityFrameworkCore;
 using ApparelPro.Shared.LookupConstants;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 
 namespace apparelPro.BusinessLogic.Services.Implementation.Reference
@@ -95,6 +96,17 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
         public Task<IEnumerable<GarmentTypeServiceModel>> FilterGarmentTypeByCodeAsync(string filter, int pageNumber, int pageSize)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<GarmentTypeServiceModel> CreateGarmentTypeAsync(CreateGarmentTypeServiceModel createGarmentTypeServiceModel)
+        {
+            var garmentTypeDbModel = _mapper.Map<GarmentType>(createGarmentTypeServiceModel);            
+
+            _apparelProDbContext.GarmentTypes.Add(garmentTypeDbModel);
+            await _apparelProDbContext.SaveChangesAsync();
+
+            //   _apparelProDbContext.Database.ExecuteSql($"SET IDENTITY_INSERT dbo.Currencies OFF");
+            return _mapper.Map<GarmentTypeServiceModel>(garmentTypeDbModel);
         }
     }
 }

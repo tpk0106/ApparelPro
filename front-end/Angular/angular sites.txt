@@ -1,0 +1,40 @@
+ //https://www.worldometers.info/geography/flags-of-the-world/
+  // https://www.iban.com/country-codes
+
+// https://stackoverflow\.com/questions/39224865/dependency-injection-into-abstract-class-typescriptangular2
+http://www.bullcrane.com/angular/2018/06/15/styling-mat-menu-items/
+
+
+
+If you have a lot of http requests, You can centralize it by using an http interceptor , try something like this:
+
+@Injectable()
+export class HttpInterceptor implements HttpInterceptor {
+constructor(public toasterService: ToastrService) {}
+
+intercept(
+    req: HttpRequest<any>,
+    next: HttpHandler
+  ): Observable<HttpEvent<any>> {
+
+    return next.handle(req).pipe(
+        tap(evt => {
+            if (evt instanceof HttpResponse) {
+                if(evt.body && evt.body.success)
+                    this.toasterService.success(evt.body.success.message, evt.body.success.title, { positionClass: 'toast-bottom-center' });
+            }
+        }),
+        catchError((err: any) => {
+            if(err instanceof HttpErrorResponse) {
+                try {
+                    this.toasterService.error(err.error.message, err.error.title, { positionClass: 'toast-bottom-center' });
+                } catch(e) {
+                    this.toasterService.error('An error occurred', '', { positionClass: 'toast-bottom-center' });
+                }
+                //log error 
+            }
+            return of(err);
+        }));
+  }
+}
+

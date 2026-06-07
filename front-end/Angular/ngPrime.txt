@@ -1,0 +1,6 @@
+  class="ng-invalid ng-dirty"
+
+  [inputStyle]="{ 'background-color': 'gray' }"
+
+
+https://www.geeksforgeeks.org/angular-primeng-calendar-component/

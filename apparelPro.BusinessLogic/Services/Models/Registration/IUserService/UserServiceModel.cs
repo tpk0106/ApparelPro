@@ -1,4 +1,6 @@
-﻿namespace apparelPro.BusinessLogic.Services.Models.Registration.IUserService
+﻿using ApparelPro.Data.Models.References;
+
+namespace apparelPro.BusinessLogic.Services.Models.Registration.IUserService
 {
     public class UserServiceModel
     {
@@ -12,8 +14,10 @@
         public DateTime Created { get; set; } = DateTime.Now;
         public DateTime? LastActive { get; set; } = DateTime.Now;
         public string? Gender { get; set; }
-        public string? City { get; set; }
-        public string? Country { get; set; }
+        public string? PhoneNumber { get; set; }
+
         public byte[]? Photo { get; set; }
+
+        public virtual Address? Address { get; set; }
     }
 }

@@ -42,19 +42,35 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
         }
         public async Task<CountryServiceModel> AddCountryAsync(CreateCountryServiceModel createCountryServiceModel)
         {
-            var countryDbModel = _mapper.Map<Country>(createCountryServiceModel);
-            _apparelProDbContext.Countries.Add(countryDbModel);
-            await _apparelProDbContext.SaveChangesAsync();
-            return _mapper.Map<CountryServiceModel>(countryDbModel);
+            try
+            {
+                var countryDbModel = _mapper.Map<Country>(createCountryServiceModel);
+                _apparelProDbContext.Countries.Add(countryDbModel);
+                await _apparelProDbContext.SaveChangesAsync();
+                return _mapper.Map<CountryServiceModel>(countryDbModel);
+            }
+            catch(Exception ex)
+            {
+                throw new Exception("Country is already exists.");
+            }
+           
         }
 
         public async Task DeleteCountryAsync(string code)
         {
-            var countryDbModel = await _apparelProDbContext.Countries
-               .Where(country => country.Code == code)
+            try
+            {
+                var countryDbModel = await _apparelProDbContext.Countries
+               .Where(Country => Country.Code == code)
                .FirstOrDefaultAsync();
-            _apparelProDbContext.Countries.Remove(countryDbModel!);
-            await _apparelProDbContext.SaveChangesAsync();
+                _apparelProDbContext.Countries.Remove(countryDbModel!);
+                await _apparelProDbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                throw new Exception(ex.Message);
+            }            
         }
 
         public async Task<PaginationResult<CountryServiceModel>> GetCountriesAsync(int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery)
@@ -133,7 +149,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
 
             if(filter != null)
             {
-                countryPagination = countryPagination.Where(country => country.Code.Contains(filter));
+                countryPagination = countryPagination.Where(Country => Country.Code.Contains(filter));
             }
 
             countryPagination = countryPagination             
@@ -149,17 +165,17 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
         public async Task<CountryServiceModel> GetCountryByCodeAsync(string code)
         {
             //1 
-            //var countryDbModel =  await _apparelProDbContext.Countries.AsQueryable().Where(country => country.Code == code).AsNoTracking().ToListAsync();
+            //var countryDbModel =  await _apparelProDbContext.Countries.AsQueryable().Where(Country => Country.Code == code).AsNoTracking().ToListAsync();
             
             // 2
             IQueryable<Country> countries = _apparelProDbContext.Countries;
-            var countryDbModel = await countries.Where(country => country.Code == code)
+            var countryDbModel = await countries.Where(Country => Country.Code == code)
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
 
             //var countryDbModel = await _apparelProDbContext.Countries
-            //    .Where(country => country.Code == code)
+            //    .Where(Country => Country.Code == code)
             //    .AsNoTracking()
             //    .FirstOrDefaultAsync();
             var countryServiceModel = _mapper.Map<CountryServiceModel>(countryDbModel);
@@ -170,7 +186,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
         {
            //var countryDbModel = _mapper.Map<Country>(updateCountryServiceModel);
            var countryDbModel = await _apparelProDbContext.Countries
-               .Where(country => country.Code == updateCountryServiceModel.Code)
+               .Where(Country => Country.Code == updateCountryServiceModel.Code)
                .FirstOrDefaultAsync();
 
             countryDbModel!.Name = updateCountryServiceModel.Name;
@@ -185,7 +201,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
         public async Task<bool> DoesCountryExistAsync(string code)
         {
             IQueryable<Country> countries = _apparelProDbContext.Countries;
-            var countryDbModel = await countries.Where(country => country.Code == code)
+            var countryDbModel = await countries.Where(Country => Country.Code == code)
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
             return countryDbModel != null;

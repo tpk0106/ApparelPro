@@ -78,7 +78,7 @@ namespace ApparelPro.Data.Migrations
 
                     b.HasKey("Buyer", "Order", "Type", "Style");
 
-                    b.ToTable("PODetails", (string)null);
+                    b.ToTable("PODetails");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.PurchaseOrder", b =>
@@ -129,7 +129,7 @@ namespace ApparelPro.Data.Migrations
 
                     b.HasKey("BuyerCode", "Order");
 
-                    b.ToTable("PurchaseOrders", (string)null);
+                    b.ToTable("PurchaseOrders");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Address", b =>
@@ -141,12 +141,9 @@ namespace ApparelPro.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<Guid>("AddressId")
-                        .HasColumnType("Guid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int?>("AddressType")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("BuyerCode")
                         .HasColumnType("int");
 
                     b.Property<string>("City")
@@ -172,7 +169,7 @@ namespace ApparelPro.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar");
 
-                    b.HasKey("Id", "AddressId");
+                    b.HasKey("Id");
 
                     b.HasIndex("AddressId");
 
@@ -217,7 +214,7 @@ namespace ApparelPro.Data.Migrations
 
                     b.HasKey("BankCode");
 
-                    b.ToTable("Banks", (string)null);
+                    b.ToTable("Banks");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Basis", b =>
@@ -245,7 +242,7 @@ namespace ApparelPro.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Basis", (string)null);
+                    b.ToTable("Basis");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Buyer", b =>
@@ -257,7 +254,6 @@ namespace ApparelPro.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BuyerCode"));
 
                     b.Property<Guid?>("AddressId")
-                        .IsRequired()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CUSDEC")
@@ -288,7 +284,9 @@ namespace ApparelPro.Data.Migrations
 
                     b.HasKey("BuyerCode");
 
-                    b.ToTable("Buyers", (string)null);
+                    b.HasIndex("BuyerCode");
+
+                    b.ToTable("Buyers");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Country", b =>
@@ -313,7 +311,7 @@ namespace ApparelPro.Data.Migrations
 
                     b.HasKey("Code");
 
-                    b.ToTable("Countries", (string)null);
+                    b.ToTable("Countries");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Currency", b =>
@@ -324,7 +322,8 @@ namespace ApparelPro.Data.Migrations
 
                     b.Property<string>("CountryCode")
                         .IsRequired()
-                        .HasColumnType("nvarchar(3)");
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar");
 
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -343,10 +342,7 @@ namespace ApparelPro.Data.Migrations
 
                     b.HasKey("Code");
 
-                    b.HasIndex("CountryCode")
-                        .IsUnique();
-
-                    b.ToTable("Currencies", (string)null);
+                    b.ToTable("Currencies");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.CurrencyConversion", b =>
@@ -369,7 +365,7 @@ namespace ApparelPro.Data.Migrations
 
                     b.HasKey("FromCurrency", "ToCurrency");
 
-                    b.ToTable("CurrencyConversions", (string)null);
+                    b.ToTable("CurrencyConversions");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.CurrencyExchange", b =>
@@ -398,7 +394,7 @@ namespace ApparelPro.Data.Migrations
                     b.HasKey("BaseCurrency", "QuoteCurrency", "ExchangeDate")
                         .HasName("PK_CurencyExchange");
 
-                    b.ToTable("CurrencyExchanges", (string)null);
+                    b.ToTable("CurrencyExchanges");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Destination", b =>
@@ -409,19 +405,18 @@ namespace ApparelPro.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Code")
-                        .IsRequired()
+                    b.Property<string>("CountryCode")
                         .HasMaxLength(3)
                         .HasColumnType("nvarchar");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("DestinationName")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id", "CountryCode");
 
-                    b.ToTable("Destinations", (string)null);
+                    b.ToTable("Destinations");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Feature", b =>
@@ -444,7 +439,7 @@ namespace ApparelPro.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Features", (string)null);
+                    b.ToTable("Features");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.GarmentType", b =>
@@ -462,7 +457,7 @@ namespace ApparelPro.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("GarmentTypes", (string)null);
+                    b.ToTable("GarmentTypes");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Stock", b =>
@@ -480,7 +475,7 @@ namespace ApparelPro.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Stocks", (string)null);
+                    b.ToTable("Stocks");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.StockItem", b =>
@@ -506,7 +501,7 @@ namespace ApparelPro.Data.Migrations
 
                     b.HasIndex("StockId");
 
-                    b.ToTable("StockItems", (string)null);
+                    b.ToTable("StockItems");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Style", b =>
@@ -590,7 +585,42 @@ namespace ApparelPro.Data.Migrations
                     b.HasIndex("BuyerCode", "Order", "TypeCode", "StyleCode")
                         .IsUnique();
 
-                    b.ToTable("Styles", (string)null);
+                    b.ToTable("Styles");
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.References.Supplier", b =>
+                {
+                    b.Property<int>("SupplierCode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SupplierCode"));
+
+                    b.Property<Guid?>("AddressId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Fax")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar");
+
+                    b.Property<string>("MobileNos")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar");
+
+                    b.Property<string>("TelephoneNos")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar");
+
+                    b.HasKey("SupplierCode");
+
+                    b.HasIndex("SupplierCode");
+
+                    b.ToTable("Suppliers");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Unit", b =>
@@ -613,7 +643,7 @@ namespace ApparelPro.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Units", (string)null);
+                    b.ToTable("Units");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.Registration.User", b =>
@@ -622,12 +652,12 @@ namespace ApparelPro.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar");
 
-                    b.Property<string>("City")
-                        .HasMaxLength(50)
+                    b.Property<string>("Bank")
+                        .HasMaxLength(100)
                         .HasColumnType("nvarchar");
 
-                    b.Property<string>("Country")
-                        .HasMaxLength(100)
+                    b.Property<string>("City")
+                        .HasMaxLength(50)
                         .HasColumnType("nvarchar");
 
                     b.Property<DateTime>("Created")
@@ -673,28 +703,7 @@ namespace ApparelPro.Data.Migrations
 
                     b.HasKey("Email");
 
-                    b.ToTable("Users", (string)null);
-                });
-
-            modelBuilder.Entity("ApparelPro.Data.Models.References.Address", b =>
-                {
-                    b.HasOne("ApparelPro.Data.Models.References.Buyer", "Buyer")
-                        .WithMany("Addresses")
-                        .HasForeignKey("AddressId")
-                        .HasPrincipalKey("AddressId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Buyer");
-                });
-
-            modelBuilder.Entity("ApparelPro.Data.Models.References.Currency", b =>
-                {
-                    b.HasOne("ApparelPro.Data.Models.References.Country", null)
-                        .WithOne()
-                        .HasForeignKey("ApparelPro.Data.Models.References.Currency", "CountryCode")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.StockItem", b =>
@@ -706,11 +715,6 @@ namespace ApparelPro.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Stock");
-                });
-
-            modelBuilder.Entity("ApparelPro.Data.Models.References.Buyer", b =>
-                {
-                    b.Navigation("Addresses");
                 });
 #pragma warning restore 612, 618
         }

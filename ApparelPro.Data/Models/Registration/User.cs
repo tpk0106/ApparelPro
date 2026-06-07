@@ -13,7 +13,7 @@
         public DateTime? LastActive { get; set; } = DateTime.Now;
         public string? Gender { get; set; }
         public string? City { get; set; }
-        public string? Country { get; set; }
+        public string? Bank { get; set; }
         public byte[]? Photo { get; set; }
     }
 }

@@ -1,6 +1,8 @@
-﻿using ApparelPro.Data.Models.Registration;
+﻿using ApparelPro.Data.Models.References;
+using ApparelPro.Data.Models.Registration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Reflection.Emit;
 
 namespace ApparelPro.Data.Configurations.Registration
 {
@@ -8,6 +10,14 @@ namespace ApparelPro.Data.Configurations.Registration
     {
         public void Configure(EntityTypeBuilder<ApparelProUser> entity)
         {
+            entity.HasOne(user => user.Address)
+                .WithMany()  // Leaves it open if other entities also map to addresses
+                .HasForeignKey(user => user.AddressId)
+                .HasPrincipalKey(user => user.AddressId) // Binds specifically to your Guid property
+                .OnDelete(DeleteBehavior.Cascade);
+
+          
+
             entity.Property(c => c.DateOfBirth)
                 .HasColumnType("date")
                 .HasColumnName("DateOfBirth");
@@ -15,16 +25,16 @@ namespace ApparelPro.Data.Configurations.Registration
             entity.Property(c => c.Gender)
                     .HasColumnType("int");                    
 
-            entity.Property(c => c.City)
-                    .HasColumnType("nvarchar")
-                    .HasMaxLength(50);
+            //entity.Property(c => c.City)
+            //        .HasColumnType("nvarchar")
+            //        .HasMaxLength(50);
 
-            entity.Property(c => c.Country)
-                  .HasColumnType("nvarchar")
-                  .HasMaxLength(100);
+            //entity.Property(c => c.Country)
+            //      .HasColumnType("nvarchar")
+            //      .HasMaxLength(100);
 
-            entity.Property(c => c.AddressId)
-                 .HasColumnType("int");                 
+            //entity.Property(c => c.AddressId)
+            //     .HasColumnType("int");                 
 
             entity.Property(c => c.KnownAs)
                     .HasColumnType("nvarchar")

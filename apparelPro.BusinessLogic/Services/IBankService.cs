@@ -11,7 +11,7 @@ namespace apparelPro.BusinessLogic.Services
         Task<IEnumerable<BankServiceModel>> GetBanksByPageNumberAsync(int pageNumber, int pageSize);
 
         Task<IEnumerable<BankServiceModel>> FilterBanksByCodeAsync(string filter, int pageNumber, int pageSize);
-        Task<BankServiceModel> GetBankByCodeAsync(string code);
+        Task<BankServiceModel> GetBankByBankCodeAsync(string code);
         Task<bool> DoesBankExistAsync(string code);
         Task<BankServiceModel> AddBankAsync(CreateBankServiceModel createBankServiceModel);
         Task UpdateBankAsync(UpdateBankServiceModel updateBankServiceModel);

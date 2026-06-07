@@ -15,7 +15,9 @@ namespace apparelPro.BusinessLogic.Services
         //   Task<PaginationResult<AddressServiceModel>> GetAddressesAsync(int pageNumber, int pageSize, string? filter, string? sortColumn, bool? descending);
 
         Task<PaginationResult<AddressServiceModel>> GetAddressesByAddresIdAsync(Guid addressId, int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery);
+        Task<IEnumerable<AddressServiceModel>> GetAddressesByAddresIdAsync(Guid addressId);
         Task<AddressServiceModel> GetAddressByIdAndAddresIdAsync(int id, Guid addressId);
+      //  Task<AddressServiceModel> GetAddressByIdAndAddresIdAsync(int id, string addressId);
 
         Task<IEnumerable<AddressServiceModel>> FilterAddressesByCodeAsync(string filter, int pageNumber, int pageSize);
        // Task<AddressServiceModel> GetAddressByCodeAsync(string code);
@@ -23,6 +25,7 @@ namespace apparelPro.BusinessLogic.Services
         Task<AddressServiceModel> AddAddressAsync(CreateAddressServiceModel createAddressServiceModel);
         Task UpdateAddressAsync(UpdateAddressServiceModel updateAddressServiceModel);
         Task DeleteAddressAsync(int id, Guid addressId);
+        //Task DeleteAddressAsync(int id, string addressId);
         //Task<bool> DoesUnitExistAsync(string code);
     }
 }

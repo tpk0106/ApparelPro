@@ -8,14 +8,19 @@ namespace ApparelPro.Data.Configurations.References
     {
         public void Configure(EntityTypeBuilder<Destination> entity)
         {
-            entity.HasKey(x => x.Id);
+            entity.Property(p=>p.Id)
+                .IsRequired()
+                .UseIdentityColumn();
 
-            entity.Property(p => p.Code)
+            entity.HasKey(x => new { x.Id, x.CountryCode });
+
+            entity.Property(p => p.CountryCode)
+                .ValueGeneratedNever()
                 .HasMaxLength(3)
                 .IsRequired()
                 .HasColumnType("nvarchar");
 
-            entity.Property(p => p.Name)
+            entity.Property(p => p.DestinationName)
                 .IsRequired()
                 .HasMaxLength(30)
                 .HasColumnType("nvarchar");

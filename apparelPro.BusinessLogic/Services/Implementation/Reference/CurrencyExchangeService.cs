@@ -35,12 +35,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
         }
 
         public async Task<PaginationResult<CurrencyExchangeServiceModel>> GetCurrencyExchangesAsync(
-              int pageNumber,
-              int pageSize,
-              string? sortColumn,
-              string? sortOrder,
-              string? filterColumn,
-              string? filterQuery
+              int pageNumber, int pageSize,string? sortColumn,
+              string? sortOrder, string? filterColumn, string? filterQuery
         )
         {
             IQueryable<CurrencyExchange> currencyExchangePagination = _apparelProDbContext.CurrencyExchanges.AsNoTracking();
@@ -52,7 +48,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             if (filterColumn != null &&  filterQuery != null)
             {
                 fr = InputValidator.Validate(filterColumn!, filterQuery!, typeof(CurrencyExchange));
-                currencyExchangePagination = currencyExchangePagination.Where(string.Format(fr.searchPattern!, fr.FilterColumn), fr.FilterQuery);
+                currencyExchangePagination = currencyExchangePagination
+                    .Where(string.Format(fr.searchPattern!, fr.FilterColumn), fr.FilterQuery);
             }
 
             int counter = 0;
@@ -83,17 +80,24 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             return _mapper.Map<CurrencyExchangeServiceModel>(currencyExchangeDbModel);
         }
 
-        public Task DeleteCurrencyExchangeAsync(string baseCurrency, string quoteCurrency, DateOnly exchangeDate)
+        public async Task DeleteCurrencyExchangeAsync(string baseCurrency, string quoteCurrency, DateTime exchangeDate)
         {
-            throw new NotImplementedException();
-        }       
+            var currencyExchangesDbModel = await _apparelProDbContext.CurrencyExchanges
+              .Where(ce => ce.BaseCurrency == baseCurrency && 
+                    ce.QuoteCurrency == quoteCurrency && 
+                    ce.ExchangeDate == exchangeDate)
+              .FirstOrDefaultAsync();
+            _apparelProDbContext.CurrencyExchanges.Remove(currencyExchangesDbModel!);
+            await _apparelProDbContext.SaveChangesAsync();
+        }
+
         public async Task<CurrencyExchangeServiceModel> GetCurrencyExchangeByBaseCurrencyAndQuoteCurrencyOnDateAsync(string baseCurrency, string quoteCurrency, DateTime date)
         {
             var currencyExchangeDbModel = await _apparelProDbContext.CurrencyExchanges
                 .Where(ce => (ce.BaseCurrency == baseCurrency) && (ce.QuoteCurrency == quoteCurrency) && (ce.ExchangeDate == date))
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
-            var currencyExchangesServiceModels = _mapper.Map< CurrencyExchangeServiceModel>(currencyExchangeDbModel);
+            var currencyExchangesServiceModels = _mapper.Map<CurrencyExchangeServiceModel>(currencyExchangeDbModel);
             return currencyExchangesServiceModels;
         }  
 
@@ -125,9 +129,21 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             var currencyExchangesServiceModels = _mapper.Map<IEnumerable<CurrencyExchangeServiceModel>>(currencyExchangeDbModels);
             return currencyExchangesServiceModels;
         }
-        public Task UpdateCurrencyExchangeAsync(UpdateCurrencyExchangeServiceModel updateCurrencyExchangeServiceModel)
+
+        public async Task UpdateCurrencyExchangeAsync(UpdateCurrencyExchangeServiceModel updateCurrencyExchangeServiceModel)
         {
-            throw new NotImplementedException();
+            var currencyExchangeDbModel = await _apparelProDbContext.CurrencyExchanges
+             .Where(currencyExchange => 
+                currencyExchange.BaseCurrency == updateCurrencyExchangeServiceModel.BaseCurrency 
+                && currencyExchange.QuoteCurrency == updateCurrencyExchangeServiceModel.QuoteCurrency 
+                && currencyExchange.ExchangeDate == updateCurrencyExchangeServiceModel.ExchangeDate)
+             .FirstOrDefaultAsync();
+
+            currencyExchangeDbModel!.BaseCurrency = updateCurrencyExchangeServiceModel.BaseCurrency;
+            currencyExchangeDbModel.QuoteCurrency = updateCurrencyExchangeServiceModel.QuoteCurrency;
+            currencyExchangeDbModel.ExchangeDate = updateCurrencyExchangeServiceModel.ExchangeDate;
+            currencyExchangeDbModel.Rate = updateCurrencyExchangeServiceModel.Rate;
+            await _apparelProDbContext.SaveChangesAsync();
         }
     }
 }

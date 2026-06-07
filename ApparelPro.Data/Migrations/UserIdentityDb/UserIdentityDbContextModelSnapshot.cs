@@ -22,6 +22,43 @@ namespace ApparelPro.Data.Migrations.UserIdentityDb
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("ApparelPro.Data.Models.References.Address", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("AddressId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("AddressType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("City")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CountryCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool?>("Default")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("PostCode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("State")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StreetAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Addresses", (string)null);
+                });
+
             modelBuilder.Entity("ApparelPro.Data.Models.Registration.ApparelProUser", b =>
                 {
                     b.Property<string>("Id")
@@ -30,20 +67,12 @@ namespace ApparelPro.Data.Migrations.UserIdentityDb
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<int?>("AddressId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("City")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar");
+                    b.Property<Guid?>("AddressId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Country")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar");
 
                     b.Property<DateTime>("Created")
                         .HasColumnType("datetime")
@@ -114,6 +143,8 @@ namespace ApparelPro.Data.Migrations.UserIdentityDb
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AddressId");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -257,6 +288,17 @@ namespace ApparelPro.Data.Migrations.UserIdentityDb
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.Registration.ApparelProUser", b =>
+                {
+                    b.HasOne("ApparelPro.Data.Models.References.Address", "Address")
+                        .WithMany()
+                        .HasForeignKey("AddressId")
+                        .HasPrincipalKey("AddressId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Address");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

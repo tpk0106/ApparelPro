@@ -14,8 +14,11 @@ namespace ApparelPro.Data.Models.References
         public string? CountryCode { get; set; }
         [NotMapped]
         public string? Country { get; set; }
-        public bool? Default { get; set; }             
-        public int? BuyerCode { get; set; }        
+        public bool? Default { get; set; }
+
+        [NotMapped]
+        public int BuyerCode { get; set; }
+
     }
 
     public enum AddressType

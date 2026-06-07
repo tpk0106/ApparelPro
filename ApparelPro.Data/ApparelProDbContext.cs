@@ -10,13 +10,23 @@ namespace ApparelPro.Data
 {
     public class ApparelProDbContext:DbContext
     {
+        // Add this temporary block inside your ApparelProDbContext class:
         public ApparelProDbContext()
-        {            
+        {
         }
         public ApparelProDbContext(DbContextOptions<ApparelProDbContext> options):base(options) 
         { 
         }
 
+        // this entry is used to bypass program.cs in case of connection issues, instead offline via this 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                // Points directly to your local SQL Express server using Windows Authentication
+                optionsBuilder.UseSqlServer("Server=THUSITHPC\\SQLEXPRESS;Database=ApparelPro;Trusted_Connection=True;TrustServerCertificate=True;");
+            }
+        }
         public virtual DbSet<Currency> Currencies { get; set; }
         public virtual DbSet<Address> Addresses { get; set; }
         public virtual DbSet<Buyer> Buyers { get; set; }
@@ -36,6 +46,8 @@ namespace ApparelPro.Data
 
         public virtual DbSet<PurchaseOrder> PurchaseOrders { get; set; }
         public virtual DbSet<CurrencyConversion> CurrencyConversions { get; set; }
+
+        public virtual DbSet<Supplier> Suppliers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -60,6 +72,7 @@ namespace ApparelPro.Data
 
             modelBuilder.ApplyConfiguration(new PurchaseOrderConfig());
             modelBuilder.ApplyConfiguration(new CurrencyConversionConfig());
+            modelBuilder.ApplyConfiguration(new SupplierConfig());
         }
 
         //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

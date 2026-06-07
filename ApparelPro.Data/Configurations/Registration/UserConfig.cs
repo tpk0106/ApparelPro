@@ -41,7 +41,7 @@ namespace ApparelPro.Data.Configurations.Registration
                 .HasColumnType("nvarchar")
                 .HasMaxLength(50);
 
-            entity.Property(c => c.Country)
+            entity.Property(c => c.Bank)
               .HasColumnType("nvarchar")
               .HasMaxLength(100);
 

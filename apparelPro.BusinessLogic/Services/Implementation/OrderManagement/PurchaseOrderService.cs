@@ -61,24 +61,24 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                  })
             .AsNoTracking();
 
-            var joined1 = _apparelProDbContext.PurchaseOrders
-            .AsNoTracking()
-            .Join(_apparelProDbContext.GarmentTypes, po => po.GarmentType, gt => gt.Id, (po, gt) =>
-            new PurchaseOrder
-            {
-                BasisCode = po.BasisCode,
-                BasisValue = po.BasisValue,
-                BuyerCode = po.BuyerCode,               
-                CountryCode = po.CountryCode,
-                CurrencyCode = po.CurrencyCode,
-                GarmentType = po.GarmentType,
-                GarmentTypeName = gt.TypeName,
-                Order = po.Order,
-                OrderDate = po.OrderDate,
-                Season = po.Season,
-                TotalQuantity = po.TotalQuantity,
-                UnitCode = po.UnitCode
-            });
+            //var joined1 = _apparelProDbContext.PurchaseOrders
+            //.AsNoTracking()
+            //.Join(_apparelProDbContext.GarmentTypes, po => po.GarmentType, gt => gt.Id, (po, gt) =>
+            //new PurchaseOrder
+            //{
+            //    BasisCode = po.BasisCode,
+            //    BasisValue = po.BasisValue,
+            //    BuyerCode = po.BuyerCode,               
+            //    CountryCode = po.CountryCode,
+            //    CurrencyCode = po.CurrencyCode,
+            //    GarmentType = po.GarmentType,
+            //    GarmentTypeName = gt.TypeName,
+            //    Order = po.Order,
+            //    OrderDate = po.OrderDate,
+            //    Season = po.Season,
+            //    TotalQuantity = po.TotalQuantity,
+            //    UnitCode = po.UnitCode
+            //});
 
             IQueryable<PurchaseOrder> poPagination = (IQueryable<PurchaseOrder>)joined.AsQueryable();
 
@@ -103,8 +103,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 .Skip(pageSize * pageNumber)
                 .Take(pageSize);
 
-            //poPagination.Join(_apparelProDbContext.GarmentTypes,po => po.GarmentType,gt=>gt.Id,(po=>po,gt=>gt));
-               
+            //poPagination.Join(_apparelProDbContext.GarmentTypes,po => po.GarmentType,gt=>gt.Id,(po=>po,gt=>gt));               
 
             var filteredDbPos = await poPagination.ToListAsync();
             var poServiceModels = _mapper.Map<IList<PurchaseOrderServiceModel>>(filteredDbPos);
@@ -115,13 +114,28 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
         public async Task<PurchaseOrderServiceModel> GetPurchaseOrderByBuyerAndOrderAsync(int buyer, string order)
         {
-            //var PODbModel = await _apparelProDbContext.PurchaseOrders
-            //    .Where(po => po.BuyerCode == buyer && po.Order == order)
-            //    .AsNoTracking()
-            //    .FirstOrDefaultAsync();
-            //var POServiceModel = _mapper.Map<PurchaseOrderServiceModel>(PODbModel);
-            //return POServiceModel;
-            throw new NotImplementedException();
+            var PODbModel = await _apparelProDbContext.PurchaseOrders
+                .Join(_apparelProDbContext.Buyers,
+                    order => order.BuyerCode, 
+                    buyer => buyer.BuyerCode, 
+                    (order, buyer) => new { order,buyer })
+                .Where(joinedBuyerOrder => joinedBuyerOrder.order.BuyerCode == buyer &&  joinedBuyerOrder.order.Order == order)
+                .Select(joinedResult => 
+                    new PurchaseOrder { BasisCode = joinedResult.order.BasisCode, 
+                        Buyer = joinedResult.buyer.Name, 
+                        Order = joinedResult.order.Order, 
+                        BuyerCode = joinedResult.buyer.BuyerCode, 
+                        CurrencyCode = joinedResult.order.CurrencyCode,
+                        BasisValue = joinedResult.order.BasisValue, 
+                        OrderDate = joinedResult.order.OrderDate, 
+                        Season = joinedResult.order.Season, 
+                        TotalQuantity = joinedResult.order.TotalQuantity, 
+                        UnitCode = joinedResult.order.UnitCode
+                    } )
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+            var POServiceModel = _mapper.Map<PurchaseOrderServiceModel>(PODbModel);
+            return POServiceModel;
         }
 
         public Task UpdatePurchaseOrderAsync(UpdatePurchaseOrderServiceModel updateCurrencyServiceModel)

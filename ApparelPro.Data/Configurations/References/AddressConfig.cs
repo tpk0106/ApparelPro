@@ -9,7 +9,11 @@ namespace ApparelPro.Data.Configurations.References
     {
         public void Configure(EntityTypeBuilder<Address> entity)
         {
-            entity.HasKey(k => new { k.Id, k.AddressId});
+            // Force Entity Framework to bind strictly to the 'Addresses' plural table
+            entity.ToTable("Addresses");
+
+            entity.HasKey(k =>  k.Id);
+            //entity.HasKey(k => new { k.Id, k.AddressId});
 
             entity.Property(p => p.Id)
                 .IsRequired()
@@ -19,12 +23,10 @@ namespace ApparelPro.Data.Configurations.References
             // https://stackoverflow.com/questions/60909477/ef-core-3-has-value-generator
             entity.Property(p => p.AddressId)
                 .IsRequired(true)
-                .HasColumnType("Guid");
+                .HasColumnType("uniqueidentifier");
                 //.ValueGeneratedOnAdd()
                 //.HasValueGenerator<ApparelProAddressIdValueGenerator>();
              //  .HasDefaultValue(new Guid())
-
-
 
             //entity.HasOne<Buyer>(p => p.AddressId).WithMany<Address>(p => p.AddressId);
             //entity.HasOne<Buyer>().WithMany<Address>().HasForeignKey(p=>p.AddressId);
@@ -50,8 +52,7 @@ namespace ApparelPro.Data.Configurations.References
 
             entity.Property(p => p.Default)
                 .HasColumnType("bit")
-                .IsRequired(false);
-              //  .HasDefaultValue(false);                       
+                .IsRequired(false);              
 
             entity.Property(p => p.StreetAddress)
              .HasMaxLength(200)
@@ -61,8 +62,7 @@ namespace ApparelPro.Data.Configurations.References
             entity.Property(p => p.City)
              .HasMaxLength(100)
              .IsRequired(false)
-             .HasColumnType("nvarchar");
-            
+             .HasColumnType("nvarchar");            
 
             entity.Property(p => p.CountryCode)
              .HasMaxLength(2)
@@ -78,6 +78,8 @@ namespace ApparelPro.Data.Configurations.References
             .HasMaxLength(5)
             .IsRequired(false)
             .HasColumnType("nvarchar");
+
+            entity.HasIndex(p => p.AddressId);
         }
     }
 }

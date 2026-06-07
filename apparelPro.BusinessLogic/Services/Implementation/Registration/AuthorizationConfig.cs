@@ -38,7 +38,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
             AuthorizationOptions options, 
             PolicyManager policyManager, 
             string policyName, 
-            string exclludes
+            string? exclludes
         )
         {
             PermissionConfiguration.Configure(options, policyManager, policyName, null); ;
@@ -63,27 +63,27 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
                _configuration, "PolicyManager:Merchandising:Roles", null);
         }      
 
-        public static void AddMerchandisingPoliciesUsingPolicyManager(AuthorizationOptions options, PolicyManager policyManager, string policyName, string excludes)
+        public static void AddMerchandisingPoliciesUsingPolicyManager(AuthorizationOptions options, PolicyManager policyManager, string policyName, string? excludes)
         {
             PermissionConfiguration.Configure(options, policyManager,policyName, excludes);
         }
 
-        private static void AddStorePoliciesUsingPolicyManager(AuthorizationOptions options, PolicyManager policyManager, string policyName, string excludes)
+        private static void AddStorePoliciesUsingPolicyManager(AuthorizationOptions options, PolicyManager policyManager, string policyName, string? excludes)
         {
             PermissionConfiguration.Configure(options, policyManager, policyName, excludes);
         }
 
-        public static void AddProductionPoliciesUsingPolicyManager(AuthorizationOptions options, PolicyManager policyManager, string policyName, string excludes)
+        public static void AddProductionPoliciesUsingPolicyManager(AuthorizationOptions options, PolicyManager policyManager, string policyName, string? excludes)
         {
             PermissionConfiguration.Configure(options, policyManager, policyName, excludes);
         }
 
-        public static void AddOfficePoliciesUsingPolicyManager(AuthorizationOptions options, PolicyManager policyManager,string policyName, string excludes)
+        public static void AddOfficePoliciesUsingPolicyManager(AuthorizationOptions options, PolicyManager policyManager,string policyName, string? excludes)
         {
             PermissionConfiguration.Configure(options, policyManager, policyName, null); ;
         }
 
-        public static void AddImportExportPoliciesUsingPolicyManager(AuthorizationOptions options, PolicyManager policyManager,string policyName, string excludes)
+        public static void AddImportExportPoliciesUsingPolicyManager(AuthorizationOptions options, PolicyManager policyManager,string policyName, string? excludes)
         {
             PermissionConfiguration.Configure(options, policyManager, policyName, excludes);
         }
@@ -115,9 +115,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
         }
 
         public class PermissionConfiguration
-        {           
-
-            public static void Configure(AuthorizationOptions options, PolicyManager policyManager,
+        {
+            internal static void Configure(AuthorizationOptions options, PolicyManager policyManager,
                string policyName, string? excludes)
             {               
                 List<string> excludesList = [];
@@ -140,7 +139,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
                 }                
             }
 
-            public static void Configure(AuthorizationOptions options,
+            internal static void Configure(AuthorizationOptions options,
                string policyName, string role, string? excludes)
             {
                 options.AddPolicy(policyName, policy =>

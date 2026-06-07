@@ -17,26 +17,31 @@ namespace ApparelPro.Data.Configurations.References
                 .IsRequired()
                 .HasColumnType("nvarchar");
 
-            currency.HasOne<Country>()
-            .WithOne()
-            .IsRequired()
-           //  .HasForeignKey<Currency>(c=>c.CountryCode);
-            .HasForeignKey(typeof(Currency), @"CountryCode");
+            //currency.HasOne<Bank>()
+            //.WithOne()
+            //.IsRequired()
+            ////  .HasForeignKey<Currency>(c=>c.CountryCode);
+            //.HasForeignKey(typeof(Currency), @"CountryCode");
 
 
             // beolow code also same as above but need to test whether its working.
             // https://github.com/dotnet/EntityFramework.Docs/issues/3004
-            currency.HasOne<Country>()
-           .WithOne()
-             .HasForeignKey<Currency>(c => c.CountryCode)
-            .IsRequired(); // should come after HasForeignKey
+            // currency.HasOne<Bank>()
+            //.WithOne()
+            //  .HasForeignKey<Currency>(c => c.CountryCode)
+            // .IsRequired(); // should come after HasForeignKey
 
-            //currency.HasOne<Country>()
+            //currency.HasOne<Bank>()
             //   .WithOne()
-            //  // .HasPrincipalKey<Country>(x=>x.Code)
+            //  // .HasPrincipalKey<Bank>(x=>x.Code)
             //   .HasPrincipalKey<Currency>(x=>x.CountryCode)
             //   // .IsRequired()              
-            //   .HasForeignKey<Country>(c=>c.Code);
+            //   .HasForeignKey<Bank>(c=>c.Code);
+
+            currency.Property(x => x.CountryCode)
+                .HasMaxLength(3)
+                .HasColumnType("nvarchar")
+                .IsRequired();
 
             currency.Property(x => x.Id)
              .UseIdentityColumn();
@@ -45,7 +50,7 @@ namespace ApparelPro.Data.Configurations.References
                 .HasMaxLength(30)
                 .HasColumnType("nvarchar");
 
-            //  entity.HasOne(c => c.Country);            
+            //  entity.HasOne(c => c.Bank);            
 
             currency.Property(p => p.Minor)
               .HasMaxLength(3)

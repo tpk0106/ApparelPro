@@ -2,6 +2,7 @@
 using apparelPro.BusinessLogic.Extensions;
 using apparelPro.BusinessLogic.Misc;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
+using apparelPro.BusinessLogic.Services.Models.Reference.ICountryService;
 using ApparelPro.Data;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Shared.Extensions;
@@ -18,7 +19,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
         private readonly IMapper _mapper;
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly ILookupConstants _lookupConstants;
-        private readonly Microsoft.Extensions.Caching.Distributed.IDistributedCache _distributedCache;
+        private readonly IDistributedCache _distributedCache;
         public BankService(IMapper mapper, ApparelProDbContext apparelProReferenceDbContext,
             ILookupConstants lookupConstants, IDistributedCache distributedCache)
         {
@@ -54,21 +55,27 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
 
             List<Bank>? result = null;
 
-            var cacheKey = $"{pageNumber}-{pageSize}-{sortColumn}-{sortOrder}-{filterColumn}-{filterQuery}";
-            var _options = new DistributedCacheEntryOptions() { AbsoluteExpirationRelativeToNow = new TimeSpan(0, 0, 30) };
+            //var cacheKey = $"{pageNumber}-{pageSize}-{sortColumn}-{sortOrder}-{filterColumn}-{filterQuery}";
+            //var _options = new DistributedCacheEntryOptions() { AbsoluteExpirationRelativeToNow = new TimeSpan(0, 0, 30) };
 
-            _distributedCache.TryGetValue<List<Bank>>(cacheKey, out result);
+            //_distributedCache.TryGetValue<List<Bank>>(cacheKey, out result);
 
-            if (await _distributedCache.GetAsync(cacheKey) == null)
-            {
-                BankPagination = BankPagination
-                    .Skip(pageSize * pageNumber)
-                    .Take(pageSize);
+            //if (await _distributedCache.GetAsync(cacheKey) == null)
+            //{
+            //    BankPagination = BankPagination
+            //        .Skip(pageSize * pageNumber)
+            //        .Take(pageSize);
 
-                result = await BankPagination.ToListAsync();
+            //    result = await BankPagination.ToListAsync();
 
-                _distributedCache.Set(cacheKey, result, _options);
-            }
+            //    _distributedCache.Set(cacheKey, result, _options);
+            //}
+
+            BankPagination = BankPagination
+                .Skip(pageSize * pageNumber)
+                .Take(pageSize);
+
+            result = await BankPagination.ToListAsync();
 
             var filteredDbCountries = result; 
             var BankServiceModels = _mapper.Map<IList<BankServiceModel>>(filteredDbCountries);
@@ -77,9 +84,12 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
                 sortColumn, sortOrder, filterColumn, filterQuery);
         }
 
-        public Task<BankServiceModel> AddBankAsync(CreateBankServiceModel createBankServiceModel)
+        public async Task<BankServiceModel> AddBankAsync(CreateBankServiceModel createBankServiceModel)
         {
-            throw new NotImplementedException();
+            var bankDbModel = _mapper.Map<Bank>(createBankServiceModel);
+            _apparelProDbContext.Banks.Add(bankDbModel);
+            await _apparelProDbContext.SaveChangesAsync();
+            return _mapper.Map<BankServiceModel>(bankDbModel);
         }
 
         public Task DeleteBankAsync(string code)
@@ -97,10 +107,21 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             throw new NotImplementedException();
         }
 
-        public Task<BankServiceModel> GetBankByCodeAsync(string code)
-        {
-            throw new NotImplementedException();
-        }
+        //public Task<BankServiceModel> GetBankByCodeAsync(string code)
+        //{
+        //    IQueryable<Bank> countries = _apparelProDbContext.Countries;
+        //    var bankDbModel = await countries.Where(Bank => Bank.Code == code)
+        //        .AsNoTracking()
+        //        .FirstOrDefaultAsync();
+
+
+        //    //var bankDbModel = await _apparelProDbContext.Countries
+        //    //    .Where(Bank => Bank.Code == code)
+        //    //    .AsNoTracking()
+        //    //    .FirstOrDefaultAsync();
+        //    var countryServiceModel = _mapper.Map<CountryServiceModel>(bankDbModel);
+        //    return countryServiceModel;
+        //}
 
         public async Task<BankServiceModel> GetBankByIdAsync(string code)
         {
@@ -124,9 +145,31 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             throw new NotImplementedException();
         }
 
-        public Task UpdateBankAsync(UpdateBankServiceModel updateBankServiceModel)
+        public async Task UpdateBankAsync(UpdateBankServiceModel updateBankServiceModel)
         {
-            throw new NotImplementedException();
+            var bankDbModel = await _apparelProDbContext.Banks
+             .Where(bank => bank.BankCode == updateBankServiceModel.BankCode)
+             .FirstOrDefaultAsync();
+
+            bankDbModel!.Name = updateBankServiceModel.Name;
+            bankDbModel.CurrencyCode = updateBankServiceModel.CurrencyCode;
+            bankDbModel.AddressId = updateBankServiceModel.AddressId;            
+            bankDbModel.LoanLimit = updateBankServiceModel.LoanLimit;
+            bankDbModel.SwiftCode = updateBankServiceModel.SwiftCode;
+            bankDbModel.TelephoneNos = updateBankServiceModel.TelephoneNos;
+            
+            await _apparelProDbContext.SaveChangesAsync();
+        }
+
+        public async Task<BankServiceModel> GetBankByBankCodeAsync(string code)
+        {
+            IQueryable<Bank> banks = _apparelProDbContext.Banks;
+            var bankDbModel = await banks.Where(Bank => Bank.BankCode == code)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+           
+            var bankServiceModel = _mapper.Map<BankServiceModel>(bankDbModel);
+            return bankServiceModel;
         }
     }
 }

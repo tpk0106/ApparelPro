@@ -10,9 +10,9 @@ namespace apparelPro.BusinessLogic.Services
 
         Task<IEnumerable<GarmentTypeServiceModel>> GetGarmentTypesByPageNumberAsync(int pageNumber, int pageSize);
 
-        Task<IEnumerable<GarmentTypeServiceModel>> FilterGarmentTypeByCodeAsync(string filter, int pageNumber, int pageSize);
+        //Task<IEnumerable<GarmentTypeServiceModel>> FilterGarmentTypeByIdeAsync(string filter, int pageNumber, int pageSize);
         Task<GarmentTypeServiceModel> GetGarmentTypeByIdAsync(int id);
-        Task<GarmentTypeServiceModel> AddGarmentTypeAsync(CreateGarmentTypeServiceModel createGarmentTypeServiceModel);
+        Task<GarmentTypeServiceModel> CreateGarmentTypeAsync(CreateGarmentTypeServiceModel createGarmentTypeServiceModel);
         Task UpdateGarmentTypeAsync(UpdateGarmentTypeServiceModel updateGarmentTypeServiceModel);
         Task DeleteGarmentTypeAsync(string code);
     }

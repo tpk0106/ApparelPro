@@ -91,14 +91,14 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             
             var filteredCurrencyAndCountryJoined = filteredDbCurrencies.Join(_apparelProDbContext.Countries,
                    currency => currency.CountryCode,
-                   country => country.Code,
-                   (currency, country) => new { currency, country })
+                   Country => Country.Code,
+                   (currency, Country) => new { currency, Country })
                 .Select(r => new CurrencyServiceModel()
                 {
                     Code = r.currency.Code,
                     Name = r.currency.Name,
                     CountryCode = r.currency.CountryCode!,
-                    Country = r.country,
+                    Country = r.Country,
                     Id = r.currency.Id,
                     Minor = r.currency.Minor,
                     CurrencyDetails = r.currency.CurrencyDetails
@@ -115,8 +115,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             var currencyDbModels = await _apparelProDbContext.Currencies
                .Join(_apparelProDbContext.Countries,
                    currency => currency.CountryCode,
-                   country => country.Code,
-                   (currency, country) => new { currency, country })
+                   Country => Country.Code,
+                   (currency, Country) => new { currency, Country })
                .AsNoTracking()
                .ToListAsync();
             var results = currencyDbModels.Select(r => new CurrencyServiceModel()
@@ -124,7 +124,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
                 Code = r.currency.Code,
                 Name = r.currency.Name,
                 CountryCode = r.currency.CountryCode,
-                Country = r.country,
+                Country = r.Country,
                 Id = r.currency.Id,
                 Minor = r.currency.Minor,
                 CurrencyDetails = r.currency.CurrencyDetails
@@ -140,8 +140,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             //var currencyDbModel = await _apparelProDbContext.Currencies
             //    .Join(_apparelProDbContext.Countries,
             //        currency => currency.CountryCode,                 
-            //        country => country.Code,
-            //        (currency, country) => new { currency, country })
+            //        Country => Country.Code,
+            //        (currency, Country) => new { currency, Country })
             //    .Where(currency => currency.currency.Code == code)
             //    .AsNoTracking()
             //    .FirstOrDefaultAsync();
@@ -150,7 +150,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             //{
             //    Code = currencyDbModel!.currency.Code,
             //    Name = currencyDbModel!.currency.Name,
-            //    Country = currencyDbModel!.country,
+            //    Country = currencyDbModel!.Country,
             //    Id = currencyDbModel!.currency.Id,
             //    Minor = currencyDbModel!.currency.Minor,
             //    CurrencyDetails = currencyDbModel!.currency.CurrencyDetails

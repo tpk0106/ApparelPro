@@ -10,6 +10,7 @@ namespace ApparelPro.Data.Configurations.References
         public void Configure(EntityTypeBuilder<Buyer> entity)
         {
             entity.HasKey(k => k.BuyerCode);
+
             entity.Property(k => k.BuyerCode)
                 .IsRequired()
                 .HasColumnType("int")
@@ -17,9 +18,9 @@ namespace ApparelPro.Data.Configurations.References
 
             entity.Property(p => p.AddressId)
                  .IsRequired(false)
-                // .ValueGeneratedOnAdd()
-                // .HasValueGenerator<ApparelProAddressIdValueGenerator>()
-                .HasColumnType("uniqueidentifier");
+                 .HasColumnType("uniqueidentifier");
+            // .ValueGeneratedOnAdd()
+            // .HasValueGenerator<ApparelProAddressIdValueGenerator>()
 
             //   entity.Property(p=>p.AddressId).UseIdentityColumn();
             //.HasColumnType("char(36)")
@@ -40,13 +41,12 @@ namespace ApparelPro.Data.Configurations.References
 
             // this changes done by thusith on 23 sep 2024 in order to remove buyer navigation property on the otherside (address)
             // no meaning to have buyer at address side. 
-            entity
-                .HasMany(p => p.Addresses)
-                .WithOne()
-                .HasForeignKey(b => b.AddressId)
-                .HasPrincipalKey(k => k.AddressId)
-                .OnDelete(DeleteBehavior.Cascade);
-
+            //entity
+            //    .HasMany(p => p.Addresses)
+            //    .WithOne()
+            //    .HasForeignKey(b => b.AddressId)
+            //    .HasPrincipalKey(k => k.AddressId)
+            //    .OnDelete(DeleteBehavior.Cascade);
 
             entity.Property(p => p.Status)
                .HasMaxLength(2)
@@ -77,6 +77,8 @@ namespace ApparelPro.Data.Configurations.References
              .HasMaxLength(11)
              .IsRequired(false)
              .HasColumnType("nvarchar");
+
+            entity.HasIndex(p => p.BuyerCode);
         }
     }
 }

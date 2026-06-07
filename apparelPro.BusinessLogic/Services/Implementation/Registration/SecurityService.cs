@@ -2,7 +2,7 @@
 using apparelPro.BusinessLogic.Services.Models.Registration.IUserService;
 using ApparelPro.Data;
 using ApparelPro.Data.Models.Registration;
-using ApparelPro.Shared.LookupConstants.ApparelProContext;
+
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -61,7 +61,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
                 Issuer = JwtSettingsConfig.Issuer,                
                 Audience = JwtSettingsConfig.Audience,                                
                 Subject = new ClaimsIdentity(await GetClaimsAsync(user)),
-                SigningCredentials = credentials,                
+                SigningCredentials = credentials, 
+                NotBefore = DateTime.Now,               
                 Expires = DateTime.Now.AddMinutes(Convert.ToDouble(JwtSettingsConfig.WillExpireInMinutes)),
             };
             var tokenHandler = new JwtSecurityTokenHandler();

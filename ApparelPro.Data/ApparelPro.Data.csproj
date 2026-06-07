@@ -19,4 +19,8 @@
     <ProjectReference Include="..\ApparelPro.Shared\ApparelPro.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\UserIdentityDb\" />
+  </ItemGroup>
+
 </Project>
