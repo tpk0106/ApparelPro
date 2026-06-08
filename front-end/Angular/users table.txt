@@ -1,7 +1,0 @@
-
-  select a.KnownAs,a.Email,  r.Name from AspNetUsers a 
-  join AspNetUserRoles u 
-  on a.Id = u.UserId
-  join AspNetRoles r 
-  on u.RoleId = r.Id
-  order by a.KnownAs

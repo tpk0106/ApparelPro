@@ -35,15 +35,15 @@ dotnet tool install --global dotnet-sql-cache --version 8.0.8
 
 connection string as follow
 
-Data Source=ThusithPC\SQLExpress;Initial Catalog=ApparelPro;User Id=thusith;Password=Ayesha1966;Trusted_Connection=false;TrustServerCertificate=True
+Data Source=ThusithPC\SQLExpress;Initial Catalog=ApparelPro;User Id=thusith;Password=Ayesha****;Trusted_Connection=false;TrustServerCertificate=True
 
 command to execute in CLI
-dotnet sql-cache create "Data Source=ThusithPC\SQLExpress;Initial Catalog=ApparelPro;User Id=thusith;Password=Ayesha1966;Trusted_Connection=false;TrustServerCertificate=True" dbo AppCache
+dotnet sql-cache create "Data Source=ThusithPC\SQLExpress;Initial Catalog=ApparelPro;User Id=thusith;Password=Ayesha****;Trusted_Connection=false;TrustServerCertificate=True" dbo AppCache
 
 for ApparelPro
 
 command to execute in CLI
-dotnet sql-cache create "Data Source=ThusithPC\SQLExpress;Initial Catalog=ApparelPro;User Id=thusith;Password=Ayesha1966;Trusted_Connection=false;TrustServerCertificate=True" dbo AppCache
+dotnet sql-cache create "Data Source=ThusithPC\SQLExpress;Initial Catalog=ApparelPro;User Id=thusith;Password=Ayesha****;Trusted_Connection=false;TrustServerCertificate=True" dbo AppCache
 
 
 Migrations
