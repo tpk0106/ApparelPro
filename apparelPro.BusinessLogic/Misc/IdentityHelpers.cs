@@ -22,7 +22,8 @@ namespace apparelPro.BusinessLogic.Misc
             //var sc = entityType.GetSchema();
             var value = enable ? "ON" : "OFF";
          
-            await context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT {tablenameWithSchema} {value}");            
+            //await context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT {tablenameWithSchema} {value}");
+            await context.Database.ExecuteSqlAsync($"SET IDENTITY_INSERT {tablenameWithSchema} {value}");
         }
 
         public static async Task SaveChangesWithIdentityInsertAsync<T>(this DbContext context)
