@@ -1,5 +1,6 @@
 ﻿using apparelPro.BusinessLogic.Extensions;
 using apparelPro.BusinessLogic.Misc;
+using apparelPro.BusinessLogic.Services.Models.Shared.IAddressService;
 using ApparelPro.Data;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Shared.Extensions;
@@ -226,6 +227,71 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Shared
                 .FirstOrDefault();
             _apparelProDbContext.Addresses.Remove(buyerAddress!);
             await _apparelProDbContext.SaveChangesAsync();
+        }
+
+        public async Task<PaginationResult<AddressServiceModel>> GetAddressesByBuyerCodeAsync(int buyerCode, int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery)
+        {
+            var addressPagination = _apparelProDbContext.Addresses
+               .Where(address => address.BuyerCode == buyerCode)
+               .AsNoTracking()
+               .AsQueryable();
+
+            FilterResult fr = new();
+            fr.searchPattern = "{0}.Contains(@0)";
+            fr.FilterColumn = filterColumn;
+            fr.FilterQuery = filterQuery;
+            if (filterColumn != null && filterQuery != null)
+            {
+                fr = InputValidator.Validate(filterColumn!, filterQuery!, typeof(Address));
+                addressPagination = addressPagination.Where(string.Format(fr.searchPattern!, fr.FilterColumn), fr.FilterQuery);
+            }
+
+            int counter = 0;
+            counter = await addressPagination.CountAsync();
+
+            if (sortColumn != null)
+            {
+                sortOrder = !string.IsNullOrEmpty(sortOrder) && sortOrder.ToUpper() == "ASC" ? "ASC" : "DESC";
+                addressPagination = addressPagination.OrderBy(string.Format("{0} {1}", sortColumn, sortOrder));
+            }
+
+            var filteredDbAddresses = await addressPagination.ToListAsync();
+            var addressServiceModels = _mapper.Map<IList<AddressServiceModel>>(filteredDbAddresses);
+
+            return new PaginationResult<AddressServiceModel>(pageSize, pageNumber, counter, addressServiceModels,
+                sortColumn, sortOrder, filterColumn, filterQuery);
+        }
+
+        public async Task UpdateDefaultAddressAsync(UpdateAddressServiceModel updateAddressServiceModel)
+        {
+            var buyerCode = updateAddressServiceModel.BuyerCode;
+            var addressId = updateAddressServiceModel.AddressId;
+
+            var addressDbModel = _mapper.Map<Address>(updateAddressServiceModel);            
+            _apparelProDbContext.Addresses.Update(addressDbModel);           
+
+            // all addresses for thus buyerCode except passed address's addressId
+            await _apparelProDbContext.Addresses
+                .Where(address => address.AddressId != addressId && address.BuyerCode == buyerCode)
+                .ExecuteUpdateAsync(p => p.SetProperty(p => p.Default, false));
+
+            await _apparelProDbContext.SaveChangesAsync();
+        }
+
+        public async Task<AddressServiceModel> GetAddressByBuyerCodeAndAddresIdAsync(int buyerCode, Guid addressId)
+        {           
+            try
+            {
+                var addressDbModel = _apparelProDbContext.Addresses
+                .Where(address => address.BuyerCode == buyerCode && address.AddressId == addressId)
+                .FirstOrDefaultAsync();
+
+                return _mapper.Map<AddressServiceModel>(addressDbModel);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Address could not found for buyer code " + buyerCode);
+            }
         }
     }
 }

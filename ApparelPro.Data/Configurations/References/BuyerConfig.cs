@@ -1,5 +1,5 @@
 ﻿using ApparelPro.Data.Models.References;
-using ApparelPro.Data.ValueGenerators;
+//using ApparelPro.Data.ValueGenerators;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -16,9 +16,18 @@ namespace ApparelPro.Data.Configurations.References
                 .HasColumnType("int")
                 .UseIdentityColumn();
 
-            entity.Property(p => p.AddressId)
-                 .IsRequired(false)
-                 .HasColumnType("uniqueidentifier");
+            // 🚀 Configure the One-to-Many Relationship
+            entity.HasMany(b => b.Addresses)      // Buyer has Many Addresses
+                  .WithOne()                       // Address points back to one implicit parent
+                  .HasForeignKey(a => a.BuyerCode)  // Enforces BuyerCode as the lookup key on the Address table
+                  .HasPrincipalKey(b => b.BuyerCode)
+                  .OnDelete(DeleteBehavior.Cascade); // If a buyer is deleted, automatically delete its 3 addresses!
+
+
+            //entity.Property(p => p.AddressId)
+            //     .IsRequired(false)
+            //     .HasColumnType("uniqueidentifier");
+
             // .ValueGeneratedOnAdd()
             // .HasValueGenerator<ApparelProAddressIdValueGenerator>()
 

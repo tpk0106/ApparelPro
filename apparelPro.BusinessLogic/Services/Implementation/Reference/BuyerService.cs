@@ -1,5 +1,6 @@
 ﻿using apparelPro.BusinessLogic.Extensions;
 using apparelPro.BusinessLogic.Misc;
+using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBuyerService;
 using ApparelPro.Data;
 using ApparelPro.Data.Models.References;
@@ -75,8 +76,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
              .AsNoTracking()            
              .Select(r => new Buyer
              {
-                 BuyerCode = r.BuyerCode,
-                 AddressId = r.AddressId,
+                 BuyerCode = r.BuyerCode,                 
                  CUSDEC = r.CUSDEC,
                  Fax = r.Fax,
                  MobileNos = r.MobileNos,
@@ -85,7 +85,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
                  TelephoneNos = r.TelephoneNos,               
                  //Addresses = _apparelProDbContext!.Addresses.Where(a =>a.AddressId == r.AddressId).ToList(),               
                  Addresses = addressesWithCountries
-                    .Where(a =>a.address.AddressId == r.AddressId)
+                    .Where(a =>a.address.BuyerCode == r.BuyerCode)
                     .Select(JoinedAddressCountry => new Address{ 
                         Id = JoinedAddressCountry.address.Id,
                         AddressId = JoinedAddressCountry.address.AddressId, 
@@ -203,8 +203,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             var buyerPagination = _apparelProDbContext.Buyers
              .AsNoTracking()
              .GroupJoin(_apparelProDbContext.Addresses,
-                 buyer => buyer.AddressId,
-                 address => address.AddressId,
+                 buyer => buyer.BuyerCode,
+                 address => address.BuyerCode,
                  (buyer, address) => new { buyer, address })
              .SelectMany(x => x.address.DefaultIfEmpty(),
                 (buyer, address) => new { buyer, address })
@@ -224,8 +224,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
                 // .GroupBy(g=> new { g.buyer, g.address })
                 .Select(r => new Buyer
                 {
-                    BuyerCode = r.buyer.buyer.BuyerCode,
-                    AddressId = r.buyer.buyer.AddressId,
+                    BuyerCode = r.buyer.buyer.BuyerCode,                    
                     CUSDEC = r.buyer.buyer.CUSDEC,
                     Fax = r.buyer.buyer.Fax,
                     MobileNos = r.buyer.buyer.MobileNos,
@@ -243,8 +242,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
 
             buyers = buyerPagination2.Select(r => new Buyer
             {
-                BuyerCode = r.BuyerCode,
-                AddressId = r.AddressId,
+                BuyerCode = r.BuyerCode,               
                 CUSDEC = r.CUSDEC,
                 Fax = r.Fax,
                 MobileNos = r.MobileNos,
@@ -271,13 +269,33 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
 
         public async Task<BuyerServiceModel> AddBuyerAsync(CreateBuyerServiceModel createBuyerServiceModel)
         {
-            var addressId = Guid.NewGuid();
-           createBuyerServiceModel.AddressId = addressId.ToString();
-           //get addressid from addresses 
+            // 1. AutoMapper converts DTO into our strong relational Database Entity
+            // This implicitly maps the collection arrays and applies the Guid generator rules
             var buyerDbModel = _mapper.Map<Buyer>(createBuyerServiceModel);
+
+            // 2. Explicitly bind the parent lookup reference token to each child address row
+            if (buyerDbModel.Addresses != null && buyerDbModel.Addresses.Any())
+            {
+                foreach (var address in buyerDbModel.Addresses)
+                {
+                    address.BuyerCode = buyerDbModel.BuyerCode; // Enforces the database relational glue
+                    address.Default = address.Default; // Preserves primary branch boolean flags
+                }
+            }
+
+            // 3. Track the parent container. EF handles the nested inserts out of the box!
             _apparelProDbContext.Buyers.Add(buyerDbModel);
+
+            // 4. Fire a single atomic SaveChanges call to commit everything to SQL Server
             await _apparelProDbContext.SaveChangesAsync();
+
+            // 5. Return the newly created relational graph schema
             return _mapper.Map<BuyerServiceModel>(buyerDbModel);
+            //var addressId = Guid.NewGuid();         
+            //var buyerDbModel = _mapper.Map<Buyer>(createBuyerServiceModel);
+            //_apparelProDbContext.Buyers.Add(buyerDbModel);
+            //await _apparelProDbContext.SaveChangesAsync();
+            //return _mapper.Map<BuyerServiceModel>(buyerDbModel);
         }
 
         public async Task DeleteBuyerAsync(int buyerCode)

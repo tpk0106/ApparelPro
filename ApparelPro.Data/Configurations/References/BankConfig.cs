@@ -12,6 +12,13 @@ namespace ApparelPro.Data.Configurations.References
             entity.Property(p => p.BankCode).ValueGeneratedNever();
             entity.Property(p => p.Id).UseIdentityColumn();
 
+            // 🚀 Configure the One-to-Many Relationship
+            entity.HasMany(b => b.Addresses)      // Bank has Many Addresses
+                  .WithOne()                       // Address points back to one implicit parent
+                  .HasForeignKey(a => a.BankCode)  // Enforces BankCode as the lookup key on the Address table
+                  .HasPrincipalKey(b => b.BankCode)
+                  .OnDelete(DeleteBehavior.Cascade); // If a bank is deleted, automatically delete its 3 addresses!
+
             entity.Property(p => p.Name)
                 .HasMaxLength(100)
                 .IsRequired()
@@ -20,29 +27,21 @@ namespace ApparelPro.Data.Configurations.References
             entity.Property(p => p.BankCode)
                 .IsRequired()
                 .HasMaxLength(3)
-                .HasColumnType("nvarchar");
-
-            //entity.Property(p => p.AddressId)              
-            //   .HasColumnType("int");
-
-            // entity.HasMany(e=>e.Addresses);
+                .HasColumnType("nvarchar");      
 
             entity.Property(p => p.CurrencyCode)
                .IsRequired()
                .HasMaxLength(3)
                .HasColumnType("nvarchar");
-            entity.Property(p => p.LoanLimit)
-               //  .IsRequired()
-               // .HasMaxLength(3)
+            entity.Property(p => p.LoanLimit)              
                .HasColumnType("money");
 
             entity.Property(p => p.SwiftCode)
-               //  .IsRequired()
-               .HasMaxLength(3)
+               .IsRequired()
+               .HasMaxLength(11)
                .HasColumnType("nvarchar");
 
-            entity.Property(p => p.TelephoneNos)
-               // .IsRequired()
+            entity.Property(p => p.TelephoneNos)               
                .HasMaxLength(50)
                .HasColumnType("nvarchar");
         }

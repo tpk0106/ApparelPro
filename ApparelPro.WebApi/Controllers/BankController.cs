@@ -12,7 +12,8 @@ namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/bank")]
     [ApiController]
-   // [Authorize("RegisteredUser")]
+    // [Authorize("RegisteredUser")]
+    [Authorize(Roles = "Merchandiser, Merchandiser Manager")]
     public class BankController : ControllerBase
     {
         private readonly IBankService _bankService;
@@ -45,7 +46,7 @@ namespace ApparelPro.WebApi.Controllers
 
 
         [HttpPost()]
-        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        //[Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
         [ProducesResponseType(HttpStatusCodes.Created)]
         [SwaggerOperation(Tags = new[] { "Bank Endpoints" },
            Summary = "Add a Bank.",

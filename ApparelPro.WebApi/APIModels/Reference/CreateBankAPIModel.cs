@@ -1,4 +1,6 @@
-﻿namespace ApparelPro.WebApi.APIModels.Reference
+﻿using ApparelPro.Data.Models.References;
+
+namespace ApparelPro.WebApi.APIModels.Reference
 {
     public class CreateBankAPIModel
     {
@@ -7,8 +9,8 @@
         public string BankCode { get; set; }
         public string? SwiftCode { get; set; }
         public string? TelephoneNos { get; set; }
-        public string CurrencyCode { get; set; }
-        public int? AddressId { get; set; }
+        public string CurrencyCode { get; set; }        
         public decimal LoanLimit { get; set; }
+        public ICollection<Address> Addresses { get; set; } = new List<Address>();
     }
 }

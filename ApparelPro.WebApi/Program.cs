@@ -8,12 +8,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.MSSqlServer;
 using System.Text.Json;
 using static ApparelPro.WebApi.Misc.ByteArrayConverter;
+using Microsoft.OpenApi;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,7 +60,28 @@ ServiceExtensions.ConfgureAppsettings(builder.Services, builder.Configuration);
 //ref : https://www.josephguadagno.net/2020/07/01/no-route-matches-the-supplied-values
 ServiceExtensions.UpdateMvcOptions(builder.Services);
 
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+// This handles all AutoMapper v15/v16 assemblies concurrently without breaking
+builder.Services.AddAutoMapper(cfg =>
+{
+    // Scans every profile class within the current execution space
+    cfg.AddMaps(AppDomain.CurrentDomain.GetAssemblies());
+});
+
+// Register your open generic type converter so DI can instantiate it
+//builder.Services.AddTransient(typeof(PaginationResultToPaginationAPITypeConverter<,>));
+
+//builder.Services.AddAutoMapper(cfg =>
+//{
+//    // Scans the assembly containing DatabaseToServiceMappings
+//    cfg.RegisterServicesFromAssembly(typeof(apparelPro.BusinessLogic.Services.Mappings.DatabaseToServiceMappings).Assembly);
+
+//    // Scans the assembly containing ServicetoAPIModelMappings
+//    cfg.RegisterServicesFromAssembly(typeof(ApparelPro.WebApi.Mappings.ServicetoAPIModelMappings).Assembly);
+//});
+
+
+//IServiceCollection serviceCollection = builder.Services.AddAutoMapper(AppDcd omain.CurrentDomain.GetAssemblies());
+
 //builder.Services.AddScoped<ValidationFilterAttribute, ValidationFilterAttribute>();
 
 // authorization
@@ -150,7 +173,8 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
 {
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+    // 1. Define the security scheme natively
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
         Description = "Please enter token to login to ApparelPro",
@@ -160,21 +184,57 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer"
     });
 
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    // 2. Map the requirement using the dedicated .NET 10 OpenApiSecuritySchemeReference class
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
     {
-        {
-            new OpenApiSecurityScheme()
-            {
-                Reference = new OpenApiReference()
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id="Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
+        [new OpenApiSecuritySchemeReference("Bearer", document)] = []
     });
 });
+
+
+//builder.Services.AddSwaggerGen(options =>
+//{
+//    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+//    {
+//        In = ParameterLocation.Header,
+//        Description = "Please enter token to login to ApparelPro",
+//        Name = "Authorization",
+//        Type = SecuritySchemeType.Http,
+//        BearerFormat = "JWT",
+//        Scheme = "bearer"
+//    });
+
+//    // 2. Updated .NET 10 syntax separating the scheme and reference initialization
+//    var securityScheme = new OpenApiSecurityScheme
+//    {
+//        Reference = new OpenApiReference()
+//        {
+//            Type = ReferenceType.SecurityScheme,
+//            Id = "Bearer"
+//        }
+//    };
+
+//    options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+//    {
+//        { securityScheme, Array.Empty<string>() }
+//    });
+
+//    //options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+//    //{
+//    //    {
+//    //        new OpenApiSecurityScheme()
+//    //        {
+
+//    //            Reference = new BaseOpenApiReference()
+//    //            {
+//    //                Type = ReferenceType.SecurityScheme,
+//    //                Id="Bearer"
+//    //            }
+//    //        },
+//    //        Array.Empty<string>()
+//    //    }
+//    //});
+//});
 
 
 // add response caching middleware for server side caching
@@ -256,7 +316,6 @@ app.UseAuthentication(); // Ensure this is present if using JWT!
 
 app.UseAuthorization();
 
-
 app.MapControllers();
 
 // Temporary startup script to auto-generate the missing database file
@@ -269,6 +328,4 @@ app.MapControllers();
 //    await identityContext.Database.EnsureCreatedAsync();
 //    await apparelContext.Database.EnsureCreatedAsync();
 //}
-
-
 app.Run();

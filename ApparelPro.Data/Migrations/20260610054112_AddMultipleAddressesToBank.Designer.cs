@@ -4,6 +4,7 @@ using ApparelPro.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ApparelPro.Data.Migrations
 {
     [DbContext(typeof(ApparelProDbContext))]
-    partial class ApparelProDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260610054112_AddMultipleAddressesToBank")]
+    partial class AddMultipleAddressesToBank
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -149,9 +152,6 @@ namespace ApparelPro.Data.Migrations
                     b.Property<string>("BankCode")
                         .HasColumnType("nvarchar(3)");
 
-                    b.Property<int?>("BuyerCode")
-                        .HasColumnType("int");
-
                     b.Property<string>("City")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar");
@@ -180,8 +180,6 @@ namespace ApparelPro.Data.Migrations
                     b.HasIndex("AddressId");
 
                     b.HasIndex("BankCode");
-
-                    b.HasIndex("BuyerCode");
 
                     b.ToTable("Addresses", (string)null);
                 });
@@ -212,8 +210,7 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("nvarchar");
 
                     b.Property<string>("SwiftCode")
-                        .IsRequired()
-                        .HasMaxLength(11)
+                        .HasMaxLength(3)
                         .HasColumnType("nvarchar");
 
                     b.Property<string>("TelephoneNos")
@@ -260,6 +257,9 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BuyerCode"));
+
+                    b.Property<Guid?>("AddressId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CUSDEC")
                         .HasMaxLength(11)
@@ -716,11 +716,6 @@ namespace ApparelPro.Data.Migrations
                         .WithMany("Addresses")
                         .HasForeignKey("BankCode")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("ApparelPro.Data.Models.References.Buyer", null)
-                        .WithMany("Addresses")
-                        .HasForeignKey("BuyerCode")
-                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.StockItem", b =>
@@ -735,11 +730,6 @@ namespace ApparelPro.Data.Migrations
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Bank", b =>
-                {
-                    b.Navigation("Addresses");
-                });
-
-            modelBuilder.Entity("ApparelPro.Data.Models.References.Buyer", b =>
                 {
                     b.Navigation("Addresses");
                 });

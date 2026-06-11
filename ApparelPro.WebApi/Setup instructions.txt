@@ -54,3 +54,5 @@ Remove-Migration -Context ApparelProDbContext -Project ApparelPro.Data -StartupP
 
 // Update
 Update-Database -Context UserIdentityDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi
+
+Add-Migration AddMultipleAddressesToBank -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi

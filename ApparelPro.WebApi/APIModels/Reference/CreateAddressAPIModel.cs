@@ -14,11 +14,9 @@ namespace ApparelPro.WebApi.APIModels.Reference
         public int? PostCode { get; set; }
         public string? State { get; set; }
         public string? CountryCode { get; set; }
-        //[NotMapped]
-        //public string? Country { get; set; }
+        public string? BuyerCode { get; set; }
+
         [DefaultValue(false)]
-        public bool? Default { get; set; }
-        //[NotMapped]
-        //public int? BuyerCode { get; set; }
+        public bool? Default { get; set; }       
     }
 }

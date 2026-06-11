@@ -30,8 +30,9 @@ namespace ApparelPro.WebApi.Controllers
 
         [HttpGet("list")]
         //  [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
-        [Authorize("Merchandising")] // policy applied
-        
+        //[Authorize("Merchandising")] // policy applied
+        [Authorize(Roles = "Merchandiser,Merchandiser Manager")]
+
         // [Authorize("RegisteredUser")]
         [ProducesResponseType(typeof(PaginationAPIModel<BuyerAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetBuyersAsync(

@@ -73,9 +73,9 @@ namespace apparelPro.BusinessLogic.Services.Mappings
                 .ForMember(src => src.SwiftCode, opt => opt.MapFrom(src => src.SwiftCode))
                 .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
                 .ForMember(src => src.CurrencyCode, opt => opt.MapFrom(src => src.CurrencyCode))
-                .ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.AddressId))
                 .ForMember(src => src.LoanLimit, opt => opt.MapFrom(src => src.LoanLimit))
                 .ForMember(src => src.CurrencyCode, opt => opt.MapFrom(src => src.CurrencyCode))
+                .ForMember(src => src.Addresses, opt => opt.MapFrom(src => src.Addresses))
                 .ReverseMap();
 
             CreateMap<CreateBankServiceModel, Bank>().MaxDepth(2)
@@ -83,9 +83,9 @@ namespace apparelPro.BusinessLogic.Services.Mappings
                .ForMember(src => src.SwiftCode, opt => opt.MapFrom(src => src.SwiftCode))
                .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
                .ForMember(src => src.CurrencyCode, opt => opt.MapFrom(src => src.CurrencyCode))
-               .ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.AddressId))
                .ForMember(src => src.LoanLimit, opt => opt.MapFrom(src => src.LoanLimit))
                .ForMember(src => src.CurrencyCode, opt => opt.MapFrom(src => src.CurrencyCode))
+               .ForMember(src => src.Addresses, opt => opt.MapFrom(src => src.Addresses))
                .ReverseMap();
 
             CreateMap<UpdateBankServiceModel, Bank>().MaxDepth(2)
@@ -93,9 +93,9 @@ namespace apparelPro.BusinessLogic.Services.Mappings
             .ForMember(src => src.SwiftCode, opt => opt.MapFrom(src => src.SwiftCode))
             .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
             .ForMember(src => src.CurrencyCode, opt => opt.MapFrom(src => src.CurrencyCode))
-            .ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.AddressId))
             .ForMember(src => src.LoanLimit, opt => opt.MapFrom(src => src.LoanLimit))
             .ForMember(src => src.CurrencyCode, opt => opt.MapFrom(src => src.CurrencyCode))
+            .ForMember(src => src.Addresses, opt => opt.MapFrom(src => src.Addresses))
             .ReverseMap();
 
             // destination
@@ -107,8 +107,7 @@ namespace apparelPro.BusinessLogic.Services.Mappings
 
             // buyer
             CreateMap<Buyer, BuyerServiceModel>().MaxDepth(2)
-                .ForMember(src => src.BuyerCode, opt => opt.MapFrom(src => src.BuyerCode))
-                .ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.AddressId))
+                .ForMember(src => src.BuyerCode, opt => opt.MapFrom(src => src.BuyerCode))                
                 .ForMember(src => src.Fax, opt => opt.MapFrom(src => src.Fax))
                 .ForMember(src => src.TelephoneNos, opt => opt.MapFrom(src => src.TelephoneNos))
                 .ForMember(src => src.MobileNos, opt => opt.MapFrom(src => src.MobileNos))
@@ -120,14 +119,14 @@ namespace apparelPro.BusinessLogic.Services.Mappings
 
             CreateMap<CreateBuyerServiceModel, Buyer>().MaxDepth(2)
               .ForMember(src => src.BuyerCode, opt => opt.MapFrom(src => src.BuyerCode))
-              .ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.AddressId))
               .ForMember(src => src.Fax, opt => opt.MapFrom(src => src.Fax))
               .ForMember(src => src.TelephoneNos, opt => opt.MapFrom(src => src.TelephoneNos))
               .ForMember(src => src.MobileNos, opt => opt.MapFrom(src => src.MobileNos))
               .ForMember(src => src.Name, opt => opt.MapFrom(src => src.Name))
               .ForMember(src => src.CUSDEC, opt => opt.MapFrom(src => src.CUSDEC))
-              .ReverseMap()
-              .ForAllMembers(opt => opt.Ignore());
+              .ForMember(src => src.Addresses, opt => opt.MapFrom(src => src.Addresses))
+              .ReverseMap();
+              
 
             // Unit
             CreateMap<Unit, UnitServiceModel>().MaxDepth(2)
@@ -145,7 +144,7 @@ namespace apparelPro.BusinessLogic.Services.Mappings
                 .ForAllMembers(opt => opt.Ignore());
 
             // Garment Type
-            CreateMap<CreateGarmentTypeServiceModel, GarmentType>().MaxDepth(2)            
+            CreateMap<CreateGarmentTypeServiceModel, GarmentType>().MaxDepth(2)
             .ForMember(src => src.TypeName, opt => opt.MapFrom(src => src.TypeName));
 
             //CreateMap<GarmentTypeServiceModel, GarmentType>().MaxDepth(2)                
@@ -216,7 +215,10 @@ namespace apparelPro.BusinessLogic.Services.Mappings
                 .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode))
                 .ReverseMap();
 
-            CreateMap<CreateAddressServiceModel, Address>().MaxDepth(2);
+            CreateMap<CreateAddressServiceModel, Address>()
+                .ForMember(dest => dest.AddressId, opt => opt.MapFrom(src => Guid.NewGuid())); // 🚀 Generate new Guid automatically!
+
+            // CreateMap<CreateAddressServiceModel, Address>().MaxDepth(2);
             CreateMap<UpdateAddressServiceModel, Address>().MaxDepth(2);
 
             // Supplier

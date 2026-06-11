@@ -86,10 +86,28 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
 
         public async Task<BankServiceModel> AddBankAsync(CreateBankServiceModel createBankServiceModel)
         {
+            // 1. AutoMapper converts DTO into our strong relational Database Entity
+            // This implicitly maps the collection arrays and applies the Guid generator rules
             var bankDbModel = _mapper.Map<Bank>(createBankServiceModel);
+
+            // 2. Explicitly bind the parent lookup reference token to each child address row
+            if (bankDbModel.Addresses != null && bankDbModel.Addresses.Any())
+            {
+                foreach (var address in bankDbModel.Addresses)
+                {
+                    address.BankCode = bankDbModel.BankCode; // Enforces the database relational glue
+                    address.Default = address.Default; // Preserves primary branch boolean flags
+                }
+            }
+
+            // 3. Track the parent container. EF handles the nested inserts out of the box!
             _apparelProDbContext.Banks.Add(bankDbModel);
+
+            // 4. Fire a single atomic SaveChanges call to commit everything to SQL Server
             await _apparelProDbContext.SaveChangesAsync();
-            return _mapper.Map<BankServiceModel>(bankDbModel);
+
+            // 5. Return the newly created relational graph schema
+            return _mapper.Map<BankServiceModel>(bankDbModel);            
         }
 
         public Task DeleteBankAsync(string code)
@@ -153,7 +171,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
 
             bankDbModel!.Name = updateBankServiceModel.Name;
             bankDbModel.CurrencyCode = updateBankServiceModel.CurrencyCode;
-            bankDbModel.AddressId = updateBankServiceModel.AddressId;            
+            //bankDbModel.AddressId = updateBankServiceModel.AddressId;            
             bankDbModel.LoanLimit = updateBankServiceModel.LoanLimit;
             bankDbModel.SwiftCode = updateBankServiceModel.SwiftCode;
             bankDbModel.TelephoneNos = updateBankServiceModel.TelephoneNos;
@@ -164,7 +182,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
         public async Task<BankServiceModel> GetBankByBankCodeAsync(string code)
         {
             IQueryable<Bank> banks = _apparelProDbContext.Banks;
-            var bankDbModel = await banks.Where(Bank => Bank.BankCode == code)
+            var bankDbModel = await banks.Where(Bank => Bank.BankCode == code).Include(bank=>bank.Addresses)
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
            

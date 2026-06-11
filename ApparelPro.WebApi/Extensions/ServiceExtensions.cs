@@ -10,6 +10,7 @@ using ApparelPro.Shared.LookupConstants;
 using ApparelPro.Shared.LookupConstants.ApparelProContext;
 using ApparelPro.WebApi.Misc;
 using Microsoft.EntityFrameworkCore;
+using static ApparelPro.WebApi.Mappings.ServicetoAPIModelMappings;
 
 namespace ApparelPro.WebApi.Extensions
 {
@@ -21,7 +22,10 @@ namespace ApparelPro.WebApi.Extensions
             services.AddDbContext<ApparelProDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("ApparelProConnection"),
                 action => action.MigrationsAssembly(migrationAssemblyName))
-                                .EnableSensitiveDataLogging(true));
+                                .EnableSensitiveDataLogging(true)
+                                .EnableDetailedErrors() 
+                                //Ensure that sensitive data logging is wrapped in a check so it only activates in the Development environment.
+                                );
             //services.AddDbContextPool<ApparelProDbContext>(options => { options.EnableSensitiveDataLogging(); });
         }
 
@@ -60,6 +64,7 @@ namespace ApparelPro.WebApi.Extensions
             services.AddTransient(typeof(ISupplierService), typeof(SupplierService));
             services.AddTransient(typeof(IPortDestinationService), typeof(PortDestinationService));
             services.AddTransient(typeof(IFeatureService), typeof(FeatureService));
+            services.AddTransient(typeof(PaginationResultToPaginationAPITypeConverter<,>));
           //  services.AddTransient<IUnitServiceT<UnitServiceModel>>(x=> x.GetRequiredService<IUnitServiceT<UnitServiceModel>>());
         }
 
@@ -77,7 +82,6 @@ namespace ApparelPro.WebApi.Extensions
         {
             services.AddMvc(options => options.SuppressAsyncSuffixInActionNames = false);
         }
-
         public static void AddAuthorization(IServiceCollection services, IConfiguration configuration)
         {
             AuthorizationConfig config = new();

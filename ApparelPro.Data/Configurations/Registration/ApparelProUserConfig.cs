@@ -14,9 +14,7 @@ namespace ApparelPro.Data.Configurations.Registration
                 .WithMany()  // Leaves it open if other entities also map to addresses
                 .HasForeignKey(user => user.AddressId)
                 .HasPrincipalKey(user => user.AddressId) // Binds specifically to your Guid property
-                .OnDelete(DeleteBehavior.Cascade);
-
-          
+                .OnDelete(DeleteBehavior.Cascade);          
 
             entity.Property(c => c.DateOfBirth)
                 .HasColumnType("date")

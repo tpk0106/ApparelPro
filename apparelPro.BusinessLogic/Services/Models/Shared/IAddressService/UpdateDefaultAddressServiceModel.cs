@@ -1,14 +1,13 @@
 ﻿using ApparelPro.Data.Models.References;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace apparelPro.BusinessLogic.Services.Implementation.Shared
+namespace apparelPro.BusinessLogic.Services.Models.Shared.IAddressService
 {
-    public class CreateAddressServiceModel
-    {        
+    public class UpdateDefaultAddressServiceModel
+    {
+        public int Id { get; set; }
         public Guid AddressId { get; set; }
         public AddressType? AddressType { get; set; }
         public string? StreetAddress { get; set; }
