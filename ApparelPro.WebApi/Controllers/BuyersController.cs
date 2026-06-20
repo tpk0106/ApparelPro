@@ -56,7 +56,6 @@ namespace ApparelPro.WebApi.Controllers
             var buyerServiceModels = await _buyerService.GetBuyersExAsync();
             var buyers = _mapper.Map<IEnumerable<BuyerAPIModel>>(buyerServiceModels);
             return Ok(buyers);
-
         }
 
         [HttpPost]

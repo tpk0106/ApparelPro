@@ -47,10 +47,10 @@ namespace ApparelPro.WebApi.Extensions
 
         public static void ConfigureApparelProServices(IServiceCollection services)
         {
+            // reference services
             services.AddTransient<ICurrencyService, CurrencyService>();
             services.AddTransient<ILookupConstants, LookupConstants>();
-            services.AddTransient<ICountryService, CountryService>();
-            services.AddTransient<IPurchaseOrderService, PurchaseOrderService>();
+            services.AddTransient<ICountryService, CountryService>();            
             services.AddTransient(typeof(IUnitServiceT<UnitServiceModel>), typeof(UnitServiceT));
             services.AddTransient(typeof(IUnitService), typeof(UnitService));
             services.AddTransient(typeof(IUserService), typeof(UserService));
@@ -64,13 +64,21 @@ namespace ApparelPro.WebApi.Extensions
             services.AddTransient(typeof(ISupplierService), typeof(SupplierService));
             services.AddTransient(typeof(IPortDestinationService), typeof(PortDestinationService));
             services.AddTransient(typeof(IFeatureService), typeof(FeatureService));
+            services.AddTransient(typeof(IUnitConversionService), typeof(UnitConversionService));
+
             services.AddTransient(typeof(PaginationResultToPaginationAPITypeConverter<,>));
-          //  services.AddTransient<IUnitServiceT<UnitServiceModel>>(x=> x.GetRequiredService<IUnitServiceT<UnitServiceModel>>());
+            //  services.AddTransient<IUnitServiceT<UnitServiceModel>>(x=> x.GetRequiredService<IUnitServiceT<UnitServiceModel>>());
         }
 
         public static void ConfigureApparelProOrderManagementServices(IServiceCollection services)
         {
+            // order management srevices
+            services.AddTransient(typeof(IColorSizeBreakdownDetailsService), typeof(ColorSizeBreakdownDetailsService));
+            services.AddTransient<IPurchaseOrderService, PurchaseOrderService>();            
             services.AddTransient(typeof(IStyleDetailsService),typeof(StyleDetailsService));
+
+            // material consumption
+            services.AddTransient(typeof (IMaterialConsumptionService),typeof(MaterialConsumptionService));
         }
 
         public static void ConfgureAppsettings(IServiceCollection services, IConfiguration configuration)

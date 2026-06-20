@@ -1,4 +1,6 @@
 ﻿using apparelPro.BusinessLogic.Services.Implementation.Shared;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IColorSizeDetailsService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialConsumptionService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPurchaseOrderService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
@@ -11,8 +13,10 @@ using apparelPro.BusinessLogic.Services.Models.Reference.IFeatureService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IGarmentTypeService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IPortDestinationService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ISupplierService;
+using apparelPro.BusinessLogic.Services.Models.Reference.IUnitConversionService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitService;
 using apparelPro.BusinessLogic.Services.Models.Registration.IUserService;
+using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Data.Models.Registration;
 using ApparelPro.Shared.Extensions;
@@ -113,6 +117,20 @@ namespace ApparelPro.WebApi.Mappings
                 .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
                 .ReverseMap();
 
+            // unit conversion
+            CreateMap<CreateUnitConversionAPIModel, UnitConversionServiceModel>().MaxDepth(2)
+                .ForMember(src => src.FromUnit, opt => opt.MapFrom(src => src.FromUnit))
+                .ForMember(src => src.ToUnit, opt => opt.MapFrom(src => src.ToUnit))
+                .ForMember(src => src.Measure, opt => opt.MapFrom(src => src.Measure))
+                .MaxDepth(2);
+
+            CreateMap<UnitConversionServiceModel,UnitConversionAPIModel>().MaxDepth(2)
+                .ForMember(src => src.FromUnit, opt => opt.MapFrom(src => src.FromUnit))
+                .ForMember(src => src.ToUnit, opt => opt.MapFrom(src => src.ToUnit))
+                .ForMember(src => src.Measure, opt => opt.MapFrom(src => src.Measure))
+                .MaxDepth(2);
+
+
             // bank
 
             // 1. Map individual address entry structures
@@ -150,16 +168,22 @@ namespace ApparelPro.WebApi.Mappings
               .ForMember(src => src.SwiftCode, opt => opt.MapFrom(src => src.SwiftCode))
               .ForMember(src => src.CurrencyCode, opt => opt.MapFrom(src => src.CurrencyCode))
               .ForMember(src => src.Addresses, opt => opt.MapFrom(src => src.Addresses));
-             // .ReverseMap();
+            // .ReverseMap();
 
-            
+
 
             // basis
+
+            CreateMap<UpdateBasisServiceModel, BasisAPIModel>().MaxDepth(2);
             CreateMap<BasisServiceModel, BasisAPIModel>().MaxDepth(2)
                 .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
                 .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description))
                 .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
                 .ReverseMap();
+
+            CreateMap<CreateBasisServiceModel, CreateBasisAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<BasisServiceModel, CreateBasisAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<UpdateBasisAPIModel, UpdateBasisServiceModel>().MaxDepth(2);
 
             // destination
             CreateMap<PortDestinationAPIModel, PortDestinationServiceModel>().MaxDepth(2)
@@ -451,7 +475,26 @@ namespace ApparelPro.WebApi.Mappings
              .ReverseMap();
 
             //style
-            CreateMap<StyleDetailsServiceModel, StyleAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<StyleDetailsServiceModel, StyleAPIModel>().MaxDepth(2)
+                .ForMember(src => src.BuyerCode, opt => opt.MapFrom(src => src.BuyerCode))
+                .ForMember(src => src.Order, opt => opt.MapFrom(src => src.Order))
+                .ForMember(src => src.TypeCode, opt => opt.MapFrom(src => src.TypeCode))
+                .ForMember(src => src.StyleCode, opt => opt.MapFrom(src => src.StyleCode))
+                .ForMember(src => src.Quantity, opt => opt.MapFrom(src => src.Quantity))
+                .ForMember(src => src.Unit, opt => opt.MapFrom(src => src.Unit))
+                .ForMember(src => src.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice))
+                .ForMember(src => src.OrderDate, opt => opt.MapFrom(src => DateTime.Now));
+
+            CreateMap<StyleDetailsServiceModel, StyleDetailsAPIModel>().MaxDepth(2)
+               .ForMember(src => src.BuyerCode, opt => opt.MapFrom(src => src.BuyerCode))
+               .ForMember(src => src.Order, opt => opt.MapFrom(src => src.Order))
+               .ForMember(src => src.TypeCode, opt => opt.MapFrom(src => src.TypeCode))
+               .ForMember(src => src.StyleCode, opt => opt.MapFrom(src => src.StyleCode))
+               .ForMember(src => src.Quantity, opt => opt.MapFrom(src => src.Quantity))
+               .ForMember(src => src.Unit, opt => opt.MapFrom(src => src.Unit))
+               .ForMember(src => src.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice))
+               .ForMember(src => src.OrderDate, opt => opt.MapFrom(src => src.OrderDate));
+
             CreateMap<CreateStyleDetailsAPIModel, CreateStyleDetailsServiceModel>().MaxDepth(2)
                 .ForMember(src => src.BuyerCode, opt => opt.MapFrom(src => src.BuyerCode))
                 .ForMember(src => src.Order, opt => opt.MapFrom(src => src.Order))
@@ -460,15 +503,42 @@ namespace ApparelPro.WebApi.Mappings
                 .ForMember(src => src.Quantity, opt => opt.MapFrom(src => src.Quantity))
                 .ForMember(src => src.Unit, opt => opt.MapFrom(src => src.Unit))
                 .ForMember(src => src.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice))
-                .ForMember(src => src.OrderDate, opt => opt.MapFrom(src => DateTime.Now))
-                .ForMember(src => src.ProductionEndDate, opt => opt.MapFrom(src => DateTime.MinValue))
-                .ForMember(src => src.EstimateApprovalDate, opt => opt.MapFrom(src => DateTime.MinValue))
-                .ForMember(src => src.ApprovedDate, opt => opt.MapFrom(src => DateTime.MinValue));
+                .ForMember(src => src.OrderDate, opt => opt.MapFrom(src => DateTime.Now));
+                //.ForMember(src => src.ProductionEndDate, opt => opt.MapFrom(src => DateTime.MinValue))
+                //.ForMember(src => src.EstimateApprovalDate, opt => opt.MapFrom(src => DateTime.MinValue))
+                //.ForMember(src => src.ApprovedDate, opt => opt.MapFrom(src => DateTime.MinValue));
+
+            CreateMap<StyleAPIModel, UpdateStyleDetailsServiceModel>().MaxDepth(2);
 
             CreateMap<UpdateStyleAPIModel, UpdateStyleDetailsServiceModel>().MaxDepth(2);
 
             CreateMap(typeof(PaginationResult<>), typeof(PaginationAPIModel<>)).MaxDepth(2)
                  .ConvertUsing(typeof(PaginationResultToPaginationAPITypeConverter<,>));
+
+        
+            // color/size details
+            CreateMap<CreateColorSizeBreakdownDetailsAPIModel, CreateColorSizeBreakdownDetailsServiceModel>()
+                .MaxDepth(2);
+            CreateMap<ColorSizeBreakdownDetailsServiceModel, ColorSizeBreakdownDetailsAPIModel>()
+                .MaxDepth(2);
+
+            // material consumption
+
+            CreateMap<CreateMaterialConsumptionEntryRequestAPIModel, CreateMaterialConsumptionEntryRequestServiceModel>().MaxDepth(2);
+            CreateMap<OrderItemFeature, OrderItemFeatureServiceModel>().MaxDepth(2);
+            CreateMap<OrderItemFeatureServiceModel, OrderItemFeatureAPIModel>()
+                .ForMember(src => src.ItemCode, opt => opt.MapFrom(src => src.ItemCode))
+                .ForMember(src => src.StockCode, opt => opt.MapFrom(src => src.StockCode))
+                .ForMember(src => src.Feature1, opt => opt.MapFrom(src => src.Feature1Label))
+                .ForMember(src => src.Feature2, opt => opt.MapFrom(src => src.Feature2Label))
+                .ForMember(src => src.Feature3, opt => opt.MapFrom(src => src.Feature3Label))
+                .ForMember(src => src.Feature4, opt => opt.MapFrom(src => src.Feature4Label))
+                .ForMember(src => src.CostPerUnit, opt => opt.MapFrom(src => src.CostPerUnit))
+                .MaxDepth(2);
+
+            CreateMap<StyleDimensionsLookupServiceModel,  StyleDimensionsLookupAPIModel>().MaxDepth(2);
+            CreateMap<SupplierLookupServiceModel, SupplierLookupAPIModel>().MaxDepth(2);
+
         }
 
         public class PaginationResultToPaginationAPITypeConverter<sourceT, destT> : ITypeConverter<PaginationResult<sourceT>, PaginationAPIModel<destT>>

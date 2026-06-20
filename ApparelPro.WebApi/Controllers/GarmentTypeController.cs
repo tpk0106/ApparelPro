@@ -1,6 +1,4 @@
 ﻿using apparelPro.BusinessLogic.Services;
-using apparelPro.BusinessLogic.Services.Implementation.Reference;
-using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IGarmentTypeService;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.Reference;
@@ -42,6 +40,16 @@ namespace ApparelPro.WebApi.Controllers
             return Ok(garmentTypes);
         }
 
+        [HttpGet("list/all")]
+        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]        
+        [ProducesResponseType(typeof(IEnumerable<GarmentTypeAPIModel>), HttpStatusCodes.OK)]
+        public async Task<IActionResult> GetAllGarmentTypeAsync()
+        {
+            var garmentTypeServiceModels = await _garmentTypeService.GetAllGarmentTypeAsync();
+            var garmentTypes = _mapper.Map<IEnumerable<GarmentTypeAPIModel>>(garmentTypeServiceModels);
+            return Ok(garmentTypes);
+        }
+
         [HttpGet("list/{id}", Name = "GetGarmentTypeByIdAsync")]
         [ProducesResponseType(typeof(GarmentTypeAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
@@ -60,7 +68,7 @@ namespace ApparelPro.WebApi.Controllers
         [HttpPut()]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
-        //  [ServiceFilter(typeof(ValidationFilterAttribute))]
+        
         public async Task<IActionResult> UpdateCountryAsync([FromQuery] int id, [FromBody] UpdateGarmentTypeAPIModel
            updateGarmentTypeAPIModel)
         {
@@ -68,7 +76,7 @@ namespace ApparelPro.WebApi.Controllers
             
             if (resultGarmentTypeAPIModel == null)
             {
-                return UnprocessableEntity("Bank is not available for id :" + id);
+                return UnprocessableEntity("GarmentType is not available for id :" + id);
             }
             updateGarmentTypeAPIModel.Id = resultGarmentTypeAPIModel.Id;
             var updateGarmentTypeSeviceModel = _mapper.Map<UpdateGarmentTypeServiceModel>(updateGarmentTypeAPIModel);
@@ -85,7 +93,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(HttpStatusCodes.Created)]
+        [ProducesResponseType(typeof(CreatedResult),  HttpStatusCodes.Created)]
         public async Task<IActionResult> AddGarmentTypeAsync([FromBody] CreateGarmentTypeAPIModel createGarmentTypeAPIModel)
         {
             try

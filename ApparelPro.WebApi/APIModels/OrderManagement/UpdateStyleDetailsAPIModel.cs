@@ -1,6 +1,6 @@
 ﻿namespace ApparelPro.WebApi.APIModels.OrderManagement
 {
-    public class UpdateStyleAPIModel
+    public class UpdateStyleDetailsAPIModel
     {
         public int Id { get; set; }
         public int BuyerCode { get; set; }

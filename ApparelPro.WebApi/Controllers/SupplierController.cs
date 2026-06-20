@@ -149,5 +149,22 @@ namespace ApparelPro.WebApi.Controllers
             await _supplierService.UpdateSupplierAsync(updateSupplierSeviceModel);
             return NoContent();
         }
+
+        [HttpGet("suppliers-lookup")]
+        [ProducesResponseType(typeof(List<SupplierLookupAPIModel>), HttpStatusCodes.OK)]
+        public async Task<IActionResult> GetSuppliersLookup()
+        {
+            try
+            {
+                var data = await _supplierService.GetSuppliersLookupAsync();
+                var supplierLookupAPIModels = _mapper.Map<List<SupplierLookupAPIModel>>(data);
+                return Ok(supplierLookupAPIModels);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to execute supplier repository lookup lookup: {ex.Message}" });
+            }
+        }
+
     }
 }

@@ -53,6 +53,22 @@ Add-Migration RemoveBankCodeFromCurrency -Context ApparelProDbContext -Project A
 Remove-Migration -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi
 
 // Update
-Update-Database -Context UserIdentityDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi
+Update-Database -Context UserIdentityDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi -ErrorAction Ignore
 
 Add-Migration AddMultipleAddressesToBank -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi
+
+if error comes as ErrorAction use this flag below
+
+Add-Migration CreateColorSizeDetailsTable -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi -ErrorAction Ignore
+
+
+
+error when updateing bulk update in colorsizeberakdown details add
+
+solutuon in SSMS
+
+ALTER DATABASE ApparelPro
+SET ALLOW_SNAPSHOT_ISOLATION ON;
+
+ALTER DATABASE ApparelPro
+SET READ_COMMITTED_SNAPSHOT ON WITH ROLLBACK IMMEDIATE;

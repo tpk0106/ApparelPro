@@ -1,12 +1,14 @@
-﻿using ApparelPro.WebApi.APIModels.Reference;
-using ApparelPro.WebApi.APIModels;
-using ApparelPro.WebApi.Misc;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using AutoMapper;
-using apparelPro.BusinessLogic.Services;
-using ApparelPro.WebApi.APIModels.OrderManagement;
+﻿using apparelPro.BusinessLogic.Services;
+using apparelPro.BusinessLogic.Services.Implementation.Reference;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsService;
+using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
+using ApparelPro.WebApi.APIModels;
+using ApparelPro.WebApi.APIModels.OrderManagement;
+using ApparelPro.WebApi.APIModels.Reference;
+using ApparelPro.WebApi.Misc;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ApparelPro.WebApi.Controllers
 {
@@ -23,12 +25,12 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list")]
-        //  [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
-        [Authorize("Merchandising")] // policy applied
+        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        //[Authorize("Merchandising")] // policy applied
         //[Authorize(Roles = "Inventory")]
         // [Authorize("RegisteredUser")]
         [ProducesResponseType(typeof(PaginationAPIModel<StyleAPIModel>), HttpStatusCodes.OK)]
-        public async Task<IActionResult> GetCountriesAsync(
+        public async Task<IActionResult> GetStyleDetailsAsync(
           [FromQuery] int pageSize,
           [FromQuery] int pageNumber,
           [FromQuery] string? sortColumn = null,
@@ -58,11 +60,30 @@ namespace ApparelPro.WebApi.Controllers
                 }, null);
         }
 
-        [HttpPatch()]
+        [HttpPut()]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
-        public async Task<IActionResult> UpdateCountryAsync()
+        public async Task<IActionResult> UpdateStyleDetailsAsync([FromBody] UpdateStyleDetailsAPIModel updateStyleDetailsAPIModel)
         {
+            int buyerCode = updateStyleDetailsAPIModel.BuyerCode;
+            string order = updateStyleDetailsAPIModel.Order;
+            int type = updateStyleDetailsAPIModel.TypeCode;
+            string style = updateStyleDetailsAPIModel.StyleCode;
+
+            var resultStyleAPIModel = _mapper.Map<StyleAPIModel>(
+                await _styleDetailsService.GetStyleDetailsByBuyerOrderTypeStyleAsync(buyerCode, order, type,style));
+            
+            if (resultStyleAPIModel == null)
+            {
+                return UnprocessableEntity("Style is not available for code :" + style);
+            }
+            resultStyleAPIModel.Quantity =updateStyleDetailsAPIModel.Quantity;
+            resultStyleAPIModel.UnitPrice =updateStyleDetailsAPIModel.UnitPrice;
+            resultStyleAPIModel.Unit = updateStyleDetailsAPIModel.Unit;
+
+            var updateStyleDetailsServiceModel = _mapper.Map<UpdateStyleDetailsServiceModel>(resultStyleAPIModel);
+            await _styleDetailsService.UpdateStyleDetailsAsync(updateStyleDetailsServiceModel); 
+            
             return NoContent();
         }
 
@@ -87,7 +108,11 @@ namespace ApparelPro.WebApi.Controllers
         [HttpGet("list/{buyer}/{order}/{type}/{style}", Name = "GetStyleDetailsByBuyerOrderTypeStyleAsync")]
         [ProducesResponseType(typeof(CountryAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
-        public async Task<IActionResult> GetStyleDetailsByBuyerOrderTypeStyleAsync(int buyer, string order, int type, string style)
+        public async Task<IActionResult> GetStyleDetailsByBuyerOrderTypeStyleAsync(
+            [FromRoute]  int buyer,
+            [FromRoute] string order,
+            [FromRoute] int type, 
+            [FromRoute] string style)
         {
             var Bank = await _styleDetailsService.GetStyleDetailsByBuyerOrderTypeStyleAsync(buyer,order,type,style);
             if (Bank == null)
@@ -98,7 +123,24 @@ namespace ApparelPro.WebApi.Controllers
             return Ok(countryAPIModel);
         }
 
-        [HttpPut()]
+        [HttpGet("list/styles/{buyerCode}/{order}/{typeCode}", Name = "GetStyleDetailsByBuyerOrderTypeAsync")]
+        [ProducesResponseType(typeof(IEnumerable<StyleDetailsAPIModel>), HttpStatusCodes.OK)]
+        [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        public async Task<IActionResult> GetStyleDetailsByBuyerOrderTypeAsync(
+           [FromRoute] int buyerCode,
+           [FromRoute] string order,
+           [FromRoute] int typeCode)
+        {
+            var styles = await _styleDetailsService.GetStyleDetailsByBuyerOrderTypeAsync(buyerCode, order, typeCode);
+            if (styles == null)
+            {
+                return UnprocessableEntity("Styles not available for code :" + buyerCode +order);
+            }
+            var styleDetailsAPIModels = _mapper.Map<IEnumerable<StyleDetailsAPIModel>>(styles);
+            return Ok(styles);
+        }
+
+        [HttpPut("/paging")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]        
         public async Task<IActionResult> UpdateStyleDetailsAsync([FromQuery] int buyerCode, string order, int typeCode, string style, [FromBody] UpdateStyleAPIModel
