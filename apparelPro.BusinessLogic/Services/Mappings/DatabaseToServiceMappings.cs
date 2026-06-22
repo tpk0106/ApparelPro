@@ -1,4 +1,7 @@
 ﻿using apparelPro.BusinessLogic.Services.Implementation.Shared;
+
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IColorSizeDetailsService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialConsumptionService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPurchaseOrderService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
@@ -11,11 +14,14 @@ using apparelPro.BusinessLogic.Services.Models.Reference.IFeatureService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IGarmentTypeService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IPortDestinationService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ISupplierService;
+using apparelPro.BusinessLogic.Services.Models.Reference.IUnitConversionService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitService;
 using apparelPro.BusinessLogic.Services.Models.Registration.IUserService;
 using ApparelPro.Data.Models.OrderManagement;
+using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Data.Models.Registration;
+using ApparelPro.WebApi.APIModels.OrderManagement;
 using AutoMapper;
 
 namespace apparelPro.BusinessLogic.Services.Mappings
@@ -143,6 +149,16 @@ namespace apparelPro.BusinessLogic.Services.Mappings
                 .ReverseMap()
                 .ForAllMembers(opt => opt.Ignore());
 
+            // unit conversion
+            CreateMap<UnitConversion, UnitConversionServiceModel>().MaxDepth(2)
+                .ForMember(src => src.FromUnit, opt => opt.MapFrom(src => src.FromUnit))
+                .ForMember(src => src.ToUnit, opt => opt.MapFrom(src => src.ToUnit))
+                .ForMember(src => src.Measure, opt => opt.MapFrom(src => src.Measure))
+                .MaxDepth(2)
+                .ReverseMap()
+                .ForAllMembers(opt => opt.Ignore());
+
+
             // Garment Type
             CreateMap<CreateGarmentTypeServiceModel, GarmentType>().MaxDepth(2)
             .ForMember(src => src.TypeName, opt => opt.MapFrom(src => src.TypeName));
@@ -169,12 +185,10 @@ namespace apparelPro.BusinessLogic.Services.Mappings
 
             // basis
 
-            CreateMap<Basis, BasisServiceModel>().MaxDepth(2)
-                .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
-                .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description))
-                .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
-                .ReverseMap()
-                .ForAllMembers(opt => opt.Ignore());
+            CreateMap<Basis, BasisServiceModel>().MaxDepth(2);
+            CreateMap<CreateBasisServiceModel,Basis>().MaxDepth(2);
+            CreateMap<UpdateBasisServiceModel,Basis>().MaxDepth(2);
+
 
             // PO
             CreateMap<PurchaseOrder, PurchaseOrderServiceModel>().MaxDepth(2)
@@ -362,20 +376,56 @@ namespace apparelPro.BusinessLogic.Services.Mappings
 
             // style
             CreateMap<CreateStyleDetailsServiceModel, Style>().MaxDepth(2)
+                .ForMember(src => src.ApprovedDate, opt => opt.MapFrom(src => DateOnly.FromDateTime(src.ApprovedDate)))
+                .ForMember(src => src.EstimateApprovalDate, opt => opt.MapFrom(src => DateOnly.FromDateTime(src.EstimateApprovalDate)))
+                .ForMember(src => src.ProductionEndDate, opt => opt.MapFrom(src => DateOnly.FromDateTime(src.ProductionEndDate)))
+                .ForMember(src => src.OrderDate, opt => opt.MapFrom(src => DateOnly.FromDateTime(src.OrderDate)))                
                 .ReverseMap();
-            CreateMap<StyleDetailsServiceModel, Style>().MaxDepth(2)
-                .ReverseMap()
+
+            CreateMap<Style, StyleDetailsServiceModel>().MaxDepth(2);
+
+            // color/size details
+
+            CreateMap<ColorSizeDetails, ColorSizeBreakdownDetailsServiceModel>()
                 .ForMember(src => src.BuyerCode, opt => opt.MapFrom(src => src.BuyerCode))
                 .ForMember(src => src.Order, opt => opt.MapFrom(src => src.Order))
                 .ForMember(src => src.TypeCode, opt => opt.MapFrom(src => src.TypeCode))
                 .ForMember(src => src.StyleCode, opt => opt.MapFrom(src => src.StyleCode))
-                .ForMember(src => src.Quantity, opt => opt.MapFrom(src => src.Quantity))
-                .ForMember(src => src.Unit, opt => opt.MapFrom(src => src.Unit))
-                .ForMember(src => src.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice))
-                .ForMember(src => src.OrderDate, opt => opt.MapFrom(src => src.OrderDate))
-                .ForMember(src => src.ProductionEndDate, opt => opt.MapFrom(src => src.ProductionEndDate))
-                .ForMember(src => src.EstimateApprovalDate, opt => opt.MapFrom(src => src.EstimateApprovalDate))
-                .ForMember(src => src.ApprovedDate, opt => opt.MapFrom(src => src.ApprovedDate));
+                .ForMember(src => src.Color, opt => opt.MapFrom(src => src.Color))
+                .ForMember(src => src.Size, opt => opt.MapFrom(src => src.Size))
+                .ForMember(src => src.Quantity, opt => opt.MapFrom(src => src.Qty))
+                .ForMember(src => src.Ratio, opt => opt.MapFrom(src => src.Ratio))
+                .ReverseMap().MaxDepth(2);
+
+            CreateMap<CreateColorSizeBreakdownDetailsServiceModel, ColorSizeDetails>()
+                .ForMember(src => src.BuyerCode, opt => opt.MapFrom(src => src.BuyerCode))
+                .ForMember(src => src.Order, opt => opt.MapFrom(src => src.Order))
+                .ForMember(src => src.TypeCode, opt => opt.MapFrom(src => src.TypeCode))
+                .ForMember(src => src.StyleCode, opt => opt.MapFrom(src => src.StyleCode))
+                .ForMember(src => src.Color, opt => opt.MapFrom(src => src.Color))
+                .ForMember(src => src.Size, opt => opt.MapFrom(src => src.Size))
+                .ForMember(src => src.Qty, opt => opt.MapFrom(src => src.Quantity))
+                .ForMember(src => src.Ratio, opt => opt.MapFrom(src => src.Ratio))
+                .MaxDepth(2);
+
+            // material consumptions.
+
+            CreateMap<OrderItem, OrderItemServiceModel>().MaxDepth(2);
+            CreateMap<OrderItemFeature, OrderItemFeatureServiceModel>()
+                .ForMember(src => src.ItemCode, opt => opt.MapFrom(src => src.ItemCode))
+                .ForMember(src => src.StockCode, opt => opt.MapFrom(src => src.StockCode))
+                .ForMember(src => src.Feature1Label, opt => opt.MapFrom(src => src.Feature1Type))
+                .ForMember(src => src.Feature2Label, opt => opt.MapFrom(src => src.Feature2Type))
+                .ForMember(src => src.Feature3Label, opt => opt.MapFrom(src => src.Feature3Type))
+                .ForMember(src => src.Feature4Label, opt => opt.MapFrom(src => src.Feature4Type))
+                .ForMember(src => src.CostPerUnit, opt => opt.MapFrom(src => src.CostPerUnit))
+                .MaxDepth(2);
+
+
+            // report stylewise 
+            //CreateMap<StyleApprovalDetailsServiceModel, OrderItemServiceModel>().MaxDepth(2);
+
+            //CreateMap<ColorSizeDetails, StyleDimensionsLookupServiceModel>().MaxDepth(2);
         }
     }
 }

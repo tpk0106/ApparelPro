@@ -8,11 +8,20 @@ namespace ApparelPro.Data.Configurations.References
     {
         public void Configure(EntityTypeBuilder<Stock> entity)
         {
-            entity.HasKey(k => k.Id);
+            entity.ToTable("Stocks");
+
+            // 1. FIXED PRIMARY KEY: Enforce StockCode string as the master lookup identifier
+            entity.HasKey(k => k.StockCode);
+
+            entity.Property(e => e.StockCode)
+                .HasColumnType("varchar(2)") // Restricted to exactly 2 characters matching Clipper limits
+                .HasColumnName("StockCode")
+                .IsRequired();
+
             entity.Property(p => p.Description)
-               .HasMaxLength(30)
-               .IsRequired()
-               .HasColumnType("nvarchar");
+                .HasColumnType("varchar(30)") // Switched to optimal varchar to clean up allocation padding
+                .HasColumnName("Description")
+                .IsRequired();
         }
     }
 }

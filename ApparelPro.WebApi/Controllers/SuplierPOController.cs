@@ -9,11 +9,11 @@ namespace ApparelPro.WebApi.Controllers
     [ApiController]
     public class SuplierPOController : ControllerBase
     {
-        private readonly ISuplierPurchaseOrderService _suplierPurchaseOrderService;
+        private readonly ISupplierPurchaseOrderService _supplierPurchaseOrderService;
 
-        public SuplierPOController(ISuplierPurchaseOrderService suplierPurchaseOrderService)
+        public SuplierPOController(ISupplierPurchaseOrderService supplierPurchaseOrderService)
         {
-            _suplierPurchaseOrderService = suplierPurchaseOrderService;
+            _supplierPurchaseOrderService = supplierPurchaseOrderService;
         }
 
         // 1. GET: api/purchaseOrder/unfulfilled-budget?buyerCode=1&order=1068
@@ -23,7 +23,7 @@ namespace ApparelPro.WebApi.Controllers
             if (string.IsNullOrEmpty(order)) return BadRequest("Target order parameter cannot be empty.");
             try
             {
-                var lines = await _suplierPurchaseOrderService.GetUnfulfilledBudgetLinesAsync(buyerCode, order);
+                var lines = await _supplierPurchaseOrderService.GetUnfulfilledBudgetLinesAsync(buyerCode, order);
                 return Ok(lines);
             }
             catch (Exception ex)
@@ -39,7 +39,7 @@ namespace ApparelPro.WebApi.Controllers
             if (request == null || request.Header == null) return BadRequest("Purchase order payload cannot be empty.");
             try
             {
-                var success = await _suplierPurchaseOrderService.SaveSupplierPurchaseOrderAsync(request);
+                var success = await _supplierPurchaseOrderService.SaveSupplierPurchaseOrderAsync(request);
                 return Ok(success);
             }
             catch (Exception ex)

@@ -5,12 +5,10 @@ namespace apparelPro.BusinessLogic.Services
 {
     public interface IGarmentTypeService
     {
-        Task<PaginationResult<GarmentTypeServiceModel>> GetGarmentTypesAsync(int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery);
-        //   Task<PaginationResult<GarmentTypeServiceModel>> GetGarmentTypesAsync(int pageNumber, int pageSize, string? filter, string? sortColumn, bool? descending);
-
+        Task<PaginationResult<GarmentTypeServiceModel>> GetGarmentTypesAsync(int pageNumber, int pageSize, 
+            string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery);        
         Task<IEnumerable<GarmentTypeServiceModel>> GetGarmentTypesByPageNumberAsync(int pageNumber, int pageSize);
-
-        //Task<IEnumerable<GarmentTypeServiceModel>> FilterGarmentTypeByIdeAsync(string filter, int pageNumber, int pageSize);
+        Task<IEnumerable<GarmentTypeServiceModel>> GetAllGarmentTypeAsync();
         Task<GarmentTypeServiceModel> GetGarmentTypeByIdAsync(int id);
         Task<GarmentTypeServiceModel> CreateGarmentTypeAsync(CreateGarmentTypeServiceModel createGarmentTypeServiceModel);
         Task UpdateGarmentTypeAsync(UpdateGarmentTypeServiceModel updateGarmentTypeServiceModel);

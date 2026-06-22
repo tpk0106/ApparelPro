@@ -22,63 +22,339 @@ namespace ApparelPro.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.PODetails", b =>
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.ColorSizeDetails", b =>
                 {
-                    b.Property<int>("Buyer")
-                        .HasColumnType("int");
+                    b.Property<int>("BuyerCode")
+                        .HasColumnType("int")
+                        .HasColumnName("Buyer");
 
                     b.Property<string>("Order")
-                        .HasMaxLength(12)
-                        .HasColumnType("nvarchar");
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("Order");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
+                    b.Property<int>("TypeCode")
+                        .HasColumnType("int")
+                        .HasColumnName("Type");
 
-                    b.Property<string>("Style")
-                        .HasMaxLength(12)
-                        .HasColumnType("nvarchar");
+                    b.Property<string>("StyleCode")
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("Style");
 
-                    b.Property<int>("Balance")
-                        .HasColumnType("int");
+                    b.Property<string>("Color")
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("Color");
 
-                    b.Property<DateTime>("ExportDate")
-                        .HasColumnType("datetime");
+                    b.Property<string>("Size")
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("Size");
+
+                    b.Property<decimal>("Qty")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("Quantity");
+
+                    b.Property<decimal>("Ratio")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("Ratio");
+
+                    b.HasKey("BuyerCode", "Order", "TypeCode", "StyleCode", "Color", "Size");
+
+                    b.ToTable("ColorSizeDetails");
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.MaterialConsumption.ItemFeature", b =>
+                {
+                    b.Property<string>("FeatureCode")
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("FeatureCode");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("Description");
+
+                    b.HasKey("FeatureCode");
+
+                    b.ToTable("ItemFeatures", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.MaterialConsumption.OrderItem", b =>
+                {
+                    b.Property<string>("StockCode")
+                        .HasColumnType("varchar(2)")
+                        .HasColumnName("StockCode");
 
                     b.Property<string>("ItemCode")
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("ItemCode");
+
+                    b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(22)
-                        .HasColumnType("nvarchar");
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("Description");
+
+                    b.HasKey("StockCode", "ItemCode");
+
+                    b.ToTable("OrderItems", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.MaterialConsumption.OrderItemFeature", b =>
+                {
+                    b.Property<string>("StockCode")
+                        .HasColumnType("varchar(2)")
+                        .HasColumnName("StockCode");
+
+                    b.Property<string>("ItemCode")
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("ItemCode");
+
+                    b.Property<decimal?>("CostPerUnit")
+                        .HasColumnType("decimal(10,4)")
+                        .HasColumnName("CostPerUnit");
+
+                    b.Property<string>("Feature1Type")
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("Feature1");
+
+                    b.Property<string>("Feature2Type")
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("Feature2");
+
+                    b.Property<string>("Feature3Type")
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("Feature3");
+
+                    b.Property<string>("Feature4Type")
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("Feature4");
+
+                    b.HasKey("StockCode", "ItemCode");
+
+                    b.ToTable("OrderItemFeatures", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.MaterialConsumption.StyleMaterialConsumptionLedger", b =>
+                {
+                    b.Property<int>("BuyerCode")
+                        .HasColumnType("int")
+                        .HasColumnName("Buyer");
+
+                    b.Property<string>("Order")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("Order");
+
+                    b.Property<int>("TypeCode")
+                        .HasColumnType("int")
+                        .HasColumnName("Type");
+
+                    b.Property<string>("StyleCode")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("Style");
+
+                    b.Property<string>("Color")
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("Color");
+
+                    b.Property<string>("Size")
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("Size");
+
+                    b.Property<string>("StockCode")
+                        .HasColumnType("varchar(2)")
+                        .HasColumnName("StockCode");
+
+                    b.Property<string>("ItemCode")
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("ItemCode");
+
+                    b.Property<string>("Feature1")
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("Feature1");
+
+                    b.Property<string>("Feature2")
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("Feature2");
+
+                    b.Property<string>("Feature3")
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("Feature3");
+
+                    b.Property<string>("Feature4")
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("Feature4");
+
+                    b.Property<bool>("CalculateConsumption")
+                        .HasColumnType("bit")
+                        .HasColumnName("CalculateConsumption");
+
+                    b.Property<string>("ConsumptionUnit")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("ConsumptionUnit");
+
+                    b.Property<bool>("IsAdditionalCost")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsAdditionalCost");
+
+                    b.Property<string>("ItemUnit")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("ItemUnit");
+
+                    b.Property<decimal>("PercentageAllowance")
+                        .HasColumnType("decimal(4,1)")
+                        .HasColumnName("PercentageAllowance");
+
+                    b.Property<decimal>("QuantityPerGarment")
+                        .HasColumnType("decimal(8,3)")
+                        .HasColumnName("QuantityPerGarment");
+
+                    b.Property<string>("StoreCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("StoreCode");
+
+                    b.Property<string>("SupplierCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("SupplierCode");
+
+                    b.Property<decimal>("TotalConsumption")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("TotalConsumption");
+
+                    b.HasKey("BuyerCode", "Order", "TypeCode", "StyleCode", "Color", "Size", "StockCode", "ItemCode", "Feature1", "Feature2", "Feature3", "Feature4");
+
+                    b.ToTable("StyleMaterialConsumptionLedger", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.MaterialConsumption.StyleMaterialCostProfile", b =>
+                {
+                    b.Property<int>("BuyerCode")
+                        .HasColumnType("int")
+                        .HasColumnName("Buyer");
+
+                    b.Property<string>("Order")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("Order");
+
+                    b.Property<int>("TypeCode")
+                        .HasColumnType("int")
+                        .HasColumnName("Type");
+
+                    b.Property<string>("StyleCode")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("Style");
+
+                    b.Property<string>("StockCode")
+                        .HasColumnType("varchar(2)")
+                        .HasColumnName("StockCode");
+
+                    b.Property<string>("ItemCode")
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("ItemCode");
+
+                    b.Property<string>("Feature1")
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("Feature1");
+
+                    b.Property<string>("Feature2")
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("Feature2");
+
+                    b.Property<string>("Feature3")
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("Feature3");
+
+                    b.Property<string>("Feature4")
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("Feature4");
+
+                    b.Property<decimal>("BalanceQuantity")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("BalanceQuantity");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("CurrencyCode");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("varchar(40)")
+                        .HasColumnName("Description");
+
+                    b.Property<string>("ItemUnit")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("ItemUnit");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(10,4)")
+                        .HasColumnName("Price");
+
+                    b.HasKey("BuyerCode", "Order", "TypeCode", "StyleCode", "StockCode", "ItemCode", "Feature1", "Feature2", "Feature3", "Feature4");
+
+                    b.ToTable("StyleMaterialCostProfiles", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.PODetails", b =>
+                {
+                    b.Property<string>("PONumber")
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("PONumber");
+
+                    b.Property<int>("Buyer")
+                        .HasColumnType("int")
+                        .HasColumnName("Buyer");
+
+                    b.Property<string>("Order")
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("Order");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int")
+                        .HasColumnName("Type");
+
+                    b.Property<string>("Style")
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("Style");
+
+                    b.Property<string>("ItemCode")
+                        .HasColumnType("varchar(40)")
+                        .HasColumnName("ItemCode");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("Balance");
+
+                    b.Property<DateTime?>("ExportDate")
+                        .HasColumnType("datetime")
+                        .HasColumnName("ExportDate");
 
                     b.Property<string>("LCNo")
-                        .IsRequired()
-                        .HasMaxLength(23)
-                        .HasColumnType("nvarchar");
+                        .HasColumnType("varchar(23)")
+                        .HasColumnName("LCNo");
 
                     b.Property<decimal>("OrderQuantity")
-                        .HasColumnType("decimal(10,2)");
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("OrderQuantity");
 
                     b.Property<string>("OrderUnit")
                         .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("nvarchar");
-
-                    b.Property<int>("PONo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PONo"));
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("OrderUnit");
 
                     b.Property<string>("RefNo")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar");
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("RefNo");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(10,2)");
+                        .HasColumnType("decimal(10,4)")
+                        .HasColumnName("UnitPrice");
 
-                    b.HasKey("Buyer", "Order", "Type", "Style");
+                    b.HasKey("PONumber", "Buyer", "Order", "Type", "Style", "ItemCode");
 
-                    b.ToTable("PODetails");
+                    b.ToTable("PODetails", (string)null);
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.PurchaseOrder", b =>
@@ -130,6 +406,133 @@ namespace ApparelPro.Data.Migrations
                     b.HasKey("BuyerCode", "Order");
 
                     b.ToTable("PurchaseOrders");
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.PurchaseOrderHeader", b =>
+                {
+                    b.Property<string>("PurchaseOrderNumber")
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("PurchaseOrderNumber");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("CurrencyCode");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsPoUsed")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsPoUsed");
+
+                    b.Property<DateOnly?>("ProformaInvoiceDate")
+                        .HasColumnType("date")
+                        .HasColumnName("ProformaInvoiceDate");
+
+                    b.Property<string>("ProformaInvoiceNo")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("ProformaInvoiceNo");
+
+                    b.Property<string>("StoreCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("StoreCode");
+
+                    b.Property<string>("SupplierCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("SupplierCode");
+
+                    b.HasKey("PurchaseOrderNumber");
+
+                    b.ToTable("PurchaseOrderHeaders", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderwiseInventory.OrderwiseStock", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BuyerCode")
+                        .HasColumnType("int")
+                        .HasColumnName("BuyerCode");
+
+                    b.Property<string>("ItemCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(40)")
+                        .HasColumnName("ItemCode");
+
+                    b.Property<string>("Order")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("Order");
+
+                    b.Property<decimal>("OrderedQuantity")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("OrderedQuantity");
+
+                    b.Property<string>("StoreCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("StoreCode");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("Unit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OrderwiseStocks", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderwiseInventory.OrderwiseStockMaster", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BuyerCode")
+                        .HasColumnType("int")
+                        .HasColumnName("BuyerCode");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("Currency");
+
+                    b.Property<string>("ItemCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(40)")
+                        .HasColumnName("ItemCode");
+
+                    b.Property<string>("Order")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("Order");
+
+                    b.Property<decimal>("OrderedQuantity")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("OrderedQuantity");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(10,4)")
+                        .HasColumnName("Price");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("Unit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OrderwiseStockMasters", (string)null);
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Address", b =>
@@ -466,46 +869,38 @@ namespace ApparelPro.Data.Migrations
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Stock", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("StockCode")
+                        .HasColumnType("varchar(2)")
+                        .HasColumnName("StockCode");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar");
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("Description");
 
-                    b.HasKey("Id");
+                    b.HasKey("StockCode");
 
-                    b.ToTable("Stocks");
+                    b.ToTable("Stocks", (string)null);
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.StockItem", b =>
                 {
-                    b.Property<int>("StockCode")
-                        .HasColumnType("int");
+                    b.Property<string>("StockCode")
+                        .HasColumnType("varchar(2)")
+                        .HasColumnName("StockCode");
 
-                    b.Property<int>("ItemCode")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ItemCode"));
+                    b.Property<string>("ItemCode")
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("ItemCode");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar");
-
-                    b.Property<int>("StockId")
-                        .HasColumnType("int");
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("Description");
 
                     b.HasKey("StockCode", "ItemCode");
 
-                    b.HasIndex("StockId");
-
-                    b.ToTable("StockItems");
+                    b.ToTable("StockItems", (string)null);
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Style", b =>
@@ -516,7 +911,7 @@ namespace ApparelPro.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("ApprovedDate")
+                    b.Property<DateOnly?>("ApprovedDate")
                         .HasColumnType("date");
 
                     b.Property<int>("BuyerCode")
@@ -524,17 +919,22 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("int")
                         .HasColumnName("Buyer");
 
+                    b.Property<string>("ColorRatio")
+                        .HasMaxLength(1)
+                        .HasColumnType("nvarchar(1)")
+                        .HasColumnName("ColorRatio");
+
                     b.Property<bool?>("CustomerReturn")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<DateTime>("EstimateApprovalDate")
+                    b.Property<DateOnly?>("EstimateApprovalDate")
                         .HasColumnType("date");
 
                     b.Property<string>("EstimateApprovalUserName")
                         .HasMaxLength(6)
-                        .HasColumnType("nvarchar");
+                        .HasColumnType("nvarchar(6)");
 
                     b.Property<decimal?>("ExportBalance")
                         .HasColumnType("decimal(10,2)");
@@ -547,21 +947,26 @@ namespace ApparelPro.Data.Migrations
                     b.Property<string>("Order")
                         .IsRequired()
                         .HasMaxLength(12)
-                        .HasColumnType("nvarchar");
+                        .HasColumnType("nvarchar(12)");
 
-                    b.Property<DateTime>("OrderDate")
-                        .HasColumnType("datetime");
+                    b.Property<DateOnly>("OrderDate")
+                        .HasColumnType("date");
 
-                    b.Property<DateTime>("ProductionEndDate")
+                    b.Property<DateOnly?>("ProductionEndDate")
                         .HasColumnType("date");
 
                     b.Property<decimal?>("Quantity")
                         .HasColumnType("decimal(10,2)");
 
+                    b.Property<string>("SizeRatio")
+                        .HasMaxLength(1)
+                        .HasColumnType("nvarchar(1)")
+                        .HasColumnName("SizeRatio");
+
                     b.Property<string>("StyleCode")
                         .IsRequired()
                         .HasMaxLength(12)
-                        .HasColumnType("nvarchar")
+                        .HasColumnType("nvarchar(12)")
                         .HasColumnName("Style");
 
                     b.Property<bool?>("SupplierReturn")
@@ -575,14 +980,14 @@ namespace ApparelPro.Data.Migrations
 
                     b.Property<string>("Unit")
                         .HasMaxLength(3)
-                        .HasColumnType("nvarchar");
+                        .HasColumnType("nvarchar(3)");
 
                     b.Property<decimal?>("UnitPrice")
                         .HasColumnType("decimal(10,2)");
 
                     b.Property<string>("Username")
                         .HasMaxLength(6)
-                        .HasColumnType("nvarchar");
+                        .HasColumnType("nvarchar(6)");
 
                     b.HasKey("Id");
 
@@ -650,6 +1055,25 @@ namespace ApparelPro.Data.Migrations
                     b.ToTable("Units");
                 });
 
+            modelBuilder.Entity("ApparelPro.Data.Models.References.UnitConversion", b =>
+                {
+                    b.Property<string>("FromUnit")
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("FromUnit");
+
+                    b.Property<string>("ToUnit")
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("ToUnit");
+
+                    b.Property<decimal>("Measure")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("Measure");
+
+                    b.HasKey("FromUnit", "ToUnit");
+
+                    b.ToTable("UnitConversion", (string)null);
+                });
+
             modelBuilder.Entity("ApparelPro.Data.Models.Registration.User", b =>
                 {
                     b.Property<string>("Email")
@@ -710,6 +1134,113 @@ namespace ApparelPro.Data.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("ApparelPro.WebApi.APIModels.OrderManagement.GarmentTypeItems", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("GarmentTypeId")
+                        .HasColumnType("int")
+                        .HasColumnName("GarmentTypeId");
+
+                    b.Property<string>("ItemCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("ItemCode");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(8,3)")
+                        .HasColumnName("Quantity");
+
+                    b.Property<string>("StockCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(2)")
+                        .HasColumnName("StockCode");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("Unit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GarmentTypeId");
+
+                    b.ToTable("GarmentTypeItems", (string)null);
+                });
+
+            modelBuilder.Entity("apparelPro.BusinessLogic.Services.Models.OrderManagement.Stylewise_Events.EventMaster", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("ActualDate")
+                        .HasColumnType("date")
+                        .HasColumnName("ActualDate");
+
+                    b.Property<int>("BuyerCode")
+                        .HasColumnType("int")
+                        .HasColumnName("BuyerCode");
+
+                    b.Property<string>("EventCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("EventCode");
+
+                    b.Property<string>("Order")
+                        .IsRequired()
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("Order");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("Remarks");
+
+                    b.Property<DateTime?>("ScheduledDate")
+                        .HasColumnType("date")
+                        .HasColumnName("ScheduledDate");
+
+                    b.Property<string>("StyleCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("StyleCode");
+
+                    b.Property<int>("TypeCode")
+                        .HasColumnType("int")
+                        .HasColumnName("TypeCode");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventCode");
+
+                    b.HasIndex("BuyerCode", "Order", "TypeCode", "StyleCode", "EventCode")
+                        .IsUnique();
+
+                    b.ToTable("EventMasters", (string)null);
+                });
+
+            modelBuilder.Entity("apparelPro.BusinessLogic.Services.Models.OrderManagement.Stylewise_Events.StylewiseEvent", b =>
+                {
+                    b.Property<string>("EventCode")
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("EventCode");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("Description");
+
+                    b.HasKey("EventCode");
+
+                    b.ToTable("StylewiseEvents", (string)null);
+                });
+
             modelBuilder.Entity("ApparelPro.Data.Models.References.Address", b =>
                 {
                     b.HasOne("ApparelPro.Data.Models.References.Bank", null)
@@ -727,11 +1258,33 @@ namespace ApparelPro.Data.Migrations
                 {
                     b.HasOne("ApparelPro.Data.Models.References.Stock", "Stock")
                         .WithMany()
-                        .HasForeignKey("StockId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("StockCode")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Stock");
+                });
+
+            modelBuilder.Entity("ApparelPro.WebApi.APIModels.OrderManagement.GarmentTypeItems", b =>
+                {
+                    b.HasOne("ApparelPro.Data.Models.References.GarmentType", "GarmentType")
+                        .WithMany()
+                        .HasForeignKey("GarmentTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("GarmentType");
+                });
+
+            modelBuilder.Entity("apparelPro.BusinessLogic.Services.Models.OrderManagement.Stylewise_Events.EventMaster", b =>
+                {
+                    b.HasOne("apparelPro.BusinessLogic.Services.Models.OrderManagement.Stylewise_Events.StylewiseEvent", "MilestoneEvent")
+                        .WithMany()
+                        .HasForeignKey("EventCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("MilestoneEvent");
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Bank", b =>

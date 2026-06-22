@@ -1,5 +1,4 @@
 ﻿using apparelPro.BusinessLogic.Misc;
-using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IGarmentTypeService;
 using ApparelPro.Data;
 using ApparelPro.Data.Models.References;
@@ -108,5 +107,19 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             //   _apparelProDbContext.Database.ExecuteSql($"SET IDENTITY_INSERT dbo.Currencies OFF");
             return _mapper.Map<GarmentTypeServiceModel>(garmentTypeDbModel);
         }
+
+        public async Task<IEnumerable<GarmentTypeServiceModel>> GetAllGarmentTypeAsync()
+        {
+            {
+                var typeDbModelList = await _apparelProDbContext.GarmentTypes
+                  .AsNoTracking()                  
+                  .ToListAsync();
+
+                var garmentTypeServiceModels = _mapper.Map<IEnumerable<GarmentTypeServiceModel>>(typeDbModelList);
+
+                return garmentTypeServiceModels;
+            }
+        }       
+    
     }
 }

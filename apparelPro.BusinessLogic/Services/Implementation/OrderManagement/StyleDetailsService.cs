@@ -1,5 +1,7 @@
 ﻿using apparelPro.BusinessLogic.Extensions;
 using apparelPro.BusinessLogic.Misc;
+using apparelPro.BusinessLogic.Services.Implementation.Registration;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsService;
 using ApparelPro.Data;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Shared.Extensions;
@@ -8,7 +10,6 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Linq.Dynamic.Core;
-using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsService;
 
 namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 {
@@ -334,8 +335,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 _distributedCache.Set(cacheKey, result, _options);
             }
 
-            var filteredDbCountries = result; 
-            var StyleDetailsServiceModels = _mapper.Map<IList<StyleDetailsServiceModel>>(filteredDbCountries);
+            var filteredDbStyles = result; 
+            var StyleDetailsServiceModels = _mapper.Map<IList<StyleDetailsServiceModel>>(filteredDbStyles);
 
             return new PaginationResult<StyleDetailsServiceModel>(pageSize, pageNumber, counter, StyleDetailsServiceModels,
                 sortColumn, sortOrder, filterColumn, filterQuery);
@@ -402,6 +403,34 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
             //transaction.Commit();
             await _apparelProDbContext.SaveChangesAsync();
             return _mapper.Map<StyleDetailsServiceModel>(styleDbModel);
+        }
+
+        public async Task<IEnumerable<StyleDetailsServiceModel>> GetStyleDetailsByBuyerOrderTypeAsync(int buyerCode, string order, int typeCode)
+        {
+            var allStyleCodes = await _apparelProDbContext.Styles
+                .AsNoTracking()                
+                .Where(style => style.BuyerCode == buyerCode && style.Order == order && style.TypeCode == typeCode)               
+                .ToListAsync();
+
+            var styleDetailsServiceModels = _mapper.Map<IEnumerable<StyleDetailsServiceModel>>(allStyleCodes);
+            return  styleDetailsServiceModels;
+        }
+
+        public async Task<StyleApprovalDetailsServiceModel> GetEstimateApprovalUserNameAsync(int buyerCode, string order, int typeCode, string styleCode)
+        {
+            var styleApprovalDetailsServiceModel = await _apparelProDbContext.Styles
+              .AsNoTracking()
+              .Where(style => style.BuyerCode == buyerCode &&
+                  style.Order == order && style.TypeCode == typeCode &&
+                  style.StyleCode == styleCode)
+              .Select(style => new StyleApprovalDetailsServiceModel
+              {
+                  EstimateApprovalDate = style.ApprovedDate,
+                  EstimateApprovalUserName = style.EstimateApprovalUserName
+              })
+              .FirstOrDefaultAsync();
+
+            return styleApprovalDetailsServiceModel;
         }
     }
 }

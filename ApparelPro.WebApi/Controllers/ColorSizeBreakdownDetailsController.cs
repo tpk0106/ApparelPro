@@ -1,5 +1,6 @@
 ﻿using apparelPro.BusinessLogic.Services;
 using apparelPro.BusinessLogic.Services.Implementation.OrderManagement;
+using ApparelPro.Data.Models.OrderManagement;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.OrderManagement;
 using ApparelPro.WebApi.Misc;
@@ -124,5 +125,28 @@ namespace ApparelPro.WebApi.Controllers
                 return StatusCode(500, new { Error = $"Failed to look up style colour/size dimensional metrics: {ex.Message}" });
             }
         }
+
+        [HttpGet("color-size-matrix")]
+        [ProducesResponseType(typeof(List<ColorSizeDetails>), HttpStatusCodes.OK)]
+        public async Task<IActionResult> GetSavedColorSizeMatrix(
+            [FromQuery] int buyerCode,
+            [FromQuery] string order,
+            [FromQuery] int typeCode,
+            [FromQuery] string styleCode)
+        {
+            if (string.IsNullOrEmpty(order) || string.IsNullOrEmpty(styleCode))
+                return BadRequest("Target order and style tracking parameters cannot be empty.");
+
+            try
+            {
+                var matrixRows = await  _colorSizeBreakdownDetailsService.GetSavedColorSizeMatrixAsync(buyerCode, order, typeCode, styleCode);
+                return Ok(matrixRows);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to read saved color/size matrix records: {ex.Message}" });
+            }
+        }
+
     }
 }

@@ -5,6 +5,7 @@ using apparelPro.BusinessLogic.Services.Implementation.Reference;
 using apparelPro.BusinessLogic.Services.Implementation.Registration;
 using apparelPro.BusinessLogic.Services.Implementation.Shared;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitService;
+using apparelPro.BusinessLogic.Services.Reports.Interfaces;
 using ApparelPro.Data;
 using ApparelPro.Shared.LookupConstants;
 using ApparelPro.Shared.LookupConstants.ApparelProContext;
@@ -79,6 +80,11 @@ namespace ApparelPro.WebApi.Extensions
 
             // material consumption
             services.AddTransient(typeof (IMaterialConsumptionService),typeof(MaterialConsumptionService));
+            services.AddTransient(typeof(ISupplierPurchaseOrderService), typeof(SupplierPurchaseOrderService));
+
+            // Register the Style-wise critical path tracking service loop lifecycle handler
+            services.AddScoped<IStylewiseEventService, StylewiseEventService>();
+            //services.AddScoped<IStylewiseReportService, StylewiseReportService>();
         }
 
         public static void ConfgureAppsettings(IServiceCollection services, IConfiguration configuration)
@@ -96,12 +102,6 @@ namespace ApparelPro.WebApi.Extensions
             config.Inject(configuration);
             //AuthorizationConfig.Inject(configuration);
             services.AddAuthorization(AuthorizationConfig.GetAuthroizationOptions);
-        }
-
-        //public static void AddAuthorization(this IServiceCollection services, Action<AuthorizationOptions, IConfiguration> getAuthroizationOptions)
-        //{
-        //    services.AddAuthorizationBuilder().Services.AddAuthorization(getAuthroizationOptions);
-
-        //}
+        }    
     }
 }

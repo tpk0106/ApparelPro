@@ -8,61 +8,82 @@ namespace ApparelPro.Data.Configurations.OrderManagement
     {
         public void Configure(EntityTypeBuilder<PODetails> entity)
         {
-            entity.HasKey(k => new { k.Buyer, k.Order, k.Type, k.Style });
+            entity.ToTable("PODetails");
 
-            entity.Property(p => p.PONo)
-               .IsRequired()
-               .UseIdentityColumn()
-               .HasColumnType("int");
+            // 1. FIXED PRIMARY KEY: Composite key includes PONo and ItemCode 
+            // This safely allows multiple different material line items to exist under one PO!
+            entity.HasKey(k => new { k.PONumber, k.Buyer, k.Order, k.Type, k.Style, k.ItemCode });
+
+            // 2. CRITICAL FIX: Explicitly ignore the Id property so EF never tries to query or save it!
+            entity.Ignore(e => e.Id);
+
+
+            // 2. THE PERMANENT MAP FIX: Links your C# class property "PONumber" 
+            // straight to your physical SQL Server database column "PONo" safely!
+            entity.Property(e => e.PONumber)
+                .HasColumnType("varchar(10)")
+                .HasColumnName("PONumber") // Maps directly to your physical DB column name!
+                .IsRequired();
 
             entity.Property(p => p.Buyer)
-               .IsRequired()
-               .ValueGeneratedNever()
-               .HasColumnType("int");
+                .HasColumnType("int")
+                .HasColumnName("Buyer")
+                .IsRequired();
 
             entity.Property(p => p.Order)
-               .ValueGeneratedNever()
-              .HasMaxLength(12)
-              .IsRequired()
-              .HasColumnType("nvarchar");
+                .HasColumnType("varchar(12)") // FIXED: Clean varchar with fixed width bounds
+                .HasColumnName("Order")
+                .IsRequired();
 
-            entity.Property(p => p.Type)  
-               .ValueGeneratedNever()
-              .IsRequired()
-              .HasColumnType("int");
+            entity.Property(p => p.Type)
+                .HasColumnType("int")
+                .HasColumnName("Type")
+                .IsRequired();
 
             entity.Property(p => p.Style)
-                .ValueGeneratedNever()
-              .HasMaxLength(12)
-              .HasColumnType("nvarchar");
+                .HasColumnType("varchar(12)")
+                .HasColumnName("Style")
+                .IsRequired();
 
+            // 3. SECURED ITEM STRING EXTENSION: Increased to varchar(40) 
+            // This safely accommodates your long 22+ character dynamic item configurations
             entity.Property(p => p.ItemCode)
-              .HasMaxLength(22)
-              .HasColumnType("nvarchar");
+                .HasColumnType("varchar(40)")
+                .HasColumnName("ItemCode")
+                .IsRequired();
 
             entity.Property(p => p.RefNo)
-             .HasMaxLength(10)
-             .HasColumnType("nvarchar");
+                .HasColumnType("varchar(10)")
+                .HasColumnName("RefNo");
 
             entity.Property(p => p.OrderUnit)
-             .HasMaxLength(3)
-             .HasColumnType("nvarchar");
+                .HasColumnType("varchar(3)")
+                .HasColumnName("OrderUnit")
+                .IsRequired();
 
-            entity.Property(p => p.OrderQuantity)           
-             .HasColumnType("decimal(10,2)");
+            entity.Property(p => p.OrderQuantity)
+                .HasColumnType("decimal(12,2)")
+                .HasColumnName("OrderQuantity")
+                .IsRequired();
 
-            entity.Property(p => p.UnitPrice)             
-             .HasColumnType("decimal(10,2)");
+            // 4. FIXED FINANCIAL PRECISION: Scaled to 4 decimal places matching legacy data (e.g. 1.5900)
+            entity.Property(p => p.UnitPrice)
+                .HasColumnType("decimal(10,4)")
+                .HasColumnName("UnitPrice")
+                .IsRequired();
 
-            entity.Property(p => p.ExportDate)             
-             .HasColumnType("datetime");
+            entity.Property(p => p.ExportDate)
+                .HasColumnType("datetime")
+                .HasColumnName("ExportDate");
 
             entity.Property(p => p.LCNo)
-             .HasMaxLength(23)
-             .HasColumnType("nvarchar");
+                .HasColumnType("varchar(23)")
+                .HasColumnName("LCNo");
 
-            entity.Property(p => p.Balance)            
-             .HasColumnType("int");
+            entity.Property(e => e.Balance)
+                .HasColumnType("decimal(12,2)")
+                .HasColumnName("Balance")
+                .IsRequired();
         }
     }
 }

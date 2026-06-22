@@ -101,8 +101,11 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             }
 
             List<Country>? result = null;
-           
-            var cacheKey = $"{pageNumber}-{pageSize}-{sortColumn}-{sortOrder}-{filterColumn}-{filterQuery}";
+
+            // var cacheKey = $"{pageNumber}-{pageSize}-{sortColumn}-{sortOrder}-{filterColumn}-{filterQuery}";
+            // Add a unique "countries:" namespace prefix to the string
+            var cacheKey = $"countries:{pageNumber}-{pageSize}-{sortColumn}-{sortOrder}-{filterColumn}-{filterQuery}";
+
             var _options = new DistributedCacheEntryOptions() { AbsoluteExpirationRelativeToNow = new TimeSpan(0, 0, 30) };
 
             _distributedCache.TryGetValue<List<Country>>(cacheKey, out result);

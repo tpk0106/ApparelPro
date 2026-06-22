@@ -9,93 +9,100 @@ namespace ApparelPro.Data.Configurations.OrderManagement
         public void Configure(EntityTypeBuilder<Style> entity)
         {
             entity.Property(p => p.Id)
-                .UseIdentityColumn()                
+                .UseIdentityColumn()
                 .IsRequired().HasColumnType("int");
 
             entity.HasKey(p => p.Id);
 
-           // entity.HasKey(k => new { k.BuyerCode, k.Order, k.TypeCode, k.StyleCode });
             entity.HasIndex(p => new { p.BuyerCode, p.Order, p.TypeCode, p.StyleCode })
                 .IsUnique();
 
             entity.Property(p => p.BuyerCode)
-               .HasMaxLength(6)
-               .HasColumnName("Buyer")
-              .IsRequired()
-              .HasColumnType("int");
+                .HasMaxLength(6)
+                .HasColumnName("Buyer")
+                .IsRequired()
+                .HasColumnType("int");
 
             entity.Property(p => p.Order)
                 .HasMaxLength(12)
-               .IsRequired()
-               .HasColumnType("nvarchar");         
+                .IsRequired(); // Maps automatically to nvarchar(12)
 
             entity.Property(p => p.TypeCode)
-              .IsRequired()
-              .HasColumnName("Type")            
-              .HasColumnType("int");
+                .IsRequired()
+                .HasColumnName("Type")
+                .HasColumnType("int");
 
             entity.Property(p => p.StyleCode)
-              .IsRequired()
-              .HasMaxLength(12)
-              .HasColumnName("Style")
-              .HasColumnType("nvarchar");
+                .IsRequired()
+                .HasMaxLength(12)
+                .HasColumnName("Style");  // Maps automatically to nvarchar(12)              
 
+            entity.Property(p => p.ColorRatio)
+                .HasMaxLength(1)
+                .IsRequired(false)
+                .HasColumnName("ColorRatio");  // Maps automatically to nvarchar(1)              
+
+            entity.Property(p => p.SizeRatio)
+                .HasMaxLength(1)
+                .IsRequired(false)
+                .HasColumnName("SizeRatio");
+
+            // OrderDate remains required (assumes it is filled on creation)
             entity.Property(p => p.OrderDate)
-          .HasColumnType("datetime");
+                .HasColumnType("date")
+                .IsRequired();
 
             entity.Property(p => p.Unit)
-              .HasMaxLength(3)
-              .IsRequired(false)
-              .HasColumnType("nvarchar");
+                .HasMaxLength(3) // Maps automatically to nvarchar(3)
+                .IsRequired(false);                
 
-            entity.Property(p => p.Quantity).IsRequired(false)                
+            entity.Property(p => p.Quantity)
+                .IsRequired(false)
                 .HasColumnType("decimal(10,2)");
 
-            entity.Property(p => p.UnitPrice).IsRequired(false)              
-              .HasColumnType("decimal(10,2)");
+            entity.Property(p => p.UnitPrice)
+                .IsRequired(false)
+                .HasColumnType("decimal(10,2)");
 
-            entity.Property(p => p.ExportBalance).IsRequired(false)
-             .HasColumnType("decimal(10,2)");
+            entity.Property(p => p.ExportBalance)
+                .IsRequired(false)
+                .HasColumnType("decimal(10,2)");
 
             entity.Property(p => p.CustomerReturn)
-               .IsRequired(false)
-              .HasDefaultValue(false)
-             .HasColumnType("bit");
+                .IsRequired(false)
+                .HasDefaultValue(false)
+                .HasColumnType("bit");
 
             entity.Property(p => p.SupplierReturn)
                 .IsRequired(false)
-            .HasDefaultValue(false)
-           .HasColumnType("bit");
+                .HasDefaultValue(false)
+                .HasColumnType("bit");
 
             entity.Property(p => p.Username)
                 .IsRequired(false)
-           .HasMaxLength(6)
-           .HasColumnType("nvarchar");
+                .HasMaxLength(6);  // Maps automatically to nvarchar(6)
 
+            // These three are now explicitly configured as optional (nullable)
             entity.Property(p => p.ApprovedDate)
-                //.IsRequired(false)
-                .HasColumnType("date").HasDefaultValue(null);
-                //.HasDefaultValueSql("getdate()"); ;
+                .HasColumnType("date")
+                .IsRequired(false); // Allows NULL in database until production phase
 
             entity.Property(p => p.ProductionEndDate)
-               // .IsRequired(false)
-           .HasColumnType("date").HasDefaultValue(null);
-            //.HasDefaultValueSql("getdate()"); ;
+                .HasColumnType("date")
+                .IsRequired(false);
 
             entity.Property(p => p.EstimateApprovalDate)
-               // .IsRequired(false)
-           .HasColumnType("date").HasDefaultValue(null);
-            // .HasDefaultValueSql("getdate()"); ;
+                .HasColumnType("date")
+                .IsRequired(false);
 
             entity.Property(p => p.EstimateApprovalUserName)
-            .IsRequired(false)
-           .HasMaxLength(6)
-           .HasColumnType("nvarchar");
+                .IsRequired(false)
+                .HasMaxLength(6); // Maps automatically to nvarchar(6)
 
             entity.Property(p => p.Exported)
                 .IsRequired(false)
                 .HasDefaultValue(false)
-           .HasColumnType("bit");
+                .HasColumnType("bit");
         }
     }
 }

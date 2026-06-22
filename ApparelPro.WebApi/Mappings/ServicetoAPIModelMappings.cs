@@ -24,6 +24,7 @@ using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.OrderManagement;
 using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.APIModels.Registration;
+using ApparelPro.WebApi.Reports.Models;
 using AutoMapper;
 
 namespace ApparelPro.WebApi.Mappings
@@ -539,6 +540,7 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<StyleDimensionsLookupServiceModel,  StyleDimensionsLookupAPIModel>().MaxDepth(2);
             CreateMap<SupplierLookupServiceModel, SupplierLookupAPIModel>().MaxDepth(2);
 
+            CreateMap<StyleApprovalDetailsServiceModel, StyleApprovalDetailsAPIModel>().MaxDepth(2);
         }
 
         public class PaginationResultToPaginationAPITypeConverter<sourceT, destT> : ITypeConverter<PaginationResult<sourceT>, PaginationAPIModel<destT>>

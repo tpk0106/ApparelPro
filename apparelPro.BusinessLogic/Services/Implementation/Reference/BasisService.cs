@@ -1,11 +1,10 @@
-﻿using apparelPro.BusinessLogic.Services.Models.Reference.IBasisService;
-
-using ApparelPro.Data.Models.References;
+﻿using apparelPro.BusinessLogic.Misc;
+using apparelPro.BusinessLogic.Services.Models.Reference.IBasisService;
 using ApparelPro.Data;
+using ApparelPro.Data.Models.References;
 using ApparelPro.Shared.Extensions;
 using ApparelPro.Shared.LookupConstants;
 using AutoMapper;
-using apparelPro.BusinessLogic.Misc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 
@@ -23,26 +22,38 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             _lookupConstants = lookupConstants;                
         }
 
-        public Task AddBasisAsync(CreateBasisServiceModel createBasisServiceModel)
+        public async Task<BasisServiceModel> AddBasisAsync(CreateBasisServiceModel createBasisServiceModel)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var basisDbModel = _mapper.Map<Basis>(createBasisServiceModel);
+                _apparelProDbContext.Basis.Add(basisDbModel);
+                await _apparelProDbContext.SaveChangesAsync();
+                return _mapper.Map<BasisServiceModel>(basisDbModel);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Basis already exists");
+            }            
         }
 
-        public Task DeleteBasissAsync(string code)
+        public async Task DeleteBasisAsync(string code)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var basisDbModel = await _apparelProDbContext.Basis
+                    .Where(basis => basis.Code == code)
+                    .FirstOrDefaultAsync();
+                _apparelProDbContext.Basis.Remove(basisDbModel!);
+                await _apparelProDbContext.SaveChangesAsync();                
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                throw new Exception(ex.Message);
+            }
         }
-
-        public Task GetBasisAsync()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task GetBasisByCodeAsync(string code)
-        {
-            throw new NotImplementedException();
-        }
-
+     
         public async Task<PaginationResult<BasisServiceModel>> GetBasisesAsync(int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery)
         {
             IQueryable<Basis> basisPagination = _apparelProDbContext.Basis.AsNoTracking();
@@ -80,9 +91,34 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
                 sortColumn, sortOrder, filterColumn, filterQuery);
         }
 
-        public Task UpdateBasisAsync(UpdateBasisServiceModel updateBasisServiceModel)
+        public async Task UpdateBasisAsync(UpdateBasisServiceModel updateBasisServiceModel)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var basisDbModel = await _apparelProDbContext.Basis
+                    .Where(basis => basis.Code == updateBasisServiceModel.Code)
+                    .FirstOrDefaultAsync();
+                if(basisDbModel != null)
+                {
+                    basisDbModel?.Description = updateBasisServiceModel.Description;
+                    basisDbModel?.ValueAdd = updateBasisServiceModel.ValueAdd;
+                    _apparelProDbContext.Basis.Update(basisDbModel!);
+                    await _apparelProDbContext.SaveChangesAsync();
+                }                
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<BasisServiceModel> GetBasisByCodeAsync(string code)
+        {
+            var basisDbModel = await _apparelProDbContext.Basis.Where(basis => basis.Code == code)
+                .FirstOrDefaultAsync();
+            var basisServiceModel = _mapper.Map<BasisServiceModel>(basisDbModel);
+            return basisServiceModel;
         }
     }
 }

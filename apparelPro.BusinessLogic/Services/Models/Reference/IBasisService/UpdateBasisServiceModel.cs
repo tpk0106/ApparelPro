@@ -1,8 +1,11 @@
-﻿using ApparelPro.Data.Models.References;
-
+﻿
 namespace apparelPro.BusinessLogic.Services.Models.Reference.IBasisService
 {
-    public class UpdateBasisServiceModel:Basis
+    public class UpdateBasisServiceModel
     {
+        public int Id { get; set; }
+        public string Code { get; set; }
+        public string Description { get; set; }
+        public bool ValueAdd { get; set; }
     }
 }

@@ -72,3 +72,12 @@ SET ALLOW_SNAPSHOT_ISOLATION ON;
 
 ALTER DATABASE ApparelPro
 SET READ_COMMITTED_SNAPSHOT ON WITH ROLLBACK IMMEDIATE;
+
+
+Add-Migration AddEventsTrackingArchitectureTables -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi -ErrorActionignore
+Update-Database -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi -ErrorActionignore
+
+ QuestPDF—the modern, high-speed, type-safe enterprise standard for 
+ C# document generation—to produce a beautifully formatted page-turning report with zero generic overhead.
+
+Install-Package QuestPDF -Version 2024.12.1

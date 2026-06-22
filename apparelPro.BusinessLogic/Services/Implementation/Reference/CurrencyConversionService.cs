@@ -72,7 +72,10 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
 
             List<CurrencyConversion>? result = null;
 
-            var cacheKey = $"{pageNumber}-{pageSize}-{sortColumn}-{sortOrder}-{filterColumn}-{filterQuery}";
+            //var cacheKey = $"{pageNumber}-{pageSize}-{sortColumn}-{sortOrder}-{filterColumn}-{filterQuery}";
+            // Add a unique "units:" namespace prefix to the string
+            var cacheKey = $"currency-conversion:{pageNumber}-{pageSize}-{sortColumn}-{sortOrder}-{filterColumn}-{filterQuery}";
+
             var _options = new DistributedCacheEntryOptions() { AbsoluteExpirationRelativeToNow = new TimeSpan(0, 0, 30) };
 
             _distributedCache.TryGetValue<List<CurrencyConversion>>(cacheKey, out result);

@@ -169,5 +169,19 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             _apparelProDbContext.Update(supplierDbModel);
             await _apparelProDbContext.SaveChangesAsync();
         }
+
+        public async Task<List<SupplierLookupServiceModel>> GetSuppliersLookupAsync()
+        {
+            return await _apparelProDbContext.Suppliers
+                .AsNoTracking()
+                .Select(s => new SupplierLookupServiceModel
+                {
+                    SupplierCode = s.SupplierCode,
+                    Name = s.Name
+                })
+                .OrderBy(s => s.Name)
+                .ToListAsync();
+        }
+
     }
 }

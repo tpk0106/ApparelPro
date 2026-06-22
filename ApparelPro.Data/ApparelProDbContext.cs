@@ -1,9 +1,17 @@
-﻿using ApparelPro.Data.Configurations.OrderManagement;
+﻿using apparelPro.BusinessLogic.Services.Models.OrderManagement.Stylewise_Events;
+using ApparelPro.Data.Configurations;
+using ApparelPro.Data.Configurations.OrderManagement;
+using ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption;
+using ApparelPro.Data.Configurations.OrderManagement.Stylewise_events;
+using ApparelPro.Data.Configurations.OrderwiseInventory;
 using ApparelPro.Data.Configurations.References;
 using ApparelPro.Data.Configurations.Registration;
 using ApparelPro.Data.Models.OrderManagement;
+using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
+using ApparelPro.Data.Models.OrderwiseInventory;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Data.Models.Registration;
+using ApparelPro.WebApi.APIModels.OrderManagement;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApparelPro.Data
@@ -37,6 +45,7 @@ namespace ApparelPro.Data
         public virtual DbSet<Style> Styles { get; set; }
         public virtual DbSet<Basis> Basis { get; set; }
         public virtual DbSet<Unit> Units { get; set; }
+        public virtual DbSet<UnitConversion> UnitConversion { get; set; }
         public virtual DbSet<Stock> Stocks { get; set; }
         public virtual DbSet<Feature> Features { get; set; }
         public virtual DbSet<StockItem> StockItems { get; set; }       
@@ -48,6 +57,23 @@ namespace ApparelPro.Data
         public virtual DbSet<CurrencyConversion> CurrencyConversions { get; set; }
 
         public virtual DbSet<Supplier> Suppliers { get; set; }
+
+        // Order Management
+        public virtual DbSet<ItemFeature> ItemFeatures { get; set; }
+        public virtual DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<GarmentTypeItems> GarmentTypeItems { get; set; } = null!;
+        public virtual DbSet<OrderItemFeature> OrderItemFeatures { get; set; }
+        public virtual DbSet<StyleMaterialConsumptionLedger> StyleMaterialConsumptionLedgers { get; set; }
+        public virtual DbSet<StyleMaterialCostProfile> StyleMaterialCostProfiles { get; set; }
+        public virtual DbSet<ColorSizeDetails> ColorSizeDetails { get; set; }
+
+        public virtual DbSet<PurchaseOrderHeader>  PurchaseOrderHeaders { get; set; }
+        public virtual DbSet<EventMaster> EventMasters { get; set; } = null;
+        public virtual DbSet<StylewiseEvent> StylewiseEvents { get; set; } = null;
+
+        // inventory
+        public virtual DbSet<OrderwiseStock> OrderwiseStocks { get; set; }
+        public virtual DbSet<OrderwiseStockMaster> OrderwiseStockMasters { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -63,16 +89,37 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new StyleConfig());
             modelBuilder.ApplyConfiguration(new BasisConfig());
             modelBuilder.ApplyConfiguration(new UnitConfig());
+            modelBuilder.ApplyConfiguration(new UnitConversionConfig());
             modelBuilder.ApplyConfiguration(new FeatureConfig());
             modelBuilder.ApplyConfiguration(new StockConfig());
             modelBuilder.ApplyConfiguration(new StockItemConfig());
             modelBuilder.ApplyConfiguration(new PODetailsConfig());
             modelBuilder.ApplyConfiguration(new CurrencyExchangeConfig());
             modelBuilder.ApplyConfiguration(new UserConfig());
-
-            modelBuilder.ApplyConfiguration(new PurchaseOrderConfig());
+            modelBuilder.ApplyConfiguration(new SupplierConfig());            
             modelBuilder.ApplyConfiguration(new CurrencyConversionConfig());
-            modelBuilder.ApplyConfiguration(new SupplierConfig());
+
+            // order management
+            modelBuilder.ApplyConfiguration(new PurchaseOrderConfig());
+            modelBuilder.ApplyConfiguration(new ColorSizeDetailsConfig());
+
+            modelBuilder.ApplyConfiguration(new ItemFeatureConfig());
+            modelBuilder.ApplyConfiguration(new OrderItemConfig());
+            modelBuilder.ApplyConfiguration(new GarmentTypeItemsConfig());
+
+            modelBuilder.ApplyConfiguration(new OrderItemFeatureConfig());
+            modelBuilder.ApplyConfiguration(new StyleMaterialCostProfileConfig());
+            modelBuilder.ApplyConfiguration(new StyleMaterialConsumptionLedgerConfig());
+            modelBuilder.ApplyConfiguration(new PurchaseOrderHeaderConfig());
+
+            // styelwise events
+            modelBuilder.ApplyConfiguration(new StylewiseEventConfig());
+            modelBuilder.ApplyConfiguration(new EventMasterConfig());
+
+            // inventory
+            modelBuilder.ApplyConfiguration(new OrderwiseStockConfig());
+            modelBuilder.ApplyConfiguration(new OrderwiseStockMasterConfig());
+
         }
 
         //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -80,7 +127,5 @@ namespace ApparelPro.Data
         //    base.OnConfiguring(optionsBuilder);
         //    optionsBuilder.UseSqlServer("ApparelProConnection");              
         //}
-    }
-
-   
+    }   
 }

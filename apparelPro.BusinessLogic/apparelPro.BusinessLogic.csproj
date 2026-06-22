@@ -10,11 +10,17 @@
     <PackageReference Include="AutoMapper" Version="16.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="10.0.8" />
     <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.8" />
+    <PackageReference Include="QuestPDF" Version="2026.6.0" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.7.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ApparelPro.Data\ApparelPro.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\Models\OrderManagement\ISupplierPurchaseOrder\" />
+    <Folder Include="Services\Reports\Models\" />
   </ItemGroup>
 
 </Project>

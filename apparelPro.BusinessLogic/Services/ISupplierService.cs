@@ -12,7 +12,8 @@ namespace apparelPro.BusinessLogic.Services
     public interface ISupplierService
     {
         Task<PaginationResult<SupplierServiceModel>> GetSuppliersAsync(int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery);
-        
+
+        Task<List<SupplierLookupServiceModel>> GetSuppliersLookupAsync();
         Task<SupplierServiceModel> GetSupplierBySupplierCodeAsync(int supplierCode);        
         Task<SupplierServiceModel> AddSupplierAsync(CreateSupplierServiceModel createSupplierServiceModel);
         Task UpdateSupplierAsync(UpdateSupplierServiceModel  updateSupplierServiceModel);

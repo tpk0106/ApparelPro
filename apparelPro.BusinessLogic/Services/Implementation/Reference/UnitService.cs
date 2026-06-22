@@ -73,7 +73,10 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
 
             List<Unit>? result = null;
 
-            var cacheKey = $"{pageNumber}-{pageSize}-{sortColumn}-{sortOrder}-{filterColumn}-{filterQuery}";
+            //var cacheKey = $"{pageNumber}-{pageSize}-{sortColumn}-{sortOrder}-{filterColumn}-{filterQuery}";
+            // Add a unique "units:" namespace prefix to the string
+            var cacheKey = $"units:{pageNumber}-{pageSize}-{sortColumn}-{sortOrder}-{filterColumn}-{filterQuery}";
+
             var _options = new DistributedCacheEntryOptions() { AbsoluteExpirationRelativeToNow = new TimeSpan(0, 0, 30) };
 
             _distributedCache.TryGetValue<List<Unit>>(cacheKey, out result);
@@ -87,11 +90,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
                 result = await unitPagination.ToListAsync();
 
                 _distributedCache.Set(cacheKey, result, _options);
-            }
-
-            unitPagination = unitPagination
-                .Skip(pageSize * pageNumber)
-                .Take(pageSize);
+            }                     
 
             var filteredDbCountries = result;
             var UnitServiceModels = _mapper.Map<IList<UnitServiceModel>>(filteredDbCountries);
