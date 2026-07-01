@@ -4,12 +4,14 @@ using apparelPro.BusinessLogic.Services.Models.OrderManagement.IColorSizeDetails
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialConsumptionService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPurchaseOrderService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsService;
+using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBasisService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBuyerService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICountryService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyExchangeService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyService;
+using apparelPro.BusinessLogic.Services.Models.Reference.IDepartmentService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IFeatureService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IGarmentTypeService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IPortDestinationService;
@@ -132,7 +134,9 @@ namespace apparelPro.BusinessLogic.Services.Mappings
               .ForMember(src => src.CUSDEC, opt => opt.MapFrom(src => src.CUSDEC))
               .ForMember(src => src.Addresses, opt => opt.MapFrom(src => src.Addresses))
               .ReverseMap();
-              
+
+            // Department
+            CreateMap<DepartmentServiceModel, Department>().ReverseMap().MaxDepth(2);
 
             // Unit
             CreateMap<Unit, UnitServiceModel>().MaxDepth(2)
@@ -421,6 +425,9 @@ namespace apparelPro.BusinessLogic.Services.Mappings
                 .ForMember(src => src.CostPerUnit, opt => opt.MapFrom(src => src.CostPerUnit))
                 .MaxDepth(2);
 
+
+            // orderwise inventory
+            //CreateMap<SRNServiceModel,SRN>().MaxDepth(2);
 
             // report stylewise 
             //CreateMap<StyleApprovalDetailsServiceModel, OrderItemServiceModel>().MaxDepth(2);

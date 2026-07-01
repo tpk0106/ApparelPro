@@ -6,21 +6,25 @@ using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace ApparelPro.WebApi.Controllers
 {
-    [Route("api/materialConsumption")]
+    [Route("api/material-consumption")]
     [ApiController]
     [Authorize(Roles = "Merchandiser,Merchandiser Manager")]
     public class MaterialConsumptionController : ControllerBase
     {
         private readonly IMaterialConsumptionService _materialConsumptionService;
+        private readonly IStyleApprovalService _styleApprovalService;
         private readonly IMapper _mapper;
 
-        public MaterialConsumptionController(IMaterialConsumptionService consumptionService, IMapper mapper)
+        public MaterialConsumptionController(IMaterialConsumptionService consumptionService, 
+            IMapper mapper, IStyleApprovalService styleApprovalService)
         {
             _materialConsumptionService = consumptionService;
+            _styleApprovalService = styleApprovalService;
             _mapper = mapper;
         }       
 
@@ -76,6 +80,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost("save-entry")]
+        [Authorize] // Enforces that the request must contain a valid active web session token
         [ProducesResponseType(typeof(bool), HttpStatusCodes.OK)]
         public async Task<IActionResult> SaveEntry([FromBody] CreateMaterialConsumptionEntryRequestAPIModel request)
         {
@@ -83,6 +88,37 @@ namespace ApparelPro.WebApi.Controllers
 
             try
             {
+
+                // 1. ISOLATED SERVICE INVOCATION PASS: Check for active locks in the database
+                //var approvalDetails = await _materialConsumptionService.GetStyleApprovalDetailsAsync(
+                //    request.BuyerCode, request.Order, request.TypeCode, request.StyleCode
+                //);
+
+                // 1. Invoke your existing style approval service layer
+                var approvalDetails = await _styleApprovalService.GetStyleApprovalDetailsAsync(
+                    request.BuyerCode, request.Order, request.TypeCode, request.StyleCode
+                );
+
+                if (approvalDetails != null)
+                {
+                    // 🚀 THE CLIPPER SECURITY GUARD ACCESS INTERCEPTOR:
+                    bool isHigherAuthority = User.IsInRole("Merchandising Manager") || User.IsInRole("Executive Director");
+
+                    if (!isHigherAuthority)
+                    {
+                        // FIXED TYPING & FORMATTING PASS: 
+                        // Safely calls ToString() on the DateOnly struct using standard day-month-year masks
+                        string formattedDate = approvalDetails.EstimateApprovalDate.HasValue
+                            ? approvalDetails.EstimateApprovalDate.Value.ToString("dd-MMM-yyyy")
+                            : "an Unknown Date";
+
+                        return StatusCode(403, new
+                        {
+                            Error = $"🛑 ACCESS DENIED: This material sheet was officially approved and locked by [ {approvalDetails.EstimateApprovalUserName} ] on {formattedDate}. Alterations are restricted to higher management authority accounts only."
+                        });
+                    }
+                }
+
                 var createMaterialConsumptionEntryRequestServiceModel = _mapper.Map<CreateMaterialConsumptionEntryRequestServiceModel>(request);
                 var result = await _materialConsumptionService.SaveMaterialConsumptionEntryAsync(createMaterialConsumptionEntryRequestServiceModel);
                 return Ok(result);
@@ -116,6 +152,9 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpDelete("delete-entry")]
+        //[ProducesResponseType(HttpStatusCodes.NoContent)]
+        
+        [ProducesResponseType(typeof(BadRequestResult), HttpStatusCodes.BadRequest)]
         public async Task<IActionResult> DeleteEntry(
             [FromQuery] int buyerCode, [FromQuery] string order, [FromQuery] int typeCode, [FromQuery] string styleCode,
             [FromQuery] string stockCode, [FromQuery] string itemCode, [FromQuery] string color, [FromQuery] string size)

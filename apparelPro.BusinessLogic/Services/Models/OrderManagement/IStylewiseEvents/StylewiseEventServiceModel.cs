@@ -18,5 +18,8 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.IStylewiseEve
         public string? Remarks { get; set; }
         public string MilestoneStatus { get; set; } = null!; // Dynamic calculation: "No Scheduled Date", etc.
 
+        // ADD THESE TWO COLUMNS TO YOUR FLAT ROW MODEL:
+        public string? ApprovedByUserId { get; set; } // ea_userid
+        public DateTime? ApprovedDate { get; set; }    // ea_date
     }
 }

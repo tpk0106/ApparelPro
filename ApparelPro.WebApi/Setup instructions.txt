@@ -81,3 +81,15 @@ Update-Database -Context ApparelProDbContext -Project ApparelPro.Data -StartupPr
  C# document generation—to produce a beautifully formatted page-turning report with zero generic overhead.
 
 Install-Package QuestPDF -Version 2024.12.1
+
+Add-Migration AddPartShipmentsAndQuotaTransactionArchitecture -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi -ErrorAction ignore
+Update-Database -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi -ErrorAction ignore
+
+
+Add-Migration AddInventoryTablesAndSequentialSerialDocArchitecture  -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi
+
+# 1. Package the structural column additions into a clean migration file
+Add-Migration SyncOrderwiseStockColumnsSchema -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi
+
+# 2. Push and execute the data schema directly onto SQL Server
+Update-Database -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi

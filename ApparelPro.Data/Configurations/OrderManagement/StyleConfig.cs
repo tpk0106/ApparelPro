@@ -80,7 +80,7 @@ namespace ApparelPro.Data.Configurations.OrderManagement
 
             entity.Property(p => p.Username)
                 .IsRequired(false)
-                .HasMaxLength(6);  // Maps automatically to nvarchar(6)
+                .HasMaxLength(30);  // Maps automatically to nvarchar(6)
 
             // These three are now explicitly configured as optional (nullable)
             entity.Property(p => p.ApprovedDate)
@@ -97,7 +97,7 @@ namespace ApparelPro.Data.Configurations.OrderManagement
 
             entity.Property(p => p.EstimateApprovalUserName)
                 .IsRequired(false)
-                .HasMaxLength(6); // Maps automatically to nvarchar(6)
+                .HasMaxLength(30); // Maps automatically to nvarchar(6)
 
             entity.Property(p => p.Exported)
                 .IsRequired(false)

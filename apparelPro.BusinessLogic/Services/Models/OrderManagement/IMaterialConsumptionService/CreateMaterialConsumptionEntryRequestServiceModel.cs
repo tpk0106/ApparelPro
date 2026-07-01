@@ -15,6 +15,7 @@ namespace ApparelPro.WebApi.APIModels.OrderManagement
 
         [Required] public string StockCode { get; set; } = null!;
         [Required] public string ItemCode { get; set; } = null!;
+        public string Description { get; set; } = null!;
 
         // Feature properties mapping your dynamic interface inputs
         public string Feature1 { get; set; } = "";

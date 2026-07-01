@@ -22,6 +22,7 @@ namespace ApparelPro.Data.Configurations.OrderwiseInventory
             entity.Property(e => e.Currency).HasColumnType("varchar(3)").HasColumnName("Currency").IsRequired();
             entity.Property(e => e.OrderedQuantity).HasColumnType("decimal(12,2)").HasColumnName("OrderedQuantity").IsRequired();
             entity.Property(e => e.Price).HasColumnType("decimal(10,4)").HasColumnName("Price").IsRequired();
+            entity.Property(e => e.RequisitionedQuantity).HasColumnName("RequisitionedQuantity").HasColumnType("decimal(12,2)");
         }
     }
 }

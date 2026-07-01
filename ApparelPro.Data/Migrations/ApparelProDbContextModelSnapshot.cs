@@ -449,6 +449,177 @@ namespace ApparelPro.Data.Migrations
                     b.ToTable("PurchaseOrderHeaders", (string)null);
                 });
 
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.Shipments.PartShipment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<int>("BuyerCode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DestinationCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)");
+
+                    b.Property<string>("FromYearMonth")
+                        .IsRequired()
+                        .HasColumnType("varchar(5)");
+
+                    b.Property<string>("NewOrder")
+                        .IsRequired()
+                        .HasColumnType("varchar(12)");
+
+                    b.Property<string>("Order")
+                        .IsRequired()
+                        .HasColumnType("varchar(12)");
+
+                    b.Property<DateTime>("OrderDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("QuotaCategory")
+                        .IsRequired()
+                        .HasColumnType("varchar(6)");
+
+                    b.Property<string>("QuotaCountry")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("QuotaStatus")
+                        .IsRequired()
+                        .HasColumnType("varchar(1)");
+
+                    b.Property<string>("QuotaType")
+                        .IsRequired()
+                        .HasColumnType("varchar(2)");
+
+                    b.Property<DateTime>("ShipDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("ShippingMode")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)");
+
+                    b.Property<string>("StyleCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(12)");
+
+                    b.Property<string>("SubContractFlag")
+                        .IsRequired()
+                        .HasColumnType("varchar(1)");
+
+                    b.Property<string>("ToYearMonth")
+                        .IsRequired()
+                        .HasColumnType("varchar(5)");
+
+                    b.Property<int>("TypeCode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuyerCode", "Order", "TypeCode", "StyleCode", "NewOrder", "DestinationCode", "ShipDate")
+                        .IsUnique();
+
+                    b.ToTable("PartShipments", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.Shipments.QuotaTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)");
+
+                    b.Property<int>("BuyerCode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FromYearMonth")
+                        .IsRequired()
+                        .HasColumnType("varchar(5)");
+
+                    b.Property<string>("NewOrder")
+                        .IsRequired()
+                        .HasColumnType("varchar(12)");
+
+                    b.Property<string>("Order")
+                        .IsRequired()
+                        .HasColumnType("varchar(12)");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("QuotaCategory")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("QuotaCountry")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("QuotaStatus")
+                        .IsRequired()
+                        .HasColumnType("varchar(1)");
+
+                    b.Property<string>("QuotaType")
+                        .IsRequired()
+                        .HasColumnType("varchar(2)");
+
+                    b.Property<string>("StyleCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(12)");
+
+                    b.Property<string>("ToYearMonth")
+                        .IsRequired()
+                        .HasColumnType("varchar(5)");
+
+                    b.Property<int>("TypeCode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("QuotaTransactions", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderwiseInventory.DocumentSequence", b =>
+                {
+                    b.Property<string>("NoteType")
+                        .HasColumnType("varchar(5)");
+
+                    b.Property<int>("LastAllocatedNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Prefix")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("varchar(3)")
+                        .HasDefaultValue("");
+
+                    b.HasKey("NoteType");
+
+                    b.ToTable("DocumentSequences", (string)null);
+                });
+
             modelBuilder.Entity("ApparelPro.Data.Models.OrderwiseInventory.OrderwiseStock", b =>
                 {
                     b.Property<int>("Id")
@@ -461,10 +632,22 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("int")
                         .HasColumnName("BuyerCode");
 
+                    b.Property<decimal>("DamagedQuantity")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("DamagedQuantity");
+
                     b.Property<string>("ItemCode")
                         .IsRequired()
                         .HasColumnType("varchar(40)")
                         .HasColumnName("ItemCode");
+
+                    b.Property<DateTime?>("LastDateIssued")
+                        .HasColumnType("date")
+                        .HasColumnName("LastDateIssued");
+
+                    b.Property<DateTime?>("LastDateReceived")
+                        .HasColumnType("date")
+                        .HasColumnName("LastDateReceived");
 
                     b.Property<string>("Order")
                         .IsRequired()
@@ -475,10 +658,30 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("decimal(12,2)")
                         .HasColumnName("OrderedQuantity");
 
+                    b.Property<decimal>("QtyInHand")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("QtyInHand");
+
+                    b.Property<decimal>("ShadowBalance")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("ShadowBalance");
+
+                    b.Property<decimal>("SrnBalance")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("SrnBalance");
+
                     b.Property<string>("StoreCode")
                         .IsRequired()
                         .HasColumnType("varchar(3)")
                         .HasColumnName("StoreCode");
+
+                    b.Property<decimal>("ToDateIssued")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("ToDateIssued");
+
+                    b.Property<decimal>("ToDateReceived")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("ToDateReceived");
 
                     b.Property<string>("Unit")
                         .IsRequired()
@@ -525,6 +728,10 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("decimal(10,4)")
                         .HasColumnName("Price");
 
+                    b.Property<decimal>("RequisitionedQuantity")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("RequisitionedQuantity");
+
                     b.Property<string>("Unit")
                         .IsRequired()
                         .HasColumnType("varchar(3)")
@@ -533,6 +740,63 @@ namespace ApparelPro.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("OrderwiseStockMasters", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderwiseInventory.OrderwiseStockTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BuyerCode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedByUsername")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("DepartmentCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)");
+
+                    b.Property<string>("DocumentNumber")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("ItemCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(6)");
+
+                    b.Property<string>("Order")
+                        .IsRequired()
+                        .HasColumnType("varchar(12)");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("StockCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(2)");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("TransactionType")
+                        .IsRequired()
+                        .HasColumnType("varchar(2)");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentNumber", "TransactionType", "StockCode", "ItemCode")
+                        .IsUnique();
+
+                    b.ToTable("OrderwiseStockTransactions", (string)null);
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Address", b =>
@@ -804,6 +1068,20 @@ namespace ApparelPro.Data.Migrations
                     b.ToTable("CurrencyExchanges");
                 });
 
+            modelBuilder.Entity("ApparelPro.Data.Models.References.Department", b =>
+                {
+                    b.Property<string>("DepartmentCode")
+                        .HasColumnType("varchar(3)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("varchar(30)");
+
+                    b.HasKey("DepartmentCode");
+
+                    b.ToTable("Departments", (string)null);
+                });
+
             modelBuilder.Entity("ApparelPro.Data.Models.References.Destination", b =>
                 {
                     b.Property<int>("Id")
@@ -933,8 +1211,8 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("date");
 
                     b.Property<string>("EstimateApprovalUserName")
-                        .HasMaxLength(6)
-                        .HasColumnType("nvarchar(6)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<decimal?>("ExportBalance")
                         .HasColumnType("decimal(10,2)");
@@ -986,8 +1264,8 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("decimal(10,2)");
 
                     b.Property<string>("Username")
-                        .HasMaxLength(6)
-                        .HasColumnType("nvarchar(6)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.HasKey("Id");
 

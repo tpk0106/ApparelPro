@@ -1,13 +1,14 @@
 ﻿using apparelPro.BusinessLogic.Services.Models.OrderManagement.Stylewise_Events;
-using ApparelPro.Data.Configurations;
 using ApparelPro.Data.Configurations.OrderManagement;
 using ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption;
+using ApparelPro.Data.Configurations.OrderManagement.Shipment;
 using ApparelPro.Data.Configurations.OrderManagement.Stylewise_events;
 using ApparelPro.Data.Configurations.OrderwiseInventory;
 using ApparelPro.Data.Configurations.References;
 using ApparelPro.Data.Configurations.Registration;
 using ApparelPro.Data.Models.OrderManagement;
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
+using ApparelPro.Data.Models.OrderManagement.Shipments;
 using ApparelPro.Data.Models.OrderwiseInventory;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Data.Models.Registration;
@@ -75,6 +76,15 @@ namespace ApparelPro.Data
         public virtual DbSet<OrderwiseStock> OrderwiseStocks { get; set; }
         public virtual DbSet<OrderwiseStockMaster> OrderwiseStockMasters { get; set; }
 
+        public virtual DbSet<Department> Departments { get; set; } = null!;
+        public virtual DbSet<OrderwiseStockTransaction> OrderwiseStockTransactions { get; set; } = null!;
+        public virtual DbSet<DocumentSequence> DocumentSequences { get; set; } = null!;
+
+
+        // shipments
+        public virtual DbSet<PartShipment> PartShipments { get; set; } = null!;
+        public virtual DbSet<QuotaTransaction> QuotaTransactions { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -120,6 +130,13 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new OrderwiseStockConfig());
             modelBuilder.ApplyConfiguration(new OrderwiseStockMasterConfig());
 
+            modelBuilder.ApplyConfiguration(new DocumentSequenceConfig());
+            modelBuilder.ApplyConfiguration(new DepartmentConfig());
+            modelBuilder.ApplyConfiguration(new OrderwiseStockTransactionConfig());
+
+            // shipments
+            modelBuilder.ApplyConfiguration(new PartShipmentConfig());
+            modelBuilder.ApplyConfiguration(new QuotaTransactionConfig());
         }
 
         //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

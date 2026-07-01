@@ -13,5 +13,7 @@ namespace apparelPro.BusinessLogic.Services
         Task UpdateUnitAsync(UpdateUnitConversionServiceModel updateUnitConversionServiceModel);
         Task DeleteUnitConversionAsync(string fromUnit, string toUnit);
         //Task<bool> DoesUnitConversionExistAsync(string code);
+
+        Task<decimal> ConvertUnitAsync(string fromUnit, string toUnit, decimal quantity);
     }
 }

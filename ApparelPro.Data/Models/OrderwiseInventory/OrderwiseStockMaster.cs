@@ -15,5 +15,7 @@ namespace ApparelPro.Data.Models.OrderwiseInventory
         public string Currency { get; set; } = null!;
         public decimal OrderedQuantity { get; set; }
         public decimal Price { get; set; }
+        // 🚀 ADDED: Tracks cumulative reserved quantities (Maps to legacy req_qty)
+        public decimal RequisitionedQuantity { get; set; }
     }
 }

@@ -69,7 +69,7 @@ namespace ApparelPro.WebApi.Controllers
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
         
-        public async Task<IActionResult> UpdateCountryAsync([FromQuery] int id, [FromBody] UpdateGarmentTypeAPIModel
+        public async Task<IActionResult> UpdateGarmentTypeAsync([FromQuery] int id, [FromBody] UpdateGarmentTypeAPIModel
            updateGarmentTypeAPIModel)
         {
             var resultGarmentTypeAPIModel = _mapper.Map<GarmentTypeAPIModel>(await _garmentTypeService.GetGarmentTypeByIdAsync(id));

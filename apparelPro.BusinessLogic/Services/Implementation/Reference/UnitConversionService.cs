@@ -102,5 +102,42 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
         {
             throw new NotImplementedException();
         }
+
+        public async Task<decimal> ConvertUnitAsync(string fromUnit, string toUnit, decimal quantity)
+        {
+            fromUnit = fromUnit.Trim().ToUpper();
+            toUnit = toUnit.Trim().ToUpper();
+
+            // Base Case Guard: No calculation needed if the unit codes are identical
+            if (fromUnit == toUnit) return quantity;
+
+            // 1. Look for a Forward Conversion rule (From Left to Right, e.g., GRS -> PCS)
+            var forwardRule = await _apparelProDbContext.UnitConversion
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.FromUnit == fromUnit && u.ToUnit == toUnit);
+
+            if (forwardRule != null && forwardRule.Measure.HasValue)
+            {
+                // Multiply when moving forward from Left to Right
+                return quantity * forwardRule.Measure.Value;
+            }
+
+            // 2. Look for a Reverse Conversion rule (From Right to Left, e.g., PCS -> GRS)
+            var reverseRule = await _apparelProDbContext.UnitConversion
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.FromUnit == toUnit && u.ToUnit == fromUnit);
+
+            if (reverseRule != null && reverseRule.Measure.HasValue)
+            {
+                // Safe Division Guard to prevent application crashes
+                if (reverseRule.Measure.Value == 0) return 0;
+
+                // Divide when moving backward from Right to Left
+                return quantity / reverseRule.Measure.Value;
+            }
+
+            // 3. System Error Trap: Block execution if no relational mapping rule exists in the database
+            throw new InvalidOperationException($"Unit Conversion Map Error: No conversion rule exists between unit code '{fromUnit}' and unit code '{toUnit}' inside the lookup tables.");
+        }
     }
 }

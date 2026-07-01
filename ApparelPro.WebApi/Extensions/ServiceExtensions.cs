@@ -1,10 +1,14 @@
 ﻿using apparelPro.BusinessLogic.Configuration;
 using apparelPro.BusinessLogic.Services;
 using apparelPro.BusinessLogic.Services.Implementation.OrderManagement;
+using apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Implementation.Reference;
 using apparelPro.BusinessLogic.Services.Implementation.Registration;
 using apparelPro.BusinessLogic.Services.Implementation.Shared;
+using apparelPro.BusinessLogic.Services.interfaces.ISharedService;
+using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitService;
+using apparelPro.BusinessLogic.Services.Models.Shared;
 using apparelPro.BusinessLogic.Services.Reports.Interfaces;
 using ApparelPro.Data;
 using ApparelPro.Shared.LookupConstants;
@@ -66,6 +70,7 @@ namespace ApparelPro.WebApi.Extensions
             services.AddTransient(typeof(IPortDestinationService), typeof(PortDestinationService));
             services.AddTransient(typeof(IFeatureService), typeof(FeatureService));
             services.AddTransient(typeof(IUnitConversionService), typeof(UnitConversionService));
+            services.AddTransient(typeof(IDepartmentService), typeof(DepartmentService));
 
             services.AddTransient(typeof(PaginationResultToPaginationAPITypeConverter<,>));
             //  services.AddTransient<IUnitServiceT<UnitServiceModel>>(x=> x.GetRequiredService<IUnitServiceT<UnitServiceModel>>());
@@ -85,6 +90,19 @@ namespace ApparelPro.WebApi.Extensions
             // Register the Style-wise critical path tracking service loop lifecycle handler
             services.AddScoped<IStylewiseEventService, StylewiseEventService>();
             //services.AddScoped<IStylewiseReportService, StylewiseReportService>();
+
+            // Register the Scheduled Part Shipments logistics transaction engine loop handler
+            services.AddScoped<IPartShipmentService, PartShipmentService>();
+
+            // events approval
+            // Register the Critical Path Manager Validation Lock service interface mapping
+            services.AddScoped<IStyleApprovalService, StyleApprovalService>();
+
+            // orderwise inventory
+            services.AddScoped<IStoresRequisitionService, StoresRequisitionService>();
+
+            // shared service
+            services.AddScoped<ISharedService, SharedService>();
         }
 
         public static void ConfgureAppsettings(IServiceCollection services, IConfiguration configuration)

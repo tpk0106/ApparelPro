@@ -3,12 +3,14 @@ using apparelPro.BusinessLogic.Services.Models.OrderManagement.IColorSizeDetails
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialConsumptionService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPurchaseOrderService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsService;
+using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBasisService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBuyerService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICountryService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyExchangeService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyService;
+using apparelPro.BusinessLogic.Services.Models.Reference.IDepartmentService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IFeatureService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IGarmentTypeService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IPortDestinationService;
@@ -22,6 +24,7 @@ using ApparelPro.Data.Models.Registration;
 using ApparelPro.Shared.Extensions;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.OrderManagement;
+using ApparelPro.WebApi.APIModels.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.APIModels.Registration;
 using ApparelPro.WebApi.Reports.Models;
@@ -171,7 +174,8 @@ namespace ApparelPro.WebApi.Mappings
               .ForMember(src => src.Addresses, opt => opt.MapFrom(src => src.Addresses));
             // .ReverseMap();
 
-
+            // Department
+            CreateMap<DepartmentServiceModel,DepartmentAPIModel>().MaxDepth(2);
 
             // basis
 
@@ -541,6 +545,9 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<SupplierLookupServiceModel, SupplierLookupAPIModel>().MaxDepth(2);
 
             CreateMap<StyleApprovalDetailsServiceModel, StyleApprovalDetailsAPIModel>().MaxDepth(2);
+
+            // orderwise inventory
+            CreateMap<SRNAPIModel,SRNServiceModel>().MaxDepth(2);
         }
 
         public class PaginationResultToPaginationAPITypeConverter<sourceT, destT> : ITypeConverter<PaginationResult<sourceT>, PaginationAPIModel<destT>>

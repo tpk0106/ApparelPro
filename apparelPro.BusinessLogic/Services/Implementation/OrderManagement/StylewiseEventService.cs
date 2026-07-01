@@ -50,6 +50,12 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 }
             }
 
+            // 2. Fetch the style row from SQL Server to check for executive approval signatures
+            var styleHeader = await _apparelProDbContext.Styles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.BuyerCode == buyerCode && s.Order == order && s.TypeCode == typeCode && s.StyleCode == styleCode);
+
+
             // 3. Extract the complete checklist joined to your master descriptions dictionary
             var ledgerRows = await _apparelProDbContext.EventMasters
                 .Where(e => e.BuyerCode == buyerCode && e.Order == order && e.TypeCode == typeCode && e.StyleCode == styleCode)
@@ -64,7 +70,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     .FirstOrDefaultAsync(t => t.EventCode == row.EventCode);
 
                 // 4. CLIPPER REPORT ENGINE MATRIX: Calculate dynamic milestone status descriptions on the fly
-                string calculatedStatus = "** OK **";
+                //string calculatedStatus = "** OK **";
+                string calculatedStatus = !row.ScheduledDate.HasValue ? "No Scheduled Date" : (!row.ActualDate.HasValue ? "Actual Date Pending" : "** OK **");
+
                 if (!row.ScheduledDate.HasValue) calculatedStatus = "No Scheduled Date";
                 else if (!row.ActualDate.HasValue) calculatedStatus = "Actual Date Pending";
 
@@ -80,7 +88,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     ScheduledDate = row.ScheduledDate,
                     ActualDate = row.ActualDate,
                     Remarks = row.Remarks,
-                    MilestoneStatus = calculatedStatus
+                    MilestoneStatus = calculatedStatus,
+
+                    // FIXED: Map the parent approval stamp onto every single row item item cleanly!
+                    ApprovedByUserId = styleHeader?.Username,
+                    // THE PERMANENT FIX: Safely handles null checks first.
+                    ApprovedDate = styleHeader?.ApprovedDate.HasValue == true
+                    ? styleHeader.ApprovedDate.Value.ToDateTime(TimeOnly.MinValue) : null
                 });
             }
 

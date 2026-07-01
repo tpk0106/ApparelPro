@@ -2,9 +2,6 @@
 using ApparelPro.Data.Models.References;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ApparelPro.Data.Configurations.OrderwiseInventory
 {
@@ -21,7 +18,19 @@ namespace ApparelPro.Data.Configurations.OrderwiseInventory
             entity.Property(e => e.StoreCode).HasColumnType("varchar(3)").HasColumnName("StoreCode").IsRequired();
             entity.Property(e => e.ItemCode).HasColumnType("varchar(40)").HasColumnName("ItemCode").IsRequired();
             entity.Property(e => e.Unit).HasColumnType("varchar(3)").HasColumnName("Unit").IsRequired();
+
+            // Precision configurations for numeric inventory values
             entity.Property(e => e.OrderedQuantity).HasColumnType("decimal(12,2)").HasColumnName("OrderedQuantity").IsRequired();
+            entity.Property(e => e.QtyInHand).HasColumnName("QtyInHand").HasColumnType("decimal(12,2)");
+            entity.Property(e => e.ShadowBalance).HasColumnName("ShadowBalance").HasColumnType("decimal(12,2)");
+            entity.Property(e => e.DamagedQuantity).HasColumnName("DamagedQuantity").HasColumnType("decimal(12,2)");
+            entity.Property(e => e.ToDateIssued).HasColumnName("ToDateIssued").HasColumnType("decimal(12,2)");
+            entity.Property(e => e.ToDateReceived).HasColumnName("ToDateReceived").HasColumnType("decimal(12,2)");
+            entity.Property(e => e.SrnBalance).HasColumnName("SrnBalance").HasColumnType("decimal(12,2)");
+
+            entity.Property(e => e.LastDateIssued).HasColumnName("LastDateIssued").HasColumnType("date");
+            entity.Property(e => e.LastDateReceived).HasColumnName("LastDateReceived").HasColumnType("date");
+
         }
     }
 }
