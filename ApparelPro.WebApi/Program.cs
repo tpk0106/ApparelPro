@@ -15,19 +15,27 @@ using System.Text.Json;
 using static ApparelPro.WebApi.Misc.ByteArrayConverter;
 using Microsoft.OpenApi;
 
-
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add Serilog support
 builder.Host.UseSerilog((ctx, lc) => lc
     .ReadFrom.Configuration(ctx.Configuration)
+    .Enrich.FromLogContext()
     .WriteTo.MSSqlServer(
         connectionString: ctx.Configuration.GetConnectionString("ApparelProConnection"),
         restrictedToMinimumLevel: LogEventLevel.Information,
         sinkOptions: new MSSqlServerSinkOptions { TableName = "LogEvents", AutoCreateSqlTable = true }
         )
     .WriteTo.Console()
+        // In Serilog configuration -- filter EF Core command events by duration
+        // Separate sink for slow queries: filter on EF Core's elapsed time property
+        .WriteTo.Logger(lc => lc
+            .Filter.ByIncludingOnly(e =>
+                e.Properties.TryGetValue("ElapsedMilliseconds", out var ms) &&
+                ms is ScalarValue sv &&
+                sv.Value is long ms2 &&
+                ms2 > 500)
+            .WriteTo.File("logs/slow-queries-.log", rollingInterval: RollingInterval.Day))
 );
 
 //// Add ASP.NET Core Identity support
@@ -117,15 +125,15 @@ const string reactPolicyName = "allowFromReactOrigin";
 const string angularPolicyName = "allowFromAngularOrigin";
 builder.Services.AddCors(options =>
 {
-options.AddPolicy(reactPolicyName, builder =>
-{
-    builder
-    //.WithOrigins("https://localhost:5173", "http://localhost:5174")
-    .WithOrigins("http://localhost:3000") // put react url frm the browser
-    //.WithMethods("DELETE","PUT","GET", "POST")    
-    .AllowAnyMethod()
-    .AllowAnyHeader()
-    .AllowCredentials();
+    options.AddPolicy(reactPolicyName, builder =>
+    {
+        builder
+        //.WithOrigins("https://localhost:5173", "http://localhost:5174")
+        .WithOrigins("http://localhost:3000") // put react url frm the browser
+                                              //.WithMethods("DELETE","PUT","GET", "POST")    
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
     });
 
     options.AddPolicy(angularPolicyName, builder =>
@@ -134,7 +142,7 @@ options.AddPolicy(reactPolicyName, builder =>
         .WithOrigins("http://localhost:4200")  // put angular url
         .AllowAnyMethod()
         .AllowAnyHeader();
-    });    
+    });
 });
 
 var serializerOptions = new JsonSerializerOptions()
@@ -163,7 +171,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 
 // add cache profiles
 builder.Services.AddControllers(options =>
-{    
+{
     options.CacheProfiles.Add("No-Cache", new CacheProfile() { NoStore = true });
     options.CacheProfiles.Add("Any-60", new CacheProfile() { Location = ResponseCacheLocation.Any, Duration = 60 });
 });
@@ -307,7 +315,7 @@ app.Use(async (context, next) =>
     //     return;
     // }
     await next();
-    
+
 });
 app.UseHttpsRedirection();
 

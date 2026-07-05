@@ -11,24 +11,39 @@ using apparelPro.BusinessLogic.Services.Models.Reference.IUnitService;
 using apparelPro.BusinessLogic.Services.Models.Shared;
 using apparelPro.BusinessLogic.Services.Reports.Interfaces;
 using ApparelPro.Data;
+using ApparelPro.Data.Models.References;
 using ApparelPro.Shared.LookupConstants;
 using ApparelPro.Shared.LookupConstants.ApparelProContext;
 using ApparelPro.WebApi.Misc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileSystemGlobbing.Internal;
+using Serilog;
 using static ApparelPro.WebApi.Mappings.ServicetoAPIModelMappings;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace ApparelPro.WebApi.Extensions
 {
     public static class ServiceExtensions
     {
+
+        // Logging Slow Queries with Serilog
+
+        //You can't optimize what you can't measure.EF Core has built-in logging support that integrates with.NET's ILogger infrastructure.
+        //Combined with Serilog, you get structured logs with all the query details you need to find slow paths in production.
+
+        //  The recommended pattern: configure a minimum command execution time so you only log queries that actually
+        //  cross a performance budget -- not every query in your application.
+
         public static void ConfigureApparelProDatabase(IServiceCollection services, IConfiguration configuration)        
         {           
             var migrationAssemblyName = typeof(ApparelProDbContext).Assembly.GetName().Name;
+            //In ASP.NET Core, register your context as scoped (the default):
             services.AddDbContext<ApparelProDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("ApparelProConnection"),
+                options.UseSqlServer(configuration.GetConnectionString("ApparelProConnection"),                
                 action => action.MigrationsAssembly(migrationAssemblyName))
-                                .EnableSensitiveDataLogging(true)
-                                .EnableDetailedErrors() 
+                                .EnableSensitiveDataLogging(true)  // ⚠️ Only in development -- logs actual parameter values including PII
+                                .EnableDetailedErrors()
+                                .UseLoggerFactory(LoggerFactory.Create(lb => lb.AddSerilog()))
                                 //Ensure that sensitive data logging is wrapped in a check so it only activates in the Development environment.
                                 );
             //services.AddDbContextPool<ApparelProDbContext>(options => { options.EnableSensitiveDataLogging(); });
