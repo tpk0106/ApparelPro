@@ -547,7 +547,9 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<StyleApprovalDetailsServiceModel, StyleApprovalDetailsAPIModel>().MaxDepth(2);
 
             // orderwise inventory
-            CreateMap<SRNAPIModel,SRNServiceModel>().MaxDepth(2);
+            CreateMap<STRNAPIModel,STRNServiceModel>().MaxDepth(2);
+            CreateMap<StockItemAvailabilityDetails, StockItemAvailabilityAPIModel>().MaxDepth(2);
+            CreateMap<OrderwiseStockLookupRowServiceModel, StockLookupRowAPIModel>().MaxDepth(2);
         }
 
         public class PaginationResultToPaginationAPITypeConverter<sourceT, destT> : ITypeConverter<PaginationResult<sourceT>, PaginationAPIModel<destT>>

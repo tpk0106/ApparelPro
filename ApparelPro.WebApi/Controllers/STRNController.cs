@@ -1,26 +1,28 @@
-﻿using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
+using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApparelPro.WebApi.Controllers
 {
-    [Route("api/orderwise-inventory-srn")]
+    [Route("api/orderwise-inventory-strn")]
     [ApiController]
-    public class SRNController : ControllerBase
+    [Authorize(Roles = "Inventory, Merchandiser, Merchandiser Manager, Order Entry Operator")]
+    public class STRNController : ControllerBase
     {
         private readonly IStoresRequisitionService _storesRequisitionService;
         private readonly IMapper _mapper;
 
-        public SRNController(IStoresRequisitionService  storesRequisitionService, IMapper mapper)
+        public STRNController(IStoresRequisitionService  storesRequisitionService, IMapper mapper)
         {
             _storesRequisitionService = storesRequisitionService;
             _mapper = mapper;
         }
 
-        // 1. GET: api/orderwise-inventory-srn/verify-stock?buyerCode=2&order=1017-18&storeCode=STR&itemCode=02BT&targetUnit=PCS
+        // 1. GET: api/orderwise-inventory-strn/verify-stock?buyerCode=2&order=1017-18&storeCode=STR&itemCode=02BT&targetUnit=PCS
         [HttpGet("verify-stock")]
         public async Task<IActionResult> VerifyStock(
             [FromQuery] int buyerCode,
@@ -43,7 +45,8 @@ namespace ApparelPro.WebApi.Controllers
                 if (availability == null)
                     return NotFound("The requested material item could not be discovered inside inventory stocks ledger pools.");
 
-                return Ok(availability);
+                var availabilityAPIModel = _mapper.Map<StockItemAvailabilityAPIModel>(availability);
+                return Ok(availabilityAPIModel);
             }
             catch (Exception ex)
             {
@@ -51,31 +54,31 @@ namespace ApparelPro.WebApi.Controllers
             }
         }
 
-        // 2. POST: api/orderwise-inventory-srn/commit
+        // 2. POST: api/orderwise-inventory-strn/commit
         [HttpPost("commit")]
-        public async Task<IActionResult> CommitRequisition([FromBody] SRNAPIModel srnAPIModel)
+        public async Task<IActionResult> CommitRequisition([FromBody] STRNAPIModel strnAPIModel)
         {
-            if (srnAPIModel == null)
+            if (strnAPIModel == null)
                 return BadRequest("The inbound spreadsheet allocation model payload cannot be empty.");
 
-            if (srnAPIModel.Header == null || srnAPIModel.Lines == null || srnAPIModel.Lines.Count == 0)
+            if (strnAPIModel.Header == null || strnAPIModel.Lines == null || strnAPIModel.Lines.Count == 0)
             {
                 return BadRequest("Validation Failure: Missing critical document headers or line items data.");
             }
 
             // Extract the authenticated username context cleanly from the API session token headers identity
             string activeUsername = User.Identity?.Name ?? "STORES CLERK";
-            var srnServiceModel = _mapper.Map<SRNServiceModel>(srnAPIModel);
+            var strnServiceModel = _mapper.Map<STRNServiceModel>(strnAPIModel);
 
             try
             {
-                var success = await _storesRequisitionService.CommitStoresRequisitionNoteAsync(srnServiceModel.Header, srnServiceModel.Lines, activeUsername);
+                var success = await _storesRequisitionService.CommitStoresRequisitionNoteAsync(strnServiceModel.Header, strnServiceModel.Lines, activeUsername);
 
                 // Return a descriptive tracking success payload to output inside frontend toasts
                 return Ok(new
                 {
                     Success = success,
-                    Message = $"Stores Requisition Note '{srnAPIModel.Header.SrnNumber}' committed and inventory balances updated successfully."
+                    Message = $"Stores Requisition Note '{strnAPIModel.Header.SrnNumber}' committed and inventory balances updated successfully."
                 });
             }
             catch (InvalidOperationException ex)
@@ -89,7 +92,7 @@ namespace ApparelPro.WebApi.Controllers
             }
         }
 
-        // GET: api/orderwise-inventory-srn/available-choices?buyerCode=2&order=1017-18
+        // GET: api/orderwise-inventory-strn/available-choices?buyerCode=2&order=1017-18
         [HttpGet("available-choices")]
         public async Task<IActionResult> GetAvailableChoices([FromQuery] int buyerCode, [FromQuery] string order, [FromQuery] string storeCode)
         {
@@ -99,7 +102,8 @@ namespace ApparelPro.WebApi.Controllers
             try
             {
                 var choices = await _storesRequisitionService.GetAvailableStockChoicesAsync(buyerCode, order, storeCode);
-                return Ok(choices);
+                var choicesAPIModel = _mapper.Map<List<StockLookupRowAPIModel>>(choices);
+                return Ok(choicesAPIModel);
             }
             catch (Exception ex)
             {
