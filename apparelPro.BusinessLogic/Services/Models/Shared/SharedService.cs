@@ -23,8 +23,14 @@ namespace apparelPro.BusinessLogic.Services.Models.Shared
         {
             noteType = noteType.Trim().ToUpper();
 
+            // 🔒 CONCURRENCY FIX: Read WITH (UPDLOCK, HOLDLOCK) so the row is exclusively locked until the caller's
+            // transaction commits. A plain FirstOrDefaultAsync only takes a fleeting shared lock; if the database has
+            // READ_COMMITTED_SNAPSHOT enabled, two concurrent callers could both read the same LastAllocatedNumber
+            // and allocate duplicate document numbers. This must always be called inside an ambient transaction.
             var sequence = await _apparelProDbContext.DocumentSequences
-                .FirstOrDefaultAsync(s => s.NoteType == noteType);
+                .FromSqlInterpolated($@"SELECT * FROM DocumentSequences WITH (UPDLOCK, HOLDLOCK)
+                    WHERE NoteType = {noteType}")
+                .FirstOrDefaultAsync();
 
             if (sequence == null)
             {

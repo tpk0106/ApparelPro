@@ -72,8 +72,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                     header.Order = header.Order.Trim();
                     header.DepartmentCode = header.DepartmentCode.Trim().ToUpper();
 
-                    // 1. THREAD-SAFE AUTOGEN EMULATION: Allocate a unique consecutive serial number for this SRN note
-                    string allocatedSrnNumber = await _sharedService.GenerateNextDocumentNumberAsync("SRN");
+                    // 1. THREAD-SAFE AUTOGEN EMULATION: Allocate a unique consecutive serial number for this STRN note
+                    string allocatedSrnNumber = await _sharedService.GenerateNextDocumentNumberAsync("STRN");
                     header.SrnNumber = allocatedSrnNumber;
 
                     foreach (var line in lines)
@@ -84,11 +84,19 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         line.Unit = line.Unit.Trim().ToUpper();
 
                         // 2. VERIFY AVAILABLE STOCK BALANCES IN THE CORRECT TABLE (OrderwiseStocks)
+                        // 🔒 CONCURRENCY FIX: Read WITH (UPDLOCK, HOLDLOCK) so this row is exclusively locked for the
+                        // remainder of this transaction. Without this, two concurrent STRN commits against the same
+                        // item/store can both read the same QtyInHand/ShadowBalance/SrnBalance, both pass the deficit
+                        // check below, and the second SaveChangesAsync silently overwrites (rather than adds to) the
+                        // first commit's SrnBalance update — a classic lost-update race that lets stock be over-allocated.
+                        // This is the direct modern equivalent of the legacy RLOCK()/FLOCK() the Clipper code relied on.
                         var stockRecord = await _apparelProDbContext.OrderwiseStocks
-                            .FirstOrDefaultAsync(s => s.BuyerCode == header.BuyerCode &&
-                                                      s.Order == header.Order &&
-                                                      s.StoreCode == line.StoreCode && // Matches your explicit Basis Code property
-                                                      s.ItemCode == line.ItemCode);
+                            .FromSqlInterpolated($@"SELECT * FROM OrderwiseStocks WITH (UPDLOCK, HOLDLOCK)
+                                WHERE BuyerCode = {header.BuyerCode}
+                                  AND [Order] = {header.Order}
+                                  AND StoreCode = {line.StoreCode}
+                                  AND ItemCode = {line.ItemCode}")
+                            .FirstOrDefaultAsync();
 
                         if (stockRecord == null)
                         {
@@ -114,6 +122,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                             Order = header.Order,
                             DepartmentCode = header.DepartmentCode,
                             StockCode = line.StockCode,
+                            StoreCode = line.StoreCode,
                             ItemCode = line.ItemCode,
                             Unit = line.Unit,
                             Quantity = line.Quantity,
@@ -121,12 +130,15 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         };
                         await _apparelProDbContext.OrderwiseStockTransactions.AddAsync(trxLine);
 
-                        // 4. UPDATE MASTER ITEM CATALOG VALUES FIXED: Removed 'StockCode' check to match your exact properties!
                         // 4. UPDATE MASTER ITEM CATALOG VALUES (OrderwiseStockMasters)
+                        // 🔒 Same UPDLOCK/HOLDLOCK reasoning as above: this row's RequisitionedQuantity is a running
+                        // total that two concurrent commits could otherwise stomp on.
                         var catalogItem = await _apparelProDbContext.OrderwiseStockMasters
-                            .FirstOrDefaultAsync(m => m.BuyerCode == header.BuyerCode &&
-                                                      m.Order == header.Order &&
-                                                      m.ItemCode == line.ItemCode);
+                            .FromSqlInterpolated($@"SELECT * FROM OrderwiseStockMasters WITH (UPDLOCK, HOLDLOCK)
+                                WHERE BuyerCode = {header.BuyerCode}
+                                  AND [Order] = {header.Order}
+                                  AND ItemCode = {line.ItemCode}")
+                            .FirstOrDefaultAsync();
 
                         if (catalogItem != null)
                         {
@@ -198,22 +210,23 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 .Where(s => s.BuyerCode == buyerCode && s.Order == order && s.StoreCode == storeCode)
                 .ToListAsync();
 
-            var resultList = new List<OrderwiseStockLookupRowServiceModel>();
+            // PERFORMANCE FIX: Batch-load every matching catalog description in a single round trip instead of
+            // issuing one StockItems query per stock row (N+1 query pattern).
+            var itemCodes = stockRecords.Select(s => s.ItemCode).Distinct().ToList();
+            var catalogItemsByCode = await _apparelProDbContext.StockItems
+                .AsNoTracking()
+                .Where(c => itemCodes.Contains(c.ItemCode))
+                .ToDictionaryAsync(c => c.ItemCode, c => c.Description);
 
-            foreach (var stock in stockRecords)
+            var resultList = stockRecords.Select(stock => new OrderwiseStockLookupRowServiceModel
             {
-                var catalogItem = await _apparelProDbContext.StockItems
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(c => c.ItemCode == stock.ItemCode);
-
-                resultList.Add(new OrderwiseStockLookupRowServiceModel
-                {
-                    ItemCode = stock.ItemCode,
-                    StoreCode = stock.StoreCode,
-                    Unit = stock.Unit,
-                    Description = catalogItem?.Description ?? "Raw Material Component"
-                });
-            }
+                ItemCode = stock.ItemCode,
+                StoreCode = stock.StoreCode,
+                Unit = stock.Unit,
+                Description = catalogItemsByCode.TryGetValue(stock.ItemCode, out var description)
+                    ? description ?? "Raw Material Component"
+                    : "Raw Material Component"
+            }).ToList();
 
             return resultList.OrderBy(r => r.ItemCode).ToList();
         }

@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace apparelPro.BusinessLogic.Services.Models.OrderwiseInventory
 {
-    public class SRNServiceModel
+    public class STRNServiceModel
     {
         [Required]
         public RequisitionHeaderServiceModel Header { get; set; } = null!;
