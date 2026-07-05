@@ -8,8 +8,11 @@ using ApparelPro.Data.Models.References;
 using ApparelPro.Shared.Extensions;
 using ApparelPro.Shared.LookupConstants;
 using AutoMapper;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using QuestPDF.Helpers;
+using System.Diagnostics.Metrics;
 using System.Linq.Dynamic.Core;
 
 namespace apparelPro.BusinessLogic.Services.Implementation.Reference
@@ -18,20 +21,73 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
     {
         private readonly IMapper _mapper;
         private readonly ApparelProDbContext _apparelProDbContext;
+        //private readonly IDbContextFactory<ApparelProDbContext> dbContextFactory;
         private readonly ILookupConstants _lookupConstants;
         private readonly IDistributedCache _distributedCache;
+
+        //private static readonly __mapper = private new Mapper();
         public BankService(IMapper mapper, ApparelProDbContext apparelProReferenceDbContext,
             ILookupConstants lookupConstants, IDistributedCache distributedCache)
         {
             _mapper = mapper;
-            _apparelProDbContext = apparelProReferenceDbContext;
+           _apparelProDbContext = apparelProReferenceDbContext;
             _lookupConstants = lookupConstants;
             _distributedCache = distributedCache;
+            //__mapper = new Mapper();
         }
+
+
+        //private readonly static  Func<ApparelProDbContext,int,int,string,string,string,string, Task<PaginationResult<BankServiceModel>>> GetAllBanksAsync = 
+        //    EF.CompileAsyncQuery(async (ApparelProDbContext   _apparelProDbContext, int pageNumber, int pageSize, string? sortColumn,
+        //    string? sortOrder, string? filterColumn, string? filterQuery) =>
+        //    {
+        //        IQueryable<Bank> BankPagination = _apparelProDbContext.Banks.AsNoTracking();
+
+        //        FilterResult fr = new();
+        //        fr.searchPattern = "{0}.Contains(@0)";
+        //        fr.FilterColumn = filterColumn;
+        //        fr.FilterQuery = filterQuery;
+        //        if (filterColumn != null && filterQuery != null)
+        //        {
+        //            fr = InputValidator.Validate(filterColumn!, filterQuery!, typeof(Bank));
+        //            BankPagination = BankPagination.Where(string.Format(fr.searchPattern!, fr.FilterColumn), fr.FilterQuery);
+        //        }
+
+        //        int counter = 0;
+        //        counter = await BankPagination.CountAsync();
+
+        //        if (sortColumn != null)
+        //        {
+        //            sortOrder = !string.IsNullOrEmpty(sortOrder) && sortOrder.ToUpper() == "ASC" ? "ASC" : "DESC";
+        //            BankPagination = BankPagination.OrderBy(string.Format("{0} {1}", sortColumn, sortOrder));
+        //        }
+
+        //        List<Bank>? result = null;
+
+        //        BankPagination = BankPagination
+        //            .Skip(pageSize * pageNumber)
+        //            .Take(pageSize);
+
+        //        result = await BankPagination.ToListAsync();
+
+        //        var filteredDbCountries = result;
+        //        var BankServiceModels = _mapper.Map<IList<BankServiceModel>>(filteredDbCountries);                
+
+        //        return new PaginationResult<BankServiceModel>(pageSize, pageNumber, counter, BankServiceModels,
+        //            sortColumn, sortOrder, filterColumn, filterQuery);
+        //    }            
+        // );
+
+        //public async Task<PaginationResult<BankServiceModel>> GetBanksStaticAsync(int pageNumber, int pageSize, string? sortColumn,
+        //string? sortOrder, string? filterColumn, string? filterQuery)
+        //{
+        //    return await GetAllBanksAsync(_apparelProDbContext, pageNumber, pageSize, sortColumn, sortOrder, filterColumn, filterQuery);
+        //}
 
         public async Task<PaginationResult<BankServiceModel>> GetBanksAsync(int pageNumber, int pageSize, string? sortColumn, 
             string? sortOrder, string? filterColumn, string? filterQuery)
         {
+
             IQueryable<Bank> BankPagination = _apparelProDbContext.Banks.AsNoTracking();
 
             FilterResult fr = new();
@@ -50,7 +106,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             if (sortColumn != null)
             {
                 sortOrder = !string.IsNullOrEmpty(sortOrder) && sortOrder.ToUpper() == "ASC" ? "ASC" : "DESC";
-                BankPagination = BankPagination.OrderBy(string.Format("{0} {1}", sortColumn, sortOrder));                
+                BankPagination = BankPagination.OrderBy(string.Format("{0} {1}", sortColumn, sortOrder));
             }
 
             List<Bank>? result = null;
@@ -77,7 +133,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
 
             result = await BankPagination.ToListAsync();
 
-            var filteredDbCountries = result; 
+            var filteredDbCountries = result;
             var BankServiceModels = _mapper.Map<IList<BankServiceModel>>(filteredDbCountries);
 
             return new PaginationResult<BankServiceModel>(pageSize, pageNumber, counter, BankServiceModels,
