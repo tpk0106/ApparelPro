@@ -2,7 +2,7 @@
 {
     public class RequisitionHeaderAPIModel
     {
-        public string SrnNumber { get; set; } = null!;
+        public string StrnNumber { get; set; } = null!;
         public DateTime TransactionDate { get; set; }
         public int BuyerCode { get; set; }
         public string Order { get; set; } = null!;

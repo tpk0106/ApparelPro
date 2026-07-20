@@ -24,5 +24,11 @@ namespace ApparelPro.Data.Models.OrderwiseInventory
         public decimal Quantity { get; set; }
 
         public string CreatedByUsername { get; set; } = null!;
+
+        // GIN traceability additions (see GinTraceabilityColumns migration)
+        public decimal BalanceToReceive { get; set; } // bal_to_rec — STRN ('0S') rows only. Remaining unissued qty for this line; decremented by each GIN raised against it.
+        public string? SourceDocumentNumber { get; set; } // GIN ('4I') rows only — the STRN doc number this issue was raised against.
+        public decimal? Price { get; set; } // GIN rows only — snapshotted from OrderwiseStockMaster at issue time.
+        public string? Currency { get; set; } // GIN rows only — snapshotted from OrderwiseStockMaster at issue time.
     }
 }

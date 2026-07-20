@@ -288,6 +288,15 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("varchar(3)")
                         .HasColumnName("ItemUnit");
 
+                    b.Property<string>("SupplierCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("SupplierCode");
+
+                    b.Property<decimal>("TotalConsumption")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("TotalConsumption");
+
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("decimal(10,4)")
                         .HasColumnName("Price");
@@ -666,14 +675,14 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("decimal(12,2)")
                         .HasColumnName("ShadowBalance");
 
-                    b.Property<decimal>("SrnBalance")
-                        .HasColumnType("decimal(12,2)")
-                        .HasColumnName("SrnBalance");
-
                     b.Property<string>("StoreCode")
                         .IsRequired()
                         .HasColumnType("varchar(3)")
                         .HasColumnName("StoreCode");
+
+                    b.Property<decimal>("StrnBalance")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("StrnBalance");
 
                     b.Property<decimal>("ToDateIssued")
                         .HasColumnType("decimal(12,2)")
@@ -713,6 +722,12 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("varchar(3)")
                         .HasColumnName("Currency");
 
+                    b.Property<decimal>("IssuedQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("IssuedQuantity");
+
                     b.Property<string>("ItemCode")
                         .IsRequired()
                         .HasColumnType("varchar(22)")
@@ -730,6 +745,12 @@ namespace ApparelPro.Data.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(10,4)")
                         .HasColumnName("Price");
+
+                    b.Property<decimal>("ReceivedQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("ReceivedQuantity");
 
                     b.Property<decimal>("RequisitionedQuantity")
                         .HasColumnType("decimal(12,2)")
@@ -753,12 +774,20 @@ namespace ApparelPro.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal>("BalanceToReceive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m);
+
                     b.Property<int>("BuyerCode")
                         .HasColumnType("int");
 
                     b.Property<string>("CreatedByUsername")
                         .IsRequired()
                         .HasColumnType("varchar(20)");
+
+                    b.Property<string>("Currency")
+                        .HasColumnType("varchar(3)");
 
                     b.Property<string>("DepartmentCode")
                         .IsRequired()
@@ -776,8 +805,14 @@ namespace ApparelPro.Data.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(12)");
 
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("decimal(10,4)");
+
                     b.Property<decimal>("Quantity")
                         .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("SourceDocumentNumber")
+                        .HasColumnType("varchar(10)");
 
                     b.Property<string>("StockCode")
                         .IsRequired()
@@ -800,7 +835,7 @@ namespace ApparelPro.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DocumentNumber", "TransactionType", "StockCode", "ItemCode")
+                    b.HasIndex("DocumentNumber", "TransactionType", "StoreCode", "ItemCode")
                         .IsUnique();
 
                     b.ToTable("OrderwiseStockTransactions", (string)null);

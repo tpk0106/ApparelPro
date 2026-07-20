@@ -350,7 +350,7 @@ namespace ApparelPro.WebApi.Mappings
                .ForMember(src => src.Gender, opt => opt.MapFrom(src => src.Gender))
                .ForMember(src => src.KnownAs, opt => opt.MapFrom(src => src.KnownAs))
                .ForMember(src => src.Address, opt => opt.MapFrom(src => src.Address))
-               .ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.Address.AddressId))
+               .ForMember(src => src.AddressId, opt => opt.MapFrom(src => src.Address!.AddressId))
                .ForMember(src => src.LastActive, opt => opt.Ignore())
                .ForMember(src => src.PasswordHash, opt => opt.Ignore())
                .ForMember(src => src.Id, opt => opt.Ignore())
@@ -394,14 +394,14 @@ namespace ApparelPro.WebApi.Mappings
                .ForMember(dest => dest.ProfilePhoto, opt => opt.MapFrom(src => src.ProfilePhoto))
                .ForMember(dest => dest.Created, opt => opt.MapFrom(src => src.Created))
                .ForMember(dest => dest.LastActive, opt => opt.MapFrom(src => src.LastActive))
-               .ForPath(dest => dest.Address.StreetAddress, opt => opt.MapFrom(src => src.Address.StreetAddress))               
-               .ForPath(dest => dest.Address.City, opt => opt.MapFrom(src => src.Address.City))
-               .ForPath(dest => dest.Address.PostCode, opt => opt.MapFrom(src => src.Address.PostCode))
-               .ForPath(dest => dest.Address.State, opt => opt.MapFrom(src => src.Address.State))
-               .ForPath(dest => dest.Address.CountryCode, opt => opt.MapFrom(src => src.Address.CountryCode))
-               .ForPath(dest => dest.Address.AddressId, opt => opt.MapFrom(src => src.Address.AddressId))
-               .ForPath(dest => dest.Address.Default, opt => opt.MapFrom(src => src.Address.Default))
-               .ForPath(dest => dest.Address.AddressType, opt => opt.MapFrom(src => src.Address.AddressType));
+               .ForPath(dest => dest.Address!.StreetAddress, opt => opt.MapFrom(src => src.Address!.StreetAddress))               
+               .ForPath(dest => dest.Address!.City, opt => opt.MapFrom(src => src.Address!.City))
+               .ForPath(dest => dest.Address!.PostCode, opt => opt.MapFrom(src => src.Address!.PostCode))
+               .ForPath(dest => dest.Address!.State, opt => opt.MapFrom(src => src.Address!.State))
+               .ForPath(dest => dest.Address!.CountryCode, opt => opt.MapFrom(src => src.Address!.CountryCode))
+               .ForPath(dest => dest.Address!.AddressId, opt => opt.MapFrom(src => src.Address!.AddressId))
+               .ForPath(dest => dest.Address!.Default, opt => opt.MapFrom(src => src.Address!.Default))
+               .ForPath(dest => dest.Address!.AddressType, opt => opt.MapFrom(src => src.Address!.AddressType));
             
 
             //CreateMap<UserServiceModel, UpdateUserServiceModel>().MaxDepth(2).ReverseMap();
@@ -530,6 +530,9 @@ namespace ApparelPro.WebApi.Mappings
             // material consumption
 
             CreateMap<CreateMaterialConsumptionEntryRequestAPIModel, CreateMaterialConsumptionEntryRequestServiceModel>().MaxDepth(2);
+            CreateMap<MaterialCatalogItemServiceModel, MaterialCatalogItemAPIModel>().MaxDepth(2);
+            CreateMap<MaterialCatalogGroupServiceModel, MaterialCatalogGroupAPIModel>().MaxDepth(2);
+            CreateMap<StyleMaterialConsumptionLedgerRowServiceModel, StyleMaterialConsumptionLedgerRowAPIModel>().MaxDepth(2);
             CreateMap<OrderItemFeature, OrderItemFeatureServiceModel>().MaxDepth(2);
             CreateMap<OrderItemFeatureServiceModel, OrderItemFeatureAPIModel>()
                 .ForMember(src => src.ItemCode, opt => opt.MapFrom(src => src.ItemCode))
@@ -550,6 +553,20 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<STRNAPIModel,STRNServiceModel>().MaxDepth(2);
             CreateMap<StockItemAvailabilityDetails, StockItemAvailabilityAPIModel>().MaxDepth(2);
             CreateMap<OrderwiseStockLookupRowServiceModel, StockLookupRowAPIModel>().MaxDepth(2);
+
+            // orderwise inventory - GIN
+            CreateMap<GinHeaderAPIModel, GinHeaderServiceModel>().MaxDepth(2);
+            CreateMap<GinLineItemAPIModel, GinLineItemServiceModel>().MaxDepth(2);
+            CreateMap<GinIssuableStrnLineServiceModel, GinIssuableStrnLineAPIModel>().MaxDepth(2);
+            CreateMap<GinStrnLookupResultServiceModel, GinStrnLookupResultAPIModel>().MaxDepth(2);
+            CreateMap<GinPendingStrnServiceModel, GinPendingStrnAPIModel>().MaxDepth(2);
+
+            // orderwise inventory - GRN
+            CreateMap<GrnHeaderAPIModel, GrnHeaderServiceModel>().MaxDepth(2);
+            CreateMap<GrnLineItemAPIModel, GrnLineItemServiceModel>().MaxDepth(2);
+            CreateMap<GrnReceivableLineServiceModel, GrnReceivableLineAPIModel>().MaxDepth(2);
+            CreateMap<GrnPoLookupResultServiceModel, GrnPoLookupResultAPIModel>().MaxDepth(2);
+            CreateMap<GrnPendingPoServiceModel, GrnPendingPoAPIModel>().MaxDepth(2);
         }
 
         public class PaginationResultToPaginationAPITypeConverter<sourceT, destT> : ITypeConverter<PaginationResult<sourceT>, PaginationAPIModel<destT>>

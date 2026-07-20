@@ -11,7 +11,7 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderwiseInventory
         public string Unit { get; set; } = null!;
         public decimal PhysicalQtyInHand { get; set; }
         public decimal ShadowAllocatedBalance { get; set; }
-        public decimal RequisitionedSrnBalance { get; set; }
-        public decimal NetAvailableBalance => PhysicalQtyInHand - ShadowAllocatedBalance - RequisitionedSrnBalance;
+        public decimal RequisitionedStrnBalance { get; set; }
+        public decimal NetAvailableBalance => PhysicalQtyInHand - ShadowAllocatedBalance - RequisitionedStrnBalance;
     }
 }

@@ -7,7 +7,7 @@ namespace ApparelPro.WebApi.APIModels.OrderwiseInventory
         public string Unit { get; set; } = null!;
         public decimal PhysicalQtyInHand { get; set; }
         public decimal ShadowAllocatedBalance { get; set; }
-        public decimal RequisitionedSrnBalance { get; set; }
+        public decimal RequisitionedStrnBalance { get; set; }
         public decimal NetAvailableBalance { get; set; }
     }
 }

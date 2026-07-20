@@ -33,7 +33,7 @@ namespace ApparelPro.Data.Configurations.OrderwiseInventory
             entity.Property(e => e.DamagedQuantity).HasColumnName("DamagedQuantity").HasColumnType("decimal(12,2)");
             entity.Property(e => e.ToDateIssued).HasColumnName("ToDateIssued").HasColumnType("decimal(12,2)");
             entity.Property(e => e.ToDateReceived).HasColumnName("ToDateReceived").HasColumnType("decimal(12,2)");
-            entity.Property(e => e.SrnBalance).HasColumnName("SrnBalance").HasColumnType("decimal(12,2)");
+            entity.Property(e => e.StrnBalance).HasColumnName("StrnBalance").HasColumnType("decimal(12,2)");
 
             entity.Property(e => e.LastDateIssued).HasColumnName("LastDateIssued").HasColumnType("date");
             entity.Property(e => e.LastDateReceived).HasColumnName("LastDateReceived").HasColumnType("date");

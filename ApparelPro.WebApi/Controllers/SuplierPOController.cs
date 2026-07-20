@@ -39,8 +39,12 @@ namespace ApparelPro.WebApi.Controllers
             if (request == null || request.Header == null) return BadRequest("Purchase order payload cannot be empty.");
             try
             {
-                var success = await _supplierPurchaseOrderService.SaveSupplierPurchaseOrderAsync(request);
-                return Ok(success);
+                var assignedPoNumber = await _supplierPurchaseOrderService.SaveSupplierPurchaseOrderAsync(request);
+                return Ok(new { Success = true, PurchaseNumber = assignedPoNumber });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { Error = ex.Message });
             }
             catch (Exception ex)
             {

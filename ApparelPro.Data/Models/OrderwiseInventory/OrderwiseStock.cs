@@ -23,6 +23,6 @@ namespace ApparelPro.Data.Models.OrderwiseInventory
         public decimal ToDateReceived { get; set; }  // TO_DT_REC
         public DateTime? LastDateIssued { get; set; } // L_DT_ISS
         public DateTime? LastDateReceived { get; set; } // L_DT_REC
-        public decimal SrnBalance { get; set; }      // SRN_BAL
+        public decimal StrnBalance { get; set; }      // SRN_BAL
     }
 }

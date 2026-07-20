@@ -14,6 +14,7 @@ using Serilog.Sinks.MSSqlServer;
 using System.Text.Json;
 using static ApparelPro.WebApi.Misc.ByteArrayConverter;
 using Microsoft.OpenApi;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -265,6 +266,47 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    
+    // 2. Point Scalar directly to your working Swashbuckle JSON URL
+ 
+    // run in the browser wth "https://localhost:5000/Scalar/V1"
+
+    app.MapScalarApiReference(options =>
+    {
+        // 1. Maintain your Swashbuckle route mapping
+        options.WithOpenApiRoutePattern("/swagger/v1/swagger.json");
+
+        // 2. Inject your custom CSS theme variables into the document head
+        options.WithCustomCss(@"
+            .light-mode .sidebar {
+              --scalar-sidebar-background-1: var(--scalar-background-1);
+              --scalar-sidebar-item-hover-color: currentColor;
+              --scalar-sidebar-item-hover-background: var(--scalar-background-2);
+              --scalar-sidebar-item-active-background: var(--scalar-background-2);
+              --scalar-sidebar-border-color: var(--scalar-border-color);
+              --scalar-sidebar-color-1: var(--scalar-color-1);
+              --scalar-sidebar-color-2: var(--scalar-color-2);
+              --scalar-sidebar-color-active: var(--scalar-color-2);
+              --scalar-sidebar-search-background: var(--scalar-background-2);
+              --scalar-sidebar-search-border-color: var(--scalar-border-color);
+              --scalar-sidebar-search-color: var(--scalar-color-3);
+            }
+            .dark-mode .sidebar {
+              --scalar-sidebar-background-1: var(--scalar-background-1);
+              --scalar-sidebar-item-hover-color: currentColor;
+              --scalar-sidebar-item-hover-background: var(--scalar-background-2);
+              --scalar-sidebar-item-active-background: var(--scalar-background-2);
+              --scalar-sidebar-border-color: var(--scalar-border-color);
+              --scalar-sidebar-color-1: var(--scalar-color-1);
+              --scalar-sidebar-color-2: var(--scalar-color-2);
+              --scalar-sidebar-color-active: var(--scalar-color-2);
+              --scalar-sidebar-search-background: var(--scalar-background-2);
+              --scalar-sidebar-search-border-color: var(--scalar-border-color);
+              --scalar-sidebar-search-color: var(--scalar-color-3);
+            }
+        ");
+    });
+
 }
 
 // 1. MUST call UseCors FIRST and explicitly pass your policy name!

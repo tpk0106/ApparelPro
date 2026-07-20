@@ -78,7 +78,7 @@ namespace ApparelPro.WebApi.Controllers
                 return Ok(new
                 {
                     Success = success,
-                    Message = $"Stores Requisition Note '{strnAPIModel.Header.SrnNumber}' committed and inventory balances updated successfully."
+                    Message = $"Stores Requisition Note '{strnAPIModel.Header.StrnNumber}' committed and inventory balances updated successfully."
                 });
             }
             catch (InvalidOperationException ex)

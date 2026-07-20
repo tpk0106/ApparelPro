@@ -22,6 +22,8 @@ dotnet ef database drop
 dotnet ef database update -Context ApparelProDbContext
 
 
+
+
 --------------------------------setup distributed Cache ----------------------------
 
 
@@ -92,4 +94,17 @@ Add-Migration AddInventoryTablesAndSequentialSerialDocArchitecture  -Context App
 Add-Migration SyncOrderwiseStockColumnsSchema -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi
 
 # 2. Push and execute the data schema directly onto SQL Server
+Update-Database -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi
+
+
+// list all migrations 
+
+Get-Migration -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi
+
+--run via shell terminal
+dotnet ef migrations add AddStyleMaterialCostProfileFields
+dotnet ef database update
+
+-- run via PM
+Add-Migration AddStyleMaterialCostProfileFields -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi -ErrorAction ignore
 Update-Database -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi

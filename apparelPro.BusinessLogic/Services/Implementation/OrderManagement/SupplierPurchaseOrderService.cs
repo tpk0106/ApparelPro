@@ -1,4 +1,5 @@
-﻿using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPurchaseOrderService;
+﻿using apparelPro.BusinessLogic.Services.interfaces.ISharedService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPurchaseOrderService;
 using ApparelPro.Data;
 using ApparelPro.Data.Models.OrderManagement;
 using ApparelPro.Data.Models.OrderwiseInventory;
@@ -17,13 +18,16 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly ILookupConstants _lookupConstants;
         private readonly IMaterialConsumptionService _materialConsumptionService;
+        private readonly ISharedService _sharedService;
         public SupplierPurchaseOrderService(IMapper mapper, ApparelProDbContext apparelProDbContext,
-            ILookupConstants lookupConstants, IMaterialConsumptionService materialConsumptionService)
+            ILookupConstants lookupConstants, IMaterialConsumptionService materialConsumptionService,
+            ISharedService sharedService)
         {
             _mapper = mapper;
             _apparelProDbContext = apparelProDbContext;
             _lookupConstants = lookupConstants;
             _materialConsumptionService = materialConsumptionService;
+            _sharedService = sharedService;
         }
         public async Task<List<AvailableBudgetLineServiceModel>> GetUnfulfilledBudgetLinesAsync(int buyerCode, string order)
         {
@@ -59,15 +63,41 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
         }
 
 
-        public async Task<bool> SaveSupplierPurchaseOrderAsync(SaveSupplierPORequestServiceModel request)
+        public async Task<string> SaveSupplierPurchaseOrderAsync(SaveSupplierPORequestServiceModel request)
         {
             var header = request.Header;
-            string poNoSanitized = header.PurchaseNumber.Trim();
             string storeCode = header.StoreCode.Trim();
             string currencyCode = header.CurrencyCode.Trim();
 
-            try
+            using (var dbTransaction = await _apparelProDbContext.Database.BeginTransactionAsync())
             {
+                try
+                {
+                // ---------------------------------------------------------------------
+                // TRANSACTION PHASE 0: Allocate a real P/O number for new P/Os via the
+                // same thread-safe shared document sequence service STRN/GIN already
+                // use (.NET equivalent of legacy's autogen/autosave against 'po_no').
+                // A client-supplied PurchaseNumber is never trusted for a new P/O -
+                // it's only ever used to look up an EXISTING one when editing.
+                // ---------------------------------------------------------------------
+                string poNoSanitized;
+                if (header.IsNewPurchaseOrder)
+                {
+                    poNoSanitized = (await _sharedService.GenerateNextDocumentNumberAsync("PO")).Trim();
+                }
+                else
+                {
+                    poNoSanitized = header.PurchaseNumber?.Trim() ?? "";
+                    if (string.IsNullOrEmpty(poNoSanitized))
+                        throw new InvalidOperationException("P/O Number is required when editing an existing P/O.");
+
+                    var existingHeaderCheck = await _apparelProDbContext.PurchaseOrderHeaders
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(h => h.PurchaseOrderNumber == poNoSanitized);
+                    if (existingHeaderCheck == null)
+                        throw new InvalidOperationException($"P/O No. '{poNoSanitized}' does not exist.");
+                }
+
                 // ---------------------------------------------------------------------
                 // TRANSACTION PHASE 1: Loop and process line item rows sequentially
                 // ---------------------------------------------------------------------
@@ -292,9 +322,16 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 }
 
                 // 3. ATOMIC ENFORCEMENT: A single SaveChangesAsync call processes all track adjustments cleanly
-                await _apparelProDbContext.SaveChangesAsync(); return true;
+                await _apparelProDbContext.SaveChangesAsync();
+                await dbTransaction.CommitAsync();
+                return poNoSanitized;
+                }
+                catch (Exception)
+                {
+                    await dbTransaction.RollbackAsync();
+                    throw;
+                }
             }
-            catch (Exception) { throw; }
         }
 
         public async Task<bool> SaveSupplierPurchaseOrderAsync1(SaveSupplierPORequestServiceModel request)

@@ -24,10 +24,13 @@ namespace apparelPro.BusinessLogic.Services
 
         // New: Transactional Entry Commit Operation
         Task<bool> SaveMaterialConsumptionEntryAsync(CreateMaterialConsumptionEntryRequestServiceModel request);
-        Task<List<StyleMaterialConsumptionLedger>> GetLedgerEntriesByStyleAsync(int buyerCode, string order, int typeCode, string styleCode);
+        Task<List<StyleMaterialConsumptionLedgerRowServiceModel>> GetLedgerEntriesByStyleAsync(int buyerCode, string order, int typeCode, string styleCode);
         Task<bool> DeleteConsumptionEntryAsync(int buyerCode, string order, int typeCode, string styleCode, string stockCode, string itemCode, string color, string size);
 
         Task<List<OrderItemServiceModel>> GetAvailableMaterialsLookupAsync(int buyerCode, string order, int typeCode, string styleCode);
+
+        // Full Stock+Item catalog, grouped by StockCode, for the master-list catalog picker (not style-scoped)
+        Task<List<MaterialCatalogGroupServiceModel>> GetMaterialCatalogAsync();
 
         //Task<StyleApprovalDetailsServiceModel?> GetStyleApprovalDetailsAsync(int buyerCode, string order, int typeCode, string styleCode);
 

@@ -16,8 +16,13 @@ namespace ApparelPro.Data.Configurations.OrderwiseInventory
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();
 
-            // Unique index compound constraint to track exact transaction lines cleanly
-            entity.HasIndex(e => new { e.DocumentNumber, e.TransactionType, e.StockCode, e.ItemCode }).IsUnique();
+            // Unique index compound constraint to track exact transaction lines cleanly.
+            // Uses StoreCode (not StockCode) to match legacy IN_STTR's per-line uniqueness key
+            // (buyer+order+item_cd+store_cd, confirmed against IN_GIN3.PRG's seek pattern) — StockCode
+            // is already embedded as the first 2 chars of the 22-char ItemCode, so including it here
+            // instead of StoreCode was a latent bug: two lines with the same item pulled from two
+            // different stores/bases within one document would incorrectly collide on this constraint.
+            entity.HasIndex(e => new { e.DocumentNumber, e.TransactionType, e.StoreCode, e.ItemCode }).IsUnique();
 
             entity.Property(e => e.DocumentNumber).HasColumnType("varchar(10)").IsRequired();
             entity.Property(e => e.TransactionType).HasColumnType("varchar(2)").IsRequired();
@@ -32,6 +37,12 @@ namespace ApparelPro.Data.Configurations.OrderwiseInventory
             entity.Property(e => e.Quantity).HasColumnType("decimal(12,2)").IsRequired();
             entity.Property(e => e.CreatedByUsername).HasColumnType("varchar(20)").IsRequired();
             entity.Property(e => e.TransactionDate).HasColumnType("date").IsRequired();
+
+            // GIN traceability additions
+            entity.Property(e => e.BalanceToReceive).HasColumnType("decimal(12,2)").IsRequired().HasDefaultValue(0m);
+            entity.Property(e => e.SourceDocumentNumber).HasColumnType("varchar(10)").IsRequired(false);
+            entity.Property(e => e.Price).HasColumnType("decimal(10,4)").IsRequired(false);
+            entity.Property(e => e.Currency).HasColumnType("varchar(3)").IsRequired(false);
         }
     }
 }

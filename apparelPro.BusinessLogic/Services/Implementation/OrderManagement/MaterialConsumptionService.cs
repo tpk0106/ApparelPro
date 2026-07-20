@@ -3,7 +3,6 @@ using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsServ
 using apparelPro.BusinessLogic.Services.Models.Reference.ISupplierService;
 using ApparelPro.Data;
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
-using ApparelPro.Data.Models.OrderwiseInventory;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Data.Models.Registration;
 using ApparelPro.WebApi.APIModels.OrderManagement;
@@ -208,7 +207,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 string stockCodeClean = request.StockCode.Trim();
 
                 // ---------------------------------------------------------------------
-                // 🚀 STEP 1: Update Global Reference Catalog (No StoreCode Needed!)
+                // STEP 1: Update Global Reference Catalog (No StoreCode Needed!)
                 // ---------------------------------------------------------------------
                 var itemExistsInGlobalCatalog = await _apparelProDbContext.StockItems
                     .AnyAsync(c => c.StockCode == stockCodeClean && c.ItemCode == itemCodeClean);
@@ -225,22 +224,15 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     await _apparelProDbContext.SaveChangesAsync();
                 }
 
-                // 🚀 STEP 2: DYNAMIC STORE ROUTING RESOLUTION (od_stref mappings)
-                // Dynamically assigns the target store based on your legacy category code rules
-                string dynamicStoreCode = "M-S"; // Default to M-S (Main Stores) for Raw Materials (01)
-
-                if (stockCodeClean == "02")
-                {
-                    dynamicStoreCode = "BUT"; // Route Accessories strictly to the BUT (Sub/Button Store)
-                }
-                else if (stockCodeClean == "03")
-                {
-                    dynamicStoreCode = "M-S"; // Route Packing materials to Main Stores
-                }
-
                 // ---------------------------------------------------------------------
                 // PHASE 1: Process Granular Material Consumption Spreadsheet Entry
                 // ---------------------------------------------------------------------
+                // No store/warehouse concept here, by design — verified against the legacy
+                // OD_TPDT1.PRG source: material consumption entry only writes od_sacc2/od_sacc3
+                // (this ledger + the cost profile below), which is pure BOM planning. Store codes
+                // are assigned later, at goods-received time, from od_stref (a plain code/description
+                // lookup table with no auto-routing rules — there was never a legacy rule mapping a
+                // stock category like "02" to a specific store).
 
                 var existingLedgerRow = await _apparelProDbContext.StyleMaterialConsumptionLedgers
                     .FirstOrDefaultAsync(l => l.BuyerCode == request.BuyerCode &&
@@ -266,7 +258,6 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     existingLedgerRow.SupplierCode = request.SupplierCode.Trim();
                     existingLedgerRow.ConsumptionUnit = request.ConsumptionUnit.Trim();
                     existingLedgerRow.ItemUnit = request.ItemUnit.Trim();
-                    existingLedgerRow.StoreCode = dynamicStoreCode;
 
                     _apparelProDbContext.StyleMaterialConsumptionLedgers.Update(existingLedgerRow);
                 }
@@ -291,10 +282,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         QuantityPerGarment = request.QuantityPerGarment,
                         PercentageAllowance = request.PercentageAllowance,
                         TotalConsumption = request.TotalConsumption,
-                        SupplierCode = request.SupplierCode.Trim(),
-
-                        // FIXED: Uses the dynamic warehouse code (M-S or BUT) based on category rules!
-                        StoreCode = dynamicStoreCode
+                        SupplierCode = request.SupplierCode.Trim()
                     };
 
                     await _apparelProDbContext.StyleMaterialConsumptionLedgers.AddAsync(newLedgerRow);
@@ -318,10 +306,16 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
                 if (costProfile != null)
                 {
+                    // BalanceQuantity (bal_qty) and TotalConsumption (tot_con) both move
+                    // up/down together in response to a ledger entry change - they only
+                    // diverge later, when a PO draws BalanceQuantity down without
+                    // touching TotalConsumption (see SupplierPurchaseOrderService).
                     costProfile.BalanceQuantity = (costProfile.BalanceQuantity - historicalConsumptionDelta) + request.TotalConsumption;
+                    costProfile.TotalConsumption = (costProfile.TotalConsumption - historicalConsumptionDelta) + request.TotalConsumption;
                     costProfile.UnitPrice = request.UnitPrice;
                     costProfile.Description = $"{request.StockCode}/{request.ItemCode} Component Entry Matched";
                     costProfile.ItemUnit = request.ItemUnit.Trim();
+                    costProfile.SupplierCode = request.SupplierCode.Trim();
 
                     _apparelProDbContext.StyleMaterialCostProfiles.Update(costProfile);
                 }
@@ -343,46 +337,21 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         ItemUnit = request.ItemUnit.Trim(),
                         Currency = request.Currency.Trim(),
                         UnitPrice = request.UnitPrice,
-                        BalanceQuantity = request.TotalConsumption
+                        BalanceQuantity = request.TotalConsumption,
+                        TotalConsumption = request.TotalConsumption,
+                        SupplierCode = request.SupplierCode.Trim()
                     };
 
                     await _apparelProDbContext.StyleMaterialCostProfiles.AddAsync(newCostProfile);
                 }
 
-                // ---------------------------------------------------------------------
-                // 🚀 PHASE 3: AUTOMATED ORDERWISE STOCK SYNCHRONIZATION
-                // ---------------------------------------------------------------------
-                var stockRecord = await _apparelProDbContext.OrderwiseStocks
-                    .FirstOrDefaultAsync(s => s.BuyerCode == request.BuyerCode &&
-                                              s.Order == request.Order.Trim() &&
-                                              s.StoreCode == dynamicStoreCode &&
-                                              s.ItemCode == itemCodeClean);
-
-                if (stockRecord == null)
-                {
-                    var newStockRecord = new OrderwiseStock
-                    {
-                        BuyerCode = request.BuyerCode,
-                        Order = request.Order.Trim(),
-                        StoreCode = dynamicStoreCode, // Maps perfectly to M-S or BUT cleanly!
-                        ItemCode = itemCodeClean,
-                        Unit = request.ItemUnit.Trim(),
-                        OrderedQuantity = request.TotalConsumption,
-                        QtyInHand = request.TotalConsumption,
-                        ShadowBalance = 0,
-                        SrnBalance = 0,
-                        ToDateReceived = 0,
-                        ToDateIssued = 0,
-                        DamagedQuantity = 0
-                    };
-                    await _apparelProDbContext.OrderwiseStocks.AddAsync(newStockRecord);
-                }
-                else
-                {
-                    stockRecord.OrderedQuantity = (stockRecord.OrderedQuantity - historicalConsumptionDelta) + request.TotalConsumption;
-                    stockRecord.QtyInHand = (stockRecord.QtyInHand - historicalConsumptionDelta) + request.TotalConsumption;
-                    _apparelProDbContext.OrderwiseStocks.Update(stockRecord);
-                }
+                // Removed PHASE 3 ("AUTOMATED ORDERWISE STOCK SYNCHRONIZATION"): it wrote
+                // QtyInHand = TotalConsumption straight into OrderwiseStock, fabricating physical
+                // stock the moment a BOM line was entered — before anything was purchased or
+                // received. STRN/GIN draw down against OrderwiseStock.QtyInHand, so this could let
+                // material be issued that was never actually received. OrderwiseStock is now
+                // populated only by real receipt data: GRN (once built) or your DBF import,
+                // matching the legacy flow exactly.
 
                 await _apparelProDbContext.SaveChangesAsync();
                 return true;
@@ -680,6 +649,38 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
             return _mapper.Map<List<OrderItemServiceModel>>(orderItemDbModelList);
         }
 
+        public async Task<List<MaterialCatalogGroupServiceModel>> GetMaterialCatalogAsync()
+        {
+            // 1. Load every Stock category (parent rows) - always shown, even if empty
+            var stocks = await _apparelProDbContext.Stocks
+                .AsNoTracking()
+                .OrderBy(s => s.StockCode)
+                .ToListAsync();
+
+            // 2. Load the full item catalog and group in-memory by StockCode
+            var items = await _apparelProDbContext.OrderItems
+                .AsNoTracking()
+                .OrderBy(i => i.ItemCode)
+                .ToListAsync();
+
+            var itemsByStock = items
+                .GroupBy(i => i.StockCode)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            return stocks.Select(s => new MaterialCatalogGroupServiceModel
+            {
+                StockCode = s.StockCode,
+                Description = s.Description,
+                Items = (itemsByStock.TryGetValue(s.StockCode, out var stockItems) ? stockItems : new List<OrderItem>())
+                    .Select(i => new MaterialCatalogItemServiceModel
+                    {
+                        ItemCode = i.ItemCode,
+                        Description = i.Description
+                    })
+                    .ToList()
+            }).ToList();
+        }
+
         public async Task<List<OrderItemServiceModel>> GetAvailableMaterialsLookupAsync1(int buyerCode, string order, int typeCode, string styleCode)
         {
             order = order.Trim();
@@ -851,9 +852,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
             return resultList;
         }
 
-        public async Task<List<StyleMaterialConsumptionLedger>> GetLedgerEntriesByStyleAsync(int buyerCode, string order, int typeCode, string styleCode)
+        public async Task<List<StyleMaterialConsumptionLedgerRowServiceModel>> GetLedgerEntriesByStyleAsync(int buyerCode, string order, int typeCode, string styleCode)
         {
-            return await _apparelProDbContext.StyleMaterialConsumptionLedgers
+            var ledgerRows = await _apparelProDbContext.StyleMaterialConsumptionLedgers
                 .AsNoTracking()
                 .Where(l => l.BuyerCode == buyerCode &&
                             l.Order == order.Trim() &&
@@ -862,6 +863,44 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 .OrderBy(l => l.StockCode)
                 .ThenBy(l => l.ItemCode)
                 .ToListAsync();
+
+            if (ledgerRows.Count == 0)
+                return new List<StyleMaterialConsumptionLedgerRowServiceModel>();
+
+            // Bulk-fetch catalog descriptions once (small reference table), same
+            // pattern used in GetMaterialCatalogAsync, instead of an N+1 lookup
+            // per ledger row.
+            var descriptionLookup = await _apparelProDbContext.OrderItems
+                .AsNoTracking()
+                .ToDictionaryAsync(i => (i.StockCode, i.ItemCode), i => i.Description);
+
+            return ledgerRows.Select(l => new StyleMaterialConsumptionLedgerRowServiceModel
+            {
+                BuyerCode = l.BuyerCode,
+                Order = l.Order,
+                TypeCode = l.TypeCode,
+                StyleCode = l.StyleCode,
+                Color = l.Color,
+                Size = l.Size,
+                StockCode = l.StockCode,
+                ItemCode = l.ItemCode,
+                Description = descriptionLookup.TryGetValue((l.StockCode, l.ItemCode), out var desc)
+                    ? desc
+                    : $"{l.StockCode}/{l.ItemCode}",
+                Feature1 = l.Feature1,
+                Feature2 = l.Feature2,
+                Feature3 = l.Feature3,
+                Feature4 = l.Feature4,
+                StoreCode = l.StoreCode,
+                ConsumptionUnit = l.ConsumptionUnit,
+                ItemUnit = l.ItemUnit,
+                QuantityPerGarment = l.QuantityPerGarment,
+                SupplierCode = l.SupplierCode,
+                TotalConsumption = l.TotalConsumption,
+                PercentageAllowance = l.PercentageAllowance,
+                IsAdditionalCost = l.IsAdditionalCost,
+                CalculateConsumption = l.CalculateConsumption,
+            }).ToList();
         }
 
 

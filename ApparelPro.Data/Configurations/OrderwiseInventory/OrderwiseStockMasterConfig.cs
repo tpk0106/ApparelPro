@@ -26,6 +26,8 @@ namespace ApparelPro.Data.Configurations.OrderwiseInventory
             entity.Property(e => e.OrderedQuantity).HasColumnType("decimal(12,2)").HasColumnName("OrderedQuantity").IsRequired();
             entity.Property(e => e.Price).HasColumnType("decimal(10,4)").HasColumnName("Price").IsRequired();
             entity.Property(e => e.RequisitionedQuantity).HasColumnName("RequisitionedQuantity").HasColumnType("decimal(12,2)");
+            entity.Property(e => e.IssuedQuantity).HasColumnType("decimal(12,2)").HasColumnName("IssuedQuantity").IsRequired().HasDefaultValue(0m);
+            entity.Property(e => e.ReceivedQuantity).HasColumnType("decimal(12,2)").HasColumnName("ReceivedQuantity").IsRequired().HasDefaultValue(0m);
         }
     }
 }

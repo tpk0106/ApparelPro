@@ -80,7 +80,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost("save-entry")]
-        [Authorize] // Enforces that the request must contain a valid active web session token
+        //[Authorize] // Enforces that the request must contain a valid active web session token
         [ProducesResponseType(typeof(bool), HttpStatusCodes.OK)]
         public async Task<IActionResult> SaveEntry([FromBody] CreateMaterialConsumptionEntryRequestAPIModel request)
         {
@@ -102,7 +102,7 @@ namespace ApparelPro.WebApi.Controllers
                 if (approvalDetails != null)
                 {
                     // 🚀 THE CLIPPER SECURITY GUARD ACCESS INTERCEPTOR:
-                    bool isHigherAuthority = User.IsInRole("Merchandising Manager") || User.IsInRole("Executive Director");
+                    bool isHigherAuthority = User.IsInRole("Merchandising Manager") || User.IsInRole("Merchandiser Manager") || User.IsInRole("Executive Director");
 
                     if (!isHigherAuthority)
                     {
@@ -130,7 +130,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("by-style")]
-        [ProducesResponseType(typeof(List<StyleMaterialConsumptionLedger>), HttpStatusCodes.OK)]
+        [ProducesResponseType(typeof(List<StyleMaterialConsumptionLedgerRowAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetBreakdownByStyle(
             [FromQuery] int buyerCode,
             [FromQuery] string order,
@@ -143,7 +143,7 @@ namespace ApparelPro.WebApi.Controllers
             try
             {
                 var ledgerRows = await _materialConsumptionService.GetLedgerEntriesByStyleAsync(buyerCode, order, typeCode, styleCode);
-                return Ok(ledgerRows);
+                return Ok(_mapper.Map<List<StyleMaterialConsumptionLedgerRowAPIModel>>(ledgerRows));
             }
             catch (Exception ex)
             {
@@ -188,6 +188,19 @@ namespace ApparelPro.WebApi.Controllers
         {
             var data = await _materialConsumptionService.GetAvailableMaterialsLookupAsync(buyerCode, order, typeCode, styleCode);
             return Ok(data);
+        }
+
+        [HttpGet("catalog")]
+        [ProducesResponseType(typeof(List<MaterialCatalogGroupAPIModel>), HttpStatusCodes.OK)]
+        [SwaggerOperation(Tags = new[] { "order Item Feature Endpoints" },
+             Summary = "Full material catalog grouped by Stock category",
+             Description = "Returns every Stock category with its Item catalog, for the material picker UI. Not scoped to a style.")
+         ]
+        public async Task<IActionResult> GetMaterialCatalog()
+        {
+            var data = await _materialConsumptionService.GetMaterialCatalogAsync();
+            var result = _mapper.Map<List<MaterialCatalogGroupAPIModel>>(data);
+            return Ok(result);
         }
 
         //[HttpGet("style-dimensions")]

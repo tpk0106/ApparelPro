@@ -115,6 +115,8 @@ namespace ApparelPro.WebApi.Extensions
 
             // orderwise inventory
             services.AddScoped<IStoresRequisitionService, StoresRequisitionService>();
+            services.AddScoped<IGoodsIssueService, GoodsIssueService>();
+            services.AddScoped<IGoodsReceivedNoteService, GoodsReceivedNoteService>();
 
             // shared service
             services.AddScoped<ISharedService, SharedService>();

@@ -46,7 +46,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
             // 3. Convert quantities to the target viewport unit type dynamically using your dependency service
             decimal convertedInHand = await _unitConversionService.ConvertUnitAsync(stockRecord.Unit, targetUnit, stockRecord.QtyInHand);
             decimal convertedShadow = await _unitConversionService.ConvertUnitAsync(stockRecord.Unit, targetUnit, stockRecord.ShadowBalance);
-            decimal convertedSrn = await _unitConversionService.ConvertUnitAsync(stockRecord.Unit, targetUnit, stockRecord.SrnBalance);
+            decimal convertedSrn = await _unitConversionService.ConvertUnitAsync(stockRecord.Unit, targetUnit, stockRecord.StrnBalance);
 
             return new StockItemAvailabilityDetails
             {
@@ -55,7 +55,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 Unit = targetUnit,
                 PhysicalQtyInHand = convertedInHand,
                 ShadowAllocatedBalance = convertedShadow,
-                RequisitionedSrnBalance = convertedSrn
+                RequisitionedStrnBalance = convertedSrn
             };
         }
         public async Task<bool> CommitStoresRequisitionNoteAsync(
@@ -73,8 +73,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                     header.DepartmentCode = header.DepartmentCode.Trim().ToUpper();
 
                     // 1. THREAD-SAFE AUTOGEN EMULATION: Allocate a unique consecutive serial number for this STRN note
-                    string allocatedSrnNumber = await _sharedService.GenerateNextDocumentNumberAsync("STRN");
-                    header.SrnNumber = allocatedSrnNumber;
+                    string allocatedStrnNumber = await _sharedService.GenerateNextDocumentNumberAsync("STRN");
+                    header.StrnNumber = allocatedStrnNumber;
 
                     foreach (var line in lines)
                     {
@@ -86,9 +86,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         // 2. VERIFY AVAILABLE STOCK BALANCES IN THE CORRECT TABLE (OrderwiseStocks)
                         // 🔒 CONCURRENCY FIX: Read WITH (UPDLOCK, HOLDLOCK) so this row is exclusively locked for the
                         // remainder of this transaction. Without this, two concurrent STRN commits against the same
-                        // item/store can both read the same QtyInHand/ShadowBalance/SrnBalance, both pass the deficit
+                        // item/store can both read the same QtyInHand/ShadowBalance/StrnBalance, both pass the deficit
                         // check below, and the second SaveChangesAsync silently overwrites (rather than adds to) the
-                        // first commit's SrnBalance update — a classic lost-update race that lets stock be over-allocated.
+                        // first commit's StrnBalance update — a classic lost-update race that lets stock be over-allocated.
                         // This is the direct modern equivalent of the legacy RLOCK()/FLOCK() the Clipper code relied on.
                         var stockRecord = await _apparelProDbContext.OrderwiseStocks
                             .FromSqlInterpolated($@"SELECT * FROM OrderwiseStocks WITH (UPDLOCK, HOLDLOCK)
@@ -105,7 +105,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
 
                         // Calculate net available inventory in the database record unit format using your injected service
                         decimal requestedInStockUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, stockRecord.Unit, line.Quantity);
-                        decimal netAvailableInStockUnit = stockRecord.QtyInHand - stockRecord.ShadowBalance - stockRecord.SrnBalance;
+                        decimal netAvailableInStockUnit = stockRecord.QtyInHand - stockRecord.ShadowBalance - stockRecord.StrnBalance;
 
                         if (requestedInStockUnit > netAvailableInStockUnit)
                         {
@@ -115,7 +115,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         // 3. WRITE TO THE TRANSACTION LEDGER RECORD TABLE (OrderwiseStockTransactions)
                         var trxLine = new OrderwiseStockTransaction
                         {
-                            DocumentNumber = header.SrnNumber,
+                            DocumentNumber = header.StrnNumber,
                             TransactionType = "0S", // '0S' = Stores Requisition Note
                             TransactionDate = header.TransactionDate,
                             BuyerCode = header.BuyerCode,
@@ -126,6 +126,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                             ItemCode = line.ItemCode,
                             Unit = line.Unit,
                             Quantity = line.Quantity,
+                            BalanceToReceive = line.Quantity, // Seeds the full outstanding balance at creation; GIN decrements this as material is issued against this line.
                             CreatedByUsername = username.Trim().ToUpper()
                         };
                         await _apparelProDbContext.OrderwiseStockTransactions.AddAsync(trxLine);
@@ -152,7 +153,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         }
 
                         // 5. UPDATE LOCK WITHIN THE MASTER LEDGER POOL BALANCE (OrderwiseStocks)
-                        stockRecord.SrnBalance += requestedInStockUnit; // Locks the allocation balance!
+                        stockRecord.StrnBalance += requestedInStockUnit; // Locks the allocation balance!
                         _apparelProDbContext.OrderwiseStocks.Update(stockRecord);
                     }
 

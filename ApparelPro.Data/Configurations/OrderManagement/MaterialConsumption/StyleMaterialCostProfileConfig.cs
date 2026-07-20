@@ -42,6 +42,14 @@ namespace ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption
             entity.Property(e => e.Currency).HasColumnType("varchar(3)").HasColumnName("CurrencyCode");
             entity.Property(e => e.UnitPrice).HasColumnType("decimal(10,4)").HasColumnName("Price");
             entity.Property(e => e.BalanceQuantity).HasColumnType("decimal(12,2)").HasColumnName("BalanceQuantity");
+
+            // Legacy od_sacc2 fields (SUPP_CD / TOT_CON) added alongside the
+            // entity properties. varchar(6) matches the same SupplierCode
+            // convention used on PurchaseOrderHeaderConfig / StyleMaterialConsumptionLedgerConfig;
+            // decimal(12,2) matches BalanceQuantity, since TotalConsumption tracks the
+            // same kind of rolling planned-quantity figure.
+            entity.Property(e => e.SupplierCode).HasColumnType("varchar(6)").HasColumnName("SupplierCode");
+            entity.Property(e => e.TotalConsumption).HasColumnType("decimal(12,2)").HasColumnName("TotalConsumption");
         }
     }
 }
