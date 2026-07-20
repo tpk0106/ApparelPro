@@ -43,11 +43,6 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
             foreach (var profile in costProfiles)
             {
-                // Cross-reference user-friendly descriptions from your master checklist reference table
-                var masterItem = await _apparelProDbContext.OrderItems
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(i => i.StockCode == profile.StockCode && i.ItemCode == profile.ItemCode);
-
                 resultList.Add(new AvailableBudgetLineServiceModel
                 {
                     ItemCode = $"{profile.StockCode}{profile.ItemCode}{profile.Feature1}{profile.Feature2}{profile.Feature3}{profile.Feature4}", // Unified 22+ Character Composite String Signature
@@ -55,7 +50,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     BalanceQuantity = profile.BalanceQuantity,
                     TypeCode = profile.TypeCode,
                     StyleCode = profile.StyleCode,
-                    Description = masterItem?.Description ?? "Allocated Raw Material Component Row"
+                    Description = !string.IsNullOrWhiteSpace(profile.Description)
+                        ? profile.Description
+                        : "(No description available)"
                 });
             }
 
@@ -164,17 +161,23 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
                     // FIXED LOOKUP: Map the parameters straight to your clear inbound DTO feature properties!
                     // This eliminates substring character index errors permanently!
+                    // Row-locked (UPDLOCK/HOLDLOCK) for the duration of this transaction — same
+                    // pattern already used by STRN/GIN/GRN — so two concurrent P/O saves against
+                    // the same budget line can't both read a stale balance and both get accepted,
+                    // driving it negative.
                     var costProfile = await _apparelProDbContext.StyleMaterialCostProfiles
-                        .FirstOrDefaultAsync(p => p.BuyerCode == header.BuyerCode &&
-                                                  p.Order == header.OrderNumber.Trim() &&
-                                                  p.TypeCode == header.TypeCode &&
-                                                  p.StyleCode == header.StyleCode.Trim() &&
-                                                  p.StockCode == baseStock &&
-                                                  p.ItemCode == baseItem &&
-                                                  p.Feature1 == line.Feature1.Trim() &&
-                                                  p.Feature2 == line.Feature2.Trim() &&
-                                                  p.Feature3 == line.Feature3.Trim() &&
-                                                  p.Feature4 == line.Feature4.Trim());
+                        .FromSqlInterpolated($@"SELECT * FROM StyleMaterialCostProfiles WITH (UPDLOCK, HOLDLOCK)
+                            WHERE BuyerCode = {header.BuyerCode}
+                              AND [Order] = {header.OrderNumber.Trim()}
+                              AND TypeCode = {header.TypeCode}
+                              AND StyleCode = {header.StyleCode.Trim()}
+                              AND StockCode = {baseStock}
+                              AND ItemCode = {baseItem}
+                              AND Feature1 = {line.Feature1.Trim()}
+                              AND Feature2 = {line.Feature2.Trim()}
+                              AND Feature3 = {line.Feature3.Trim()}
+                              AND Feature4 = {line.Feature4.Trim()}")
+                        .FirstOrDefaultAsync();
 
                     if (costProfile != null)
                     {
@@ -185,9 +188,17 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         }
 
                         decimal newlyOrderedInProfileUnit = await _materialConsumptionService.ConvertUnitAsync(line.OrderUnit, costProfile.ItemUnit, line.OrderQuantity);
+                        decimal availableBeforeThisLine = costProfile.BalanceQuantity + historicalBalanceRebate;
+
+                        // Server-side enforcement mirroring the client-side alert() check — the
+                        // client check is a convenience, this is the real guard. Allows ordering
+                        // exactly down to a balance of 0 (using up the full remaining budget is
+                        // legitimate); only genuine overages are rejected.
+                        if (newlyOrderedInProfileUnit > availableBeforeThisLine)
+                            throw new InvalidOperationException($"Budget Deficit: Attempted to order more than the remaining material budget for Item '{line.ItemCode}'. Requested: {line.OrderQuantity} {line.OrderUnit}, Available: {await _materialConsumptionService.ConvertUnitAsync(costProfile.ItemUnit, line.OrderUnit, availableBeforeThisLine)} {line.OrderUnit}.");
 
                         // Clipper math enforcement: 56.00 - (16.00 + 8.00) = 32.00 GRS!
-                        costProfile.BalanceQuantity = (costProfile.BalanceQuantity + historicalBalanceRebate) - newlyOrderedInProfileUnit;
+                        costProfile.BalanceQuantity = availableBeforeThisLine - newlyOrderedInProfileUnit;
 
                         _apparelProDbContext.StyleMaterialCostProfiles.Update(costProfile);
                     }

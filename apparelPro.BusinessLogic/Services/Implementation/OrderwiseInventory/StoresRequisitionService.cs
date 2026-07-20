@@ -211,22 +211,41 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 .Where(s => s.BuyerCode == buyerCode && s.Order == order && s.StoreCode == storeCode)
                 .ToListAsync();
 
-            // PERFORMANCE FIX: Batch-load every matching catalog description in a single round trip instead of
-            // issuing one StockItems query per stock row (N+1 query pattern).
+            // Real material descriptions live on StyleMaterialCostProfiles (od_sacc2), keyed by the
+            // same decomposed 22-char ItemCode used across the order/costing tables — this is the
+            // authoritative source, not the generic StockItems catalog. Batch-load every profile
+            // row for this buyer+order in one round trip.
+            var costProfiles = await _apparelProDbContext.StyleMaterialCostProfiles
+                .AsNoTracking()
+                .Where(p => p.BuyerCode == buyerCode && p.Order == order)
+                .ToListAsync();
+            var profileByItemCode = costProfiles
+                .GroupBy(p => p.StockCode + p.ItemCode + p.Feature1 + p.Feature2 + p.Feature3 + p.Feature4)
+                .ToDictionary(g => g.Key, g => g.First());
+
+            // Secondary fallback for any item without a cost profile row.
             var itemCodes = stockRecords.Select(s => s.ItemCode).Distinct().ToList();
             var catalogItemsByCode = await _apparelProDbContext.StockItems
                 .AsNoTracking()
                 .Where(c => itemCodes.Contains(c.ItemCode))
                 .ToDictionaryAsync(c => c.ItemCode, c => c.Description);
 
-            var resultList = stockRecords.Select(stock => new OrderwiseStockLookupRowServiceModel
+            var resultList = stockRecords.Select(stock =>
             {
-                ItemCode = stock.ItemCode,
-                StoreCode = stock.StoreCode,
-                Unit = stock.Unit,
-                Description = catalogItemsByCode.TryGetValue(stock.ItemCode, out var description)
-                    ? description ?? "Raw Material Component"
-                    : "Raw Material Component"
+                profileByItemCode.TryGetValue(stock.ItemCode, out var profile);
+                catalogItemsByCode.TryGetValue(stock.ItemCode, out var catalogDescription);
+                string description = !string.IsNullOrWhiteSpace(profile?.Description)
+                    ? profile!.Description
+                    : (catalogDescription ?? "(No description available)");
+
+                return new OrderwiseStockLookupRowServiceModel
+                {
+                    ItemCode = stock.ItemCode,
+                    StoreCode = stock.StoreCode,
+                    Unit = stock.Unit,
+                    Description = description,
+                    OrderedQuantity = stock.OrderedQuantity
+                };
             }).ToList();
 
             return resultList.OrderBy(r => r.ItemCode).ToList();
