@@ -1,3 +1,4 @@
+using apparelPro.BusinessLogic.Reports.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
@@ -108,6 +109,51 @@ namespace ApparelPro.WebApi.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { Error = $"Failed to build stock search options: {ex.Message}" });
+            }
+        }
+
+        // GET: api/orderwise-inventory-strn/print?strnNumber=000123
+        [HttpGet("print")]
+        public async Task<IActionResult> GetStrnPrintDetails([FromQuery] string strnNumber)
+        {
+            if (string.IsNullOrWhiteSpace(strnNumber))
+                return BadRequest("Parameter 'strnNumber' is required.");
+
+            try
+            {
+                var details = await _storesRequisitionService.GetStrnPrintDetailsAsync(strnNumber);
+                return Ok(_mapper.Map<StrnPrintDetailsAPIModel>(details));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to load Stores Requisition Note: {ex.Message}" });
+            }
+        }
+
+        // GET: api/orderwise-inventory-strn/print/pdf?strnNumber=000123
+        [HttpGet("print/pdf")]
+        public async Task<IActionResult> GetStrnPrintPdf([FromQuery] string strnNumber)
+        {
+            if (string.IsNullOrWhiteSpace(strnNumber))
+                return BadRequest("Parameter 'strnNumber' is required.");
+
+            try
+            {
+                var details = await _storesRequisitionService.GetStrnPrintDetailsAsync(strnNumber);
+                byte[] pdfBytes = StrnPrintEngine.GenerateStrnPrintPdf(details);
+                return File(pdfBytes, "application/pdf", $"STRN_{strnNumber}.pdf");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to generate Stores Requisition Note PDF: {ex.Message}" });
             }
         }
 

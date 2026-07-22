@@ -18,24 +18,18 @@ namespace ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption
                 e.Order,
                 e.TypeCode,
                 e.StyleCode,
-                e.StockCode,
-                e.ItemCode,
-                e.Feature1,
-                e.Feature2,
-                e.Feature3,
-                e.Feature4
+                e.ItemCode
             });
 
             entity.Property(e => e.BuyerCode).HasColumnType("int").HasColumnName("Buyer");
             entity.Property(e => e.Order).HasColumnType("varchar(20)").HasColumnName("Order");
             entity.Property(e => e.TypeCode).HasColumnType("int").HasColumnName("Type");
             entity.Property(e => e.StyleCode).HasColumnType("varchar(20)").HasColumnName("Style");
-            entity.Property(e => e.StockCode).HasColumnType("varchar(2)").HasColumnName("StockCode");
-            entity.Property(e => e.ItemCode).HasColumnType("varchar(6)").HasColumnName("ItemCode");
-            entity.Property(e => e.Feature1).HasColumnType("varchar(4)").HasColumnName("Feature1");
-            entity.Property(e => e.Feature2).HasColumnType("varchar(4)").HasColumnName("Feature2");
-            entity.Property(e => e.Feature3).HasColumnType("varchar(4)").HasColumnName("Feature3");
-            entity.Property(e => e.Feature4).HasColumnType("varchar(4)").HasColumnName("Feature4");
+
+            // Collapsed 2026-07-22 from separate StockCode(2)/ItemCode(4)/Feature1-4(4 each)
+            // columns into the single 22-char composite already used by OrderwiseStockMaster,
+            // OrderwiseStockTransaction and PODetails.ItemCode.
+            entity.Property(e => e.ItemCode).HasColumnType("varchar(22)").HasColumnName("ItemCode");
 
             entity.Property(e => e.Description).HasColumnType("varchar(40)").HasColumnName("Description");
             entity.Property(e => e.ItemUnit).HasColumnType("varchar(3)").HasColumnName("ItemUnit");

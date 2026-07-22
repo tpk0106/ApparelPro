@@ -117,6 +117,7 @@ namespace ApparelPro.WebApi.Extensions
             services.AddScoped<IStoresRequisitionService, StoresRequisitionService>();
             services.AddScoped<IGoodsIssueService, GoodsIssueService>();
             services.AddScoped<IGoodsReceivedNoteService, GoodsReceivedNoteService>();
+            services.AddScoped<IStockMovementReportService, StockMovementReportService>();
 
             // shared service
             services.AddScoped<ISharedService, SharedService>();

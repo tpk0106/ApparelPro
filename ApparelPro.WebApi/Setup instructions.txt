@@ -108,3 +108,6 @@ dotnet ef database update
 -- run via PM
 Add-Migration AddStyleMaterialCostProfileFields -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi -ErrorAction ignore
 Update-Database -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi
+
+Add-Migration CollapseStyleMaterialCostProfileItemCode -Context ApparelProDbContext -Project ApparelPro.Data -StartupProject ApparelPro.WebApi -ErrorAction ignore
+dotnet ef migrations add CollapseStyleMaterialCostProfileItemCode

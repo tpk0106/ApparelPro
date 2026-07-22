@@ -556,6 +556,11 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<StockItemAvailabilityDetails, StockItemAvailabilityAPIModel>().MaxDepth(2);
             CreateMap<OrderwiseStockLookupRowServiceModel, StockLookupRowAPIModel>().MaxDepth(2);
 
+            // orderwise inventory - STRN print
+            CreateMap<StrnPrintHeaderServiceModel, StrnPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<StrnPrintLineServiceModel, StrnPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<StrnPrintDetailsServiceModel, StrnPrintDetailsAPIModel>().MaxDepth(2);
+
             // orderwise inventory - GIN
             CreateMap<GinHeaderAPIModel, GinHeaderServiceModel>().MaxDepth(2);
             CreateMap<GinLineItemAPIModel, GinLineItemServiceModel>().MaxDepth(2);
@@ -569,6 +574,10 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<GrnReceivableLineServiceModel, GrnReceivableLineAPIModel>().MaxDepth(2);
             CreateMap<GrnPoLookupResultServiceModel, GrnPoLookupResultAPIModel>().MaxDepth(2);
             CreateMap<GrnPendingPoServiceModel, GrnPendingPoAPIModel>().MaxDepth(2);
+
+            // orderwise inventory - stock movement report
+            CreateMap<StockMovementReportHeaderServiceModel, StockMovementReportHeaderAPIModel>().MaxDepth(2);
+            CreateMap<StockMovementReportLineServiceModel, StockMovementReportLineAPIModel>().MaxDepth(2);
         }
 
         public class PaginationResultToPaginationAPITypeConverter<sourceT, destT> : ITypeConverter<PaginationResult<sourceT>, PaginationAPIModel<destT>>

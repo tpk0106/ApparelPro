@@ -212,7 +212,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 .ToListAsync();
 
             // Real material descriptions live on StyleMaterialCostProfiles (od_sacc2), keyed by the
-            // same decomposed 22-char ItemCode used across the order/costing tables — this is the
+            // same 22-char composite ItemCode used across the order/costing tables (collapsed
+            // 2026-07-22 from separate StockCode/ItemCode/Feature1-4 columns) — this is the
             // authoritative source, not the generic StockItems catalog. Batch-load every profile
             // row for this buyer+order in one round trip.
             var costProfiles = await _apparelProDbContext.StyleMaterialCostProfiles
@@ -220,7 +221,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 .Where(p => p.BuyerCode == buyerCode && p.Order == order)
                 .ToListAsync();
             var profileByItemCode = costProfiles
-                .GroupBy(p => p.StockCode + p.ItemCode + p.Feature1 + p.Feature2 + p.Feature3 + p.Feature4)
+                .GroupBy(p => p.ItemCode)
                 .ToDictionary(g => g.Key, g => g.First());
 
             // Secondary fallback for any item without a cost profile row.
@@ -249,6 +250,91 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
             }).ToList();
 
             return resultList.OrderBy(r => r.ItemCode).ToList();
+        }
+
+        public async Task<StrnPrintDetailsServiceModel> GetStrnPrintDetailsAsync(string strnNumber)
+        {
+            strnNumber = strnNumber.Trim();
+
+            // Legacy IN_STRN2.PRG: "seek m_docno+'0S'" then walks in_sttr while
+            // docno+id matches — i.e. every transaction row sharing this document
+            // number and the '0S' (Stores Requisition Note) type.
+            var transactionRows = await _apparelProDbContext.OrderwiseStockTransactions
+                .AsNoTracking()
+                .Where(t => t.DocumentNumber == strnNumber && t.TransactionType == "0S")
+                .OrderBy(t => t.Id)
+                .ToListAsync();
+
+            if (transactionRows.Count == 0)
+                throw new KeyNotFoundException($"SRN No '{strnNumber}' not found.");
+
+            var firstRow = transactionRows[0];
+
+            // StyleMaterialCostProfiles.ItemCode is now the same 22-char composite as
+            // OrderwiseStockTransaction.ItemCode (collapsed 2026-07-22 from separate
+            // StockCode/ItemCode/Feature1-4 columns) — a direct equality match against the
+            // whole transaction ItemCode, no more Substring decomposition needed for the
+            // description lookup. (History: this used to require decomposing the 22-char
+            // transaction ItemCode into 6 parts to match 6 separate cost-profile columns —
+            // see StockMovementReportService for the same pattern, also simplified.)
+            var costProfiles = await _apparelProDbContext.StyleMaterialCostProfiles
+                .AsNoTracking()
+                .Where(p => p.BuyerCode == firstRow.BuyerCode && p.Order.Trim() == firstRow.Order)
+                .ToListAsync();
+            var profileByItemCode = costProfiles.ToDictionary(p => p.ItemCode.Trim(), p => p);
+
+            static string DecomposePart(string fullItemCode, int start, int length) =>
+                fullItemCode.Length >= start + length ? fullItemCode.Substring(start, length).Trim() : string.Empty;
+
+            // Secondary fallback for any item without a matching cost profile row — keyed
+            // by the decomposed 4-char base item code, since StockItems' catalog is a plain
+            // ItemCode -> Description master, not style/feature-specific.
+            var baseItemCodes = transactionRows
+                .Select(t => DecomposePart(t.ItemCode, 2, 4))
+                .Distinct()
+                .ToList();
+            var catalogDescriptionByItemCode = await _apparelProDbContext.StockItems
+                .AsNoTracking()
+                .Where(c => baseItemCodes.Contains(c.ItemCode.Trim()))
+                .ToDictionaryAsync(c => c.ItemCode.Trim(), c => c.Description);
+
+            var lines = transactionRows.Select(t =>
+            {
+                var baseItemCode = DecomposePart(t.ItemCode, 2, 4);
+
+                // Display-only breakdown of the transaction's own composite ItemCode — the
+                // cost-profile match itself no longer needs these individual parts.
+                profileByItemCode.TryGetValue(t.ItemCode.Trim(), out var matchingProfile);
+
+                var description = matchingProfile?.Description?.Trim();
+                if (string.IsNullOrWhiteSpace(description))
+                    catalogDescriptionByItemCode.TryGetValue(baseItemCode, out description);
+
+                return new StrnPrintLineServiceModel
+                {
+                    ItemCode = baseItemCode,
+                    Description = !string.IsNullOrWhiteSpace(description) ? description!.Trim() : "(No description available)",
+                    Unit = t.Unit,
+                    Quantity = t.Quantity,
+                    StoreCode = t.StoreCode,
+                };
+            }).ToList();
+
+            return new StrnPrintDetailsServiceModel
+            {
+                Header = new StrnPrintHeaderServiceModel
+                {
+                    StrnNumber = strnNumber,
+                    BuyerCode = firstRow.BuyerCode,
+                    Order = firstRow.Order,
+                    DepartmentCode = firstRow.DepartmentCode,
+                    TransactionDate = firstRow.TransactionDate,
+                    // Legacy prints the current system date/time on every print run
+                    // (c_tod(date) inside inv_head), not the original transaction date.
+                    PrintedOn = DateTime.Now,
+                },
+                Lines = lines,
+            };
         }
     }
 }
