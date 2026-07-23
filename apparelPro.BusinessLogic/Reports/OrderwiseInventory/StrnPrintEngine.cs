@@ -54,7 +54,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderwiseInventory
 
                             column.Item().PaddingTop(6).Row(row =>
                             {
-                                row.RelativeItem().Text(t => { t.Span("Buyer : ").Bold(); t.Span(details.Header.BuyerCode.ToString()); });
+                                row.RelativeItem().Text(t => { t.Span("Buyer : ").Bold(); t.Span(details.Header.BuyerName); });
                                 row.RelativeItem().Text(t => { t.Span("Order No : ").Bold(); t.Span(details.Header.Order); });
                                 row.RelativeItem().Text(t => { t.Span("To Department : ").Bold(); t.Span(details.Header.DepartmentCode); });
                             });
@@ -70,8 +70,11 @@ namespace apparelPro.BusinessLogic.Reports.OrderwiseInventory
                             {
                                 table.ColumnsDefinition(columns =>
                                 {
-                                    columns.ConstantColumn(70);   // Item Code
-                                    columns.RelativeColumn(3);    // Description
+                                    // Widened from 70 to fit the full 22-char composite code
+                                    // (StockCode 2 + ItemCode 4 + Feature1-4 x4) now that the
+                                    // line query no longer decomposes it down to 4 characters.
+                                    columns.ConstantColumn(130);  // Item Code
+                                    columns.RelativeColumn(2.4f); // Description
                                     columns.ConstantColumn(50);   // Unit
                                     columns.ConstantColumn(80);   // Qty. Issued
                                     columns.ConstantColumn(70);   // Store

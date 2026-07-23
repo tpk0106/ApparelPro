@@ -4,6 +4,10 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderwiseInventory
     {
         public string StrnNumber { get; set; } = null!;
         public int BuyerCode { get; set; }
+        // Added alongside the same Buyer-name fix already applied to the Stock
+        // Movement Report — legacy IN_STRN2.PRG only ever printed the raw buyer
+        // code, but the modernized print run reads better with the name.
+        public string BuyerName { get; set; } = null!;
         public string Order { get; set; } = null!;
         public string DepartmentCode { get; set; } = null!;
         public DateTime TransactionDate { get; set; }

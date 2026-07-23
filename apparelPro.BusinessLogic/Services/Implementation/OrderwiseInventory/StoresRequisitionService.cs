@@ -312,7 +312,11 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
 
                 return new StrnPrintLineServiceModel
                 {
-                    ItemCode = baseItemCode,
+                    // Full 22-char composite (StockCode 2 + ItemCode 4 + Feature1-4 x4),
+                    // same convention as OrderwiseStockMaster/PODetails — same fix already
+                    // applied to the Stock Movement Report line query. baseItemCode above
+                    // is kept only for the StockItems catalog-fallback lookup, not for display.
+                    ItemCode = t.ItemCode.Trim(),
                     Description = !string.IsNullOrWhiteSpace(description) ? description!.Trim() : "(No description available)",
                     Unit = t.Unit,
                     Quantity = t.Quantity,
@@ -320,12 +324,23 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 };
             }).ToList();
 
+            // Legacy IN_STRN2.PRG only ever printed the raw buyer code (od_byref
+            // isn't seeked at all in that program) — same modernization already
+            // applied to the Stock Movement Report: look up the name so the
+            // printed note reads better than the legacy printout did.
+            var buyerName = await _apparelProDbContext.Buyers
+                .AsNoTracking()
+                .Where(b => b.BuyerCode == firstRow.BuyerCode)
+                .Select(b => b.Name)
+                .FirstOrDefaultAsync();
+
             return new StrnPrintDetailsServiceModel
             {
                 Header = new StrnPrintHeaderServiceModel
                 {
                     StrnNumber = strnNumber,
                     BuyerCode = firstRow.BuyerCode,
+                    BuyerName = !string.IsNullOrWhiteSpace(buyerName) ? buyerName : firstRow.BuyerCode.ToString(),
                     Order = firstRow.Order,
                     DepartmentCode = firstRow.DepartmentCode,
                     TransactionDate = firstRow.TransactionDate,
