@@ -1,0 +1,19 @@
+{
+  "name": "ApparelPro Backend (.NET) — optional VS Code / Container Tools path",
+  "//": "Only needed for the advanced path in SETUP-GUIDE.md Step 5. Not required for the default Visual Studio-on-host workflow.",
+  "dockerComposeFile": ["../docker-compose.yml"],
+  "service": "backend",
+  "workspaceFolder": "/src",
+  "shutdownAction": "stopCompose",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        "ms-mssql.mssql"
+      ]
+    }
+  },
+  "forwardPorts": [5000, 5001],
+  "postCreateCommand": "dotnet restore ApparelPro.sln"
+}

@@ -9,6 +9,7 @@ namespace ApparelPro.WebApi.APIModels.OrderwiseInventory
         public decimal ReceivedQuantity { get; set; }
         public decimal RequisitionedQuantity { get; set; }
         public decimal IssuedQuantity { get; set; }
+        public decimal ReturnedQuantity { get; set; }
         public decimal TransferInQuantity { get; set; }
         public decimal TransferOutQuantity { get; set; }
         public decimal SupplierReturnQuantity { get; set; }

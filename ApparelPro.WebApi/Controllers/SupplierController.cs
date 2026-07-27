@@ -1,26 +1,14 @@
-﻿using apparelPro.BusinessLogic.Misc;
-using apparelPro.BusinessLogic.Services.Implementation.Shared;
-using apparelPro.BusinessLogic.Services.Models.Reference.ISupplierService;
+﻿using apparelPro.BusinessLogic.Services.Models.Reference.ISupplierService;
 using ApparelPro.Data;
-using ApparelPro.Data.Models.References;
-using ApparelPro.Shared.Extensions;
-using ApparelPro.Shared.LookupConstants;
-using ApparelPro.Shared.LookupConstants.ApparelProContext;
 using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.APIModels;
-using ApparelPro.WebApi.Extensions;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Swashbuckle.AspNetCore.Annotations;
-using System.Linq.Dynamic.Core;
 using Microsoft.AspNetCore.Authorization;
 using apparelPro.BusinessLogic.Services;
-using apparelPro.BusinessLogic.Services.Implementation.Reference;
-using apparelPro.BusinessLogic.Services.Models.Reference.ICountryService;
 
 namespace ApparelPro.WebApi.Controllers
 {
@@ -29,10 +17,10 @@ namespace ApparelPro.WebApi.Controllers
     public class SupplierController : ControllerBase
     {
         private readonly IMapper _mapper;
-        private readonly ApparelProDbContext _apparelProDbContext; 
+        private readonly ApparelProDbContext _apparelProDbContext;
         private readonly IDistributedCache _distributedCache;
         private readonly ISupplierService _supplierService;
-        public SupplierController(IMapper mapper, ApparelProDbContext apparelProDbContext, 
+        public SupplierController(IMapper mapper, ApparelProDbContext apparelProDbContext,
             IDistributedCache distributedCache, ISupplierService supplierService)
         {
             if (apparelProDbContext == null)
@@ -43,11 +31,11 @@ namespace ApparelPro.WebApi.Controllers
             {
                 throw new ArgumentNullException(nameof(mapper));
             }
-            if(supplierService == null)
+            if (supplierService == null)
             {
                 throw new ArgumentNullException(nameof(supplierService));
             }
-            
+
             _mapper = mapper;
             _apparelProDbContext = apparelProDbContext;
             _supplierService = supplierService;
@@ -57,12 +45,10 @@ namespace ApparelPro.WebApi.Controllers
 
         [HttpGet("list")]
         //  [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
-        [Authorize("Merchandising")] // policy applied
-                                     //[Authorize(Roles = "Inventory")]
-                                     // [Authorize("RegisteredUser")]
-        [SwaggerOperation(Tags = new[] { "Bank Endpoints" },
-            Summary = "list all Bank details with paging and filtering.",
-            Description = "Returns 200 - OK with PaginationAPIModel with Bank list.")
+        [Authorize("Merchandising")] // policy applied                                   
+        [SwaggerOperation(Tags = new[] { "Supplier Endpoints" },
+            Summary = "list all Supplier details with paging and filtering.",
+            Description = "Returns 200 - OK with PaginationAPIModel with Supplier list.")
         ]
         [ProducesResponseType(typeof(PaginationAPIModel<SupplierAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetSuppliersAsync(
@@ -82,9 +68,9 @@ namespace ApparelPro.WebApi.Controllers
         [HttpGet("list/{SupplierCode}", Name = "GetSupplierBySupplierCodeAsync")]
         [ProducesResponseType(typeof(CountryAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
-        [SwaggerOperation(Tags = new[] { "Bank Endpoints" },
-           Summary = "list a Bank details for a given Bank Code",
-           Description = "Returns 200 - OK with Bank model.")
+        [SwaggerOperation(Tags = new[] { "Supplier Endpoints" },
+           Summary = "list a Supplier details for a given Supplier Code",
+           Description = "Returns 200 - OK with Supplier model.")
        ]
         public async Task<IActionResult> GetSupplierBySupplierCodeAsync(int supplierCode)
         {
@@ -107,14 +93,14 @@ namespace ApparelPro.WebApi.Controllers
         {
             var createSupplierServiceModel = _mapper.Map<CreateSupplierServiceModel>(createSupplierAPIModel);
             var addedSupplier = await _supplierService.AddSupplierAsync(createSupplierServiceModel);
-            return CreatedAtRoute(nameof(GetSupplierBySupplierCodeAsync), new { SupplierCode = addedSupplier.SupplierCode }, null);
+            return CreatedAtRoute(nameof(GetSupplierBySupplierCodeAsync), new { addedSupplier.SupplierCode }, null);
         }
 
         [HttpDelete("{code}")]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
-        [SwaggerOperation(Tags = new[] { "Bank Endpoints" },
-            Summary = "Delete a Bank.",
+        [SwaggerOperation(Tags = new[] { "Supplier Endpoints" },
+            Summary = "Delete a Supplier.",
             Description = "Returns 200 - OK with No content")
         ]
         public async Task<IActionResult> DeleteSupplierAsync(int supplierCode)
@@ -131,8 +117,8 @@ namespace ApparelPro.WebApi.Controllers
         [HttpPut()]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
-        [SwaggerOperation(Tags = new[] { "Bank Endpoints" },
-            Summary = "Update a Bank.",
+        [SwaggerOperation(Tags = new[] { "Supplier Endpoints" },
+            Summary = "Update a Supplier",
             Description = "Returns 200 - OK with No content")
         ]
         //  [ServiceFilter(typeof(ValidationFilterAttribute))]
@@ -144,7 +130,7 @@ namespace ApparelPro.WebApi.Controllers
             if (resultSupplierAPIModel == null)
             {
                 return UnprocessableEntity("Supplier is not available for code :" + supplierCode);
-            }         
+            }
             var updateSupplierSeviceModel = _mapper.Map<UpdateSupplierServiceModel>(updateSupplierAPIModel);
             await _supplierService.UpdateSupplierAsync(updateSupplierSeviceModel);
             return NoContent();
@@ -162,9 +148,8 @@ namespace ApparelPro.WebApi.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Error = $"Failed to execute supplier repository lookup lookup: {ex.Message}" });
+                return StatusCode(500, new { Error = $"Failed to execute supplier repository lookup: {ex.Message}" });
             }
         }
-
     }
 }

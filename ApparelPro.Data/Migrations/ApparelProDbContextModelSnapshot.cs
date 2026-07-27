@@ -702,6 +702,12 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("varchar(3)")
                         .HasColumnName("Currency");
 
+                    b.Property<decimal>("DamagedQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("DamagedQuantity");
+
                     b.Property<decimal>("IssuedQuantity")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("decimal(12,2)")
@@ -736,6 +742,30 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("decimal(12,2)")
                         .HasColumnName("RequisitionedQuantity");
 
+                    b.Property<decimal>("ReturnedQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("ReturnedQuantity");
+
+                    b.Property<decimal>("SupplierReturnQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("SupplierReturnQuantity");
+
+                    b.Property<decimal>("TransferInQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("TransferInQuantity");
+
+                    b.Property<decimal>("TransferOutQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("TransferOutQuantity");
+
                     b.Property<string>("Unit")
                         .IsRequired()
                         .HasColumnType("varchar(3)")
@@ -761,6 +791,12 @@ namespace ApparelPro.Data.Migrations
 
                     b.Property<int>("BuyerCode")
                         .HasColumnType("int");
+
+                    b.Property<int?>("CounterpartyBuyerCode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CounterpartyOrder")
+                        .HasColumnType("varchar(12)");
 
                     b.Property<string>("CreatedByUsername")
                         .IsRequired()
@@ -801,6 +837,9 @@ namespace ApparelPro.Data.Migrations
                     b.Property<string>("StoreCode")
                         .IsRequired()
                         .HasColumnType("varchar(3)");
+
+                    b.Property<int?>("SupplierCode")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("TransactionDate")
                         .HasColumnType("date");
@@ -846,7 +885,7 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("nvarchar");
 
                     b.Property<string>("CountryCode")
-                        .HasMaxLength(2)
+                        .HasMaxLength(3)
                         .HasColumnType("nvarchar");
 
                     b.Property<bool?>("Default")
@@ -857,7 +896,7 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("nvarchar");
 
                     b.Property<string>("State")
-                        .HasMaxLength(3)
+                        .HasMaxLength(5)
                         .HasColumnType("nvarchar");
 
                     b.Property<string>("StreetAddress")

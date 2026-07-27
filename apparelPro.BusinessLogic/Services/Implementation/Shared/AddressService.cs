@@ -270,7 +270,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Shared
             var addressDbModel = _mapper.Map<Address>(updateAddressServiceModel);            
             _apparelProDbContext.Addresses.Update(addressDbModel);           
 
-            // all addresses for thus buyerCode except passed address's addressId
+            // all addresses for this buyerCode except passed address's addressId
             await _apparelProDbContext.Addresses
                 .Where(address => address.AddressId != addressId && address.BuyerCode == buyerCode)
                 .ExecuteUpdateAsync(p => p.SetProperty(p => p.Default, false));
@@ -282,8 +282,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Shared
         {           
             try
             {
-                var addressDbModel = _apparelProDbContext.Addresses
-                .Where(address => address.BuyerCode == buyerCode && address.AddressId == addressId)
+                var addressDbModel = await _apparelProDbContext.Addresses
+                .Where(address => address.BuyerCode == buyerCode && address.AddressId ==  addressId)
+                .AsNoTracking()
                 .FirstOrDefaultAsync();
 
                 return _mapper.Map<AddressServiceModel>(addressDbModel);

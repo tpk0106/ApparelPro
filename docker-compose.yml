@@ -1,0 +1,95 @@
+services:
+  # ---------------------------------------------------------------------------
+  # SQL Server (Express-equivalent via MSSQL_PID=Express) — always runs.
+  # Restores your .bak automatically on first start (see db/scripts/entrypoint.sh).
+  # ---------------------------------------------------------------------------
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: apparelpro-sql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD}
+      MSSQL_PID: "Express"
+      DB_NAME: ${DB_NAME}
+    ports:
+      - "1433:1433"   # exposed to Windows too, so Visual Studio on host can connect via localhost,1433
+    volumes:
+      - sql-data:/var/opt/mssql               # persists the database across container restarts/rebuilds
+      - ./db/backup:/var/opt/mssql/backup:ro  # drop your .bak file here (see db/backup/README.md)
+      - ./db/scripts:/scripts:ro
+    entrypoint: ["/bin/bash", "/scripts/entrypoint.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks:
+      - apparelpro-net
+
+  # ---------------------------------------------------------------------------
+  # Backend (ApparelPro.WebApi, .NET) — OPTIONAL container, off by default.
+  # Default workflow: open ApparelPro.sln in Visual Studio on your host and
+  # point its connection string at localhost,1433 (see SETUP-GUIDE.md Step 5).
+  # Enable this only for the advanced path (Visual Studio Container Tools
+  # debugging the API from inside a container).
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./.devcontainer
+      dockerfile: Dockerfile
+    container_name: apparelpro-backend
+    profiles: ["with-backend-container"]
+    volumes:
+      - .:/src                                    # your whole ApparelPro solution (BusinessLogic, Data, Shared, WebApi)
+      - backend-nuget-cache:/root/.nuget/packages
+    working_dir: /src
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    environment:
+      ASPNETCORE_URLS: "http://+:5000"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=${DB_NAME};User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    command: ["sleep", "infinity"]
+    networks:
+      - apparelpro-net
+
+  # ---------------------------------------------------------------------------
+  # Frontend (apparelpro-front-end-react) — always runs.
+  # VS Code's Dev Containers extension attaches directly inside this one.
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: C:/ap-fe/apparelpro-front-end-react/.devcontainer
+      dockerfile: Dockerfile
+    container_name: apparelpro-frontend
+    volumes:
+      - C:/ap-fe/apparelpro-front-end-react:/workspace
+      - frontend-node-modules:/workspace/node_modules   # deliberately NOT your host node_modules — see note below
+    working_dir: /workspace
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE_URL: "http://localhost:5000"
+    command: ["sleep", "infinity"]
+    networks:
+      - apparelpro-net
+
+volumes:
+  sql-data:
+  backend-nuget-cache:
+  frontend-node-modules:
+
+networks:
+  apparelpro-net:
+    driver: bridge
+
+# Note on frontend-node-modules: your existing node_modules on disk was built
+# for Windows; some packages compile native binaries per-OS, which usually
+# breaks when reused inside a Linux container. The named volume above gives
+# the container its own empty node_modules instead — you just run `npm
+# install` once inside the container (Step 6) to populate it fresh. Your
+# host copy of node_modules is untouched.

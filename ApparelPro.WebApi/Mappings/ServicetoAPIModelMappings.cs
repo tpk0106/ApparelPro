@@ -309,20 +309,24 @@ namespace ApparelPro.WebApi.Mappings
               .ReverseMap()
               .ForAllMembers(opt => opt.Ignore());
 
-            // Feature
+            // Feature (renamed to ItemFeature — matches ItemFeatureService/ItemFeatureController)
 
-            CreateMap<FeatureServiceModel, FeatureAPIModel>().MaxDepth(2)
-                .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
+            CreateMap<ItemFeatureServiceModel, ItemFeatureAPIModel>().MaxDepth(2)
+                .ForMember(src => src.FeatureCode, opt => opt.MapFrom(src => src.FeatureCode))
                 .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description))
                  .ReverseMap()
                 .ForAllMembers(opt => opt.Ignore());
 
-            CreateMap<CreateFeatureAPIModel, CreateFeatureServiceModel>().MaxDepth(2)
-                    .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description));
+            // ⚠️ Not restored: CreateFeatureAPIModel still uses Id (int), but
+            // CreateItemFeatureServiceModel now needs FeatureCode (string) — these are
+            // different fields (Feature.Id is the surrogate key, Feature.Code is the
+            // business code), not just a rename. Tell Claude how you want this bridged
+            // (e.g. add a FeatureCode property to CreateFeatureAPIModel?) before wiring
+            // this map up — guessing an Id-to-FeatureCode conversion here would be wrong.
+            // CreateMap<CreateFeatureAPIModel, CreateItemFeatureServiceModel>().MaxDepth(2);
 
-            CreateMap<UpdateFeatureAPIModel, UpdateFeatureServiceModel>().MaxDepth(2)
-                      .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
+            CreateMap<UpdateItemFeatureAPIModel, UpdateItemFeatureServiceModel>().MaxDepth(2)
+                      .ForMember(src => src.FeatureCode, opt => opt.MapFrom(src => src.FeatureCode))
                 .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description))
                 .ReverseMap()
               .ForAllMembers(opt => opt.Ignore());
@@ -574,6 +578,31 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<GrnReceivableLineServiceModel, GrnReceivableLineAPIModel>().MaxDepth(2);
             CreateMap<GrnPoLookupResultServiceModel, GrnPoLookupResultAPIModel>().MaxDepth(2);
             CreateMap<GrnPendingPoServiceModel, GrnPendingPoAPIModel>().MaxDepth(2);
+
+            // orderwise inventory - RTN (Goods Return Note)
+            CreateMap<RtnHeaderAPIModel, RtnHeaderServiceModel>().MaxDepth(2);
+            CreateMap<RtnLineItemAPIModel, RtnLineItemServiceModel>().MaxDepth(2);
+            CreateMap<RtnReturnableStockRowServiceModel, RtnReturnableStockRowAPIModel>().MaxDepth(2);
+
+            // orderwise inventory - GTN (Goods Transfer Note)
+            CreateMap<GtnHeaderAPIModel, GtnHeaderServiceModel>().MaxDepth(2);
+            CreateMap<GtnLineItemAPIModel, GtnLineItemServiceModel>().MaxDepth(2);
+            CreateMap<GtnTransferableStockRowServiceModel, GtnTransferableStockRowAPIModel>().MaxDepth(2);
+
+            // orderwise inventory - SRN (Supplier Return Note)
+            CreateMap<SrnHeaderAPIModel, SrnHeaderServiceModel>().MaxDepth(2);
+            CreateMap<SrnLineItemAPIModel, SrnLineItemServiceModel>().MaxDepth(2);
+            CreateMap<SrnReturnableStockRowServiceModel, SrnReturnableStockRowAPIModel>().MaxDepth(2);
+
+            // orderwise inventory - DGN (Damaged Goods Note)
+            CreateMap<DgnHeaderAPIModel, DgnHeaderServiceModel>().MaxDepth(2);
+            CreateMap<DgnLineItemAPIModel, DgnLineItemServiceModel>().MaxDepth(2);
+            CreateMap<DgnDamageableStockRowServiceModel, DgnDamageableStockRowAPIModel>().MaxDepth(2);
+
+            // orderwise inventory - SAN (Stock Adjustment Note)
+            CreateMap<SanHeaderAPIModel, SanHeaderServiceModel>().MaxDepth(2);
+            CreateMap<SanLineItemAPIModel, SanLineItemServiceModel>().MaxDepth(2);
+            CreateMap<SanAdjustableStockRowServiceModel, SanAdjustableStockRowAPIModel>().MaxDepth(2);
 
             // orderwise inventory - stock movement report
             CreateMap<StockMovementReportHeaderServiceModel, StockMovementReportHeaderAPIModel>().MaxDepth(2);

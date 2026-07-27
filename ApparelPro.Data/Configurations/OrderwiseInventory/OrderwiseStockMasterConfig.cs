@@ -28,6 +28,11 @@ namespace ApparelPro.Data.Configurations.OrderwiseInventory
             entity.Property(e => e.RequisitionedQuantity).HasColumnName("RequisitionedQuantity").HasColumnType("decimal(12,2)");
             entity.Property(e => e.IssuedQuantity).HasColumnType("decimal(12,2)").HasColumnName("IssuedQuantity").IsRequired().HasDefaultValue(0m);
             entity.Property(e => e.ReceivedQuantity).HasColumnType("decimal(12,2)").HasColumnName("ReceivedQuantity").IsRequired().HasDefaultValue(0m);
+            entity.Property(e => e.ReturnedQuantity).HasColumnType("decimal(12,2)").HasColumnName("ReturnedQuantity").IsRequired().HasDefaultValue(0m);
+            entity.Property(e => e.TransferInQuantity).HasColumnType("decimal(12,2)").HasColumnName("TransferInQuantity").IsRequired().HasDefaultValue(0m);
+            entity.Property(e => e.TransferOutQuantity).HasColumnType("decimal(12,2)").HasColumnName("TransferOutQuantity").IsRequired().HasDefaultValue(0m);
+            entity.Property(e => e.SupplierReturnQuantity).HasColumnType("decimal(12,2)").HasColumnName("SupplierReturnQuantity").IsRequired().HasDefaultValue(0m);
+            entity.Property(e => e.DamagedQuantity).HasColumnType("decimal(12,2)").HasColumnName("DamagedQuantity").IsRequired().HasDefaultValue(0m);
         }
     }
 }

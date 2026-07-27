@@ -2,6 +2,7 @@
 using apparelPro.BusinessLogic.Services.Models.Reference.IFeatureService;
 using ApparelPro.Data;
 using ApparelPro.Data.Models.OrderManagement;
+using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Shared.Extensions;
 using ApparelPro.Shared.LookupConstants;
@@ -11,24 +12,24 @@ using System.Linq.Dynamic.Core;
 
 namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 {
-    public class FeatureService : IFeatureService
+    public class ItemFeatureService : IItemFeatureService
     {
         private readonly IMapper _mapper;
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly ILookupConstants _lookupConstants;
-        public FeatureService(IMapper mapper, ApparelProDbContext apparelProDbContext, ILookupConstants lookupConstants)
+        public ItemFeatureService(IMapper mapper, ApparelProDbContext apparelProDbContext, ILookupConstants lookupConstants)
         {
             _mapper = mapper;
             _apparelProDbContext = apparelProDbContext;
             _lookupConstants = lookupConstants;
         }
 
-        public async Task<FeatureServiceModel> AddFeatureAsync(CreateFeatureServiceModel createFeatureServiceModel)
+        public async Task<ItemFeatureServiceModel> AddItemFeatureAsync(CreateItemFeatureServiceModel createItemFeatureServiceModel)
         {
-            var featureDbModel = _mapper.Map<Feature>(createFeatureServiceModel);
-            _apparelProDbContext.Features.Add(featureDbModel);
+            var itemFeatureDbModel = _mapper.Map<Feature>(createItemFeatureServiceModel);
+            _apparelProDbContext.Features.Add(itemFeatureDbModel);
             await _apparelProDbContext.SaveChangesAsync();
-            return _mapper.Map<FeatureServiceModel>(featureDbModel);
+            return _mapper.Map<ItemFeatureServiceModel>(itemFeatureDbModel);
         }
 
         public async Task DeleteFeatureAsync(int id)
@@ -40,17 +41,22 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
             await _apparelProDbContext.SaveChangesAsync();
         }
 
-        public async Task<FeatureServiceModel> GetFeatureByIdAsync(int id)
+        public Task DeleteItemFeatureAsync(string featureCode)
         {
-            var featureDbModel = await _apparelProDbContext.Features
-             .Where(feature => feature.Id == id)
-             .FirstOrDefaultAsync();
-            return _mapper.Map<FeatureServiceModel>(featureDbModel);
+            throw new NotImplementedException();
         }
 
-        public async Task<PaginationResult<FeatureServiceModel>> GetFeaturesAsync(int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery)
+        public async Task<ItemFeatureServiceModel> GetItemFeatureByFeatureCodeAsync(string featureCode)
         {
-            IQueryable<Feature> featuresPagination = _apparelProDbContext.Features.AsNoTracking();
+            var itemFeatureDbModel = await _apparelProDbContext.ItemFeatures
+             .Where(feature => feature.FeatureCode == featureCode)
+             .FirstOrDefaultAsync();
+            return _mapper.Map<ItemFeatureServiceModel>(itemFeatureDbModel);
+        }
+
+        public async Task<PaginationResult<ItemFeatureServiceModel>> GetItemFeaturesAsync(int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery)
+        {
+            IQueryable<ItemFeature> featuresPagination = _apparelProDbContext.ItemFeatures.AsNoTracking();
 
             FilterResult fr = new();
             fr.searchPattern = "{0}.Contains(@0)";
@@ -75,21 +81,21 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 .Take(pageSize);
 
             var filteredDbPos = await featuresPagination.ToListAsync();
-            var featureServiceModels = _mapper.Map<IList<FeatureServiceModel>>(filteredDbPos);
+            var featureServiceModels = _mapper.Map<IList<ItemFeatureServiceModel>>(filteredDbPos);
 
-            return new PaginationResult<FeatureServiceModel>(pageSize, pageNumber, counter, featureServiceModels,
+            return new PaginationResult<ItemFeatureServiceModel>(pageSize, pageNumber, counter, featureServiceModels,
                 sortColumn, sortOrder, filterColumn, filterQuery);
         }
 
-        public async Task UpdateFeatureAsync(UpdateFeatureServiceModel updateFeatureServiceModel)
+        public async Task UpdateItemFeatureAsync(UpdateItemFeatureServiceModel updateItemFeatureServiceModel)
         {
-            var FeatureDbModel = await _apparelProDbContext.Features
-             .Where(Feature => Feature.Id == updateFeatureServiceModel.Id)
+            var ItemFeatureDbModel = await _apparelProDbContext.ItemFeatures
+             .Where(Feature => Feature.FeatureCode == updateItemFeatureServiceModel.FeatureCode)
              .FirstOrDefaultAsync();
 
-            FeatureDbModel!.Description = updateFeatureServiceModel.Description!;
+            ItemFeatureDbModel!.Description = updateItemFeatureServiceModel.Description!;
 
-            _apparelProDbContext.Update(FeatureDbModel);
+            _apparelProDbContext.Update(ItemFeatureDbModel);
             await _apparelProDbContext.SaveChangesAsync();
         }
     }

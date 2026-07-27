@@ -10,18 +10,27 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
     {
         private readonly ApparelProDbContext _apparelProDbContext;
 
-        // Placeholder TransactionType codes for movement types that have no note-type
-        // module writing to OrderwiseStockTransactions yet (only "0S" STRN and "4I"/"GR"
-        // GIN/GRN exist today — see OrderwiseStockTransaction.cs comments and
-        // GoodsReceivedNoteService.cs). Proposed here to match the existing 2-char code
-        // convention; confirm/align these with the real codes once Stock Transfer,
-        // Supplier Return, and Adjustment Note features are built. Until then, every SUM
-        // against these codes evaluates to 0 by construction (no rows exist with these
-        // types) — which is exactly the agreed "placeholder zero" behavior for this report.
-        private const string TransferInTypeCode = "TI";
-        private const string TransferOutTypeCode = "TO";
-        private const string SupplierReturnTypeCode = "SR";
-        private const string AdjustmentTypeCode = "AJ";
+        // TransferInTypeCode/TransferOutTypeCode were originally proposed as "TI"/"TO"
+        // before Goods Transfer Note's legacy source (IN_GTN1.PRG) had been read. Now
+        // confirmed against that source and GoodsTransferNoteService.cs: "6T" (Transfer-
+        // Out, posted on the From Buyer/Order) and "1T" (Transfer-In, posted on the To
+        // Buyer/Order). Kept here (unused by the ACTIVE query below, which reads the
+        // maintained OrderwiseStockMaster.TransferInQuantity/TransferOutQuantity running
+        // totals directly instead — same pattern as ReturnedQuantity) only because the
+        // commented-out SUPERSEDED GroupJoin variants further down still reference them.
+        //
+        // SupplierReturnTypeCode was originally proposed as "SR" before Supplier Return
+        // Note's legacy source (IN_SRN1.PRG) had been read. Now confirmed against that
+        // source and SupplierReturnNoteService.cs: "7S". AdjustmentTypeCode was originally
+        // proposed as "AJ" before Stock Adjustment Note's legacy source (IN_SAN1.PRG) had
+        // been read — now confirmed against that source and StockAdjustmentNoteService.cs:
+        // "3A". This SUM formula needed zero other changes once StockAdjustmentNoteService
+        // started writing real "3A" rows — it was already correctly anticipating a live
+        // transaction sum rather than a persisted master column.
+        private const string TransferInTypeCode = "1T";
+        private const string TransferOutTypeCode = "6T";
+        private const string SupplierReturnTypeCode = "7S";
+        private const string AdjustmentTypeCode = "3A";
 
         public StockMovementReportService(ApparelProDbContext apparelProDbContext)
         {
@@ -356,18 +365,21 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                     ReceivedQuantity = master.ReceivedQuantity,
                     RequisitionedQuantity = master.RequisitionedQuantity,
                     IssuedQuantity = master.IssuedQuantity,
+                    ReturnedQuantity = master.ReturnedQuantity,
                     DamagedQuantity = stocks
                         .Where(s => s.BuyerCode == buyerCode && s.Order == order && s.ItemCode == master.ItemCode)
                         .Sum(s => (decimal?)s.DamagedQuantity) ?? 0m,
-                    TransferInQuantity = transactions
-                        .Where(t => t.BuyerCode == buyerCode && t.Order == order && t.ItemCode == master.ItemCode && t.TransactionType == TransferInTypeCode)
-                        .Sum(t => (decimal?)t.Quantity) ?? 0m,
-                    TransferOutQuantity = transactions
-                        .Where(t => t.BuyerCode == buyerCode && t.Order == order && t.ItemCode == master.ItemCode && t.TransactionType == TransferOutTypeCode)
-                        .Sum(t => (decimal?)t.Quantity) ?? 0m,
-                    SupplierReturnQuantity = transactions
-                        .Where(t => t.BuyerCode == buyerCode && t.Order == order && t.ItemCode == master.ItemCode && t.TransactionType == SupplierReturnTypeCode)
-                        .Sum(t => (decimal?)t.Quantity) ?? 0m,
+                    // GTN traceability: read the maintained running totals directly off
+                    // OrderwiseStockMaster (same convention as IssuedQuantity/ReceivedQuantity/
+                    // ReturnedQuantity above) instead of re-aggregating OrderwiseStockTransactions
+                    // — GoodsTransferNoteService already keeps these in sync on every commit.
+                    TransferInQuantity = master.TransferInQuantity,
+                    TransferOutQuantity = master.TransferOutQuantity,
+                    // SRN traceability: read the maintained running total directly off
+                    // OrderwiseStockMaster.SupplierReturnQuantity, same convention as
+                    // TransferIn/TransferOut/Returned above — SupplierReturnNoteService
+                    // already keeps this in sync on every commit.
+                    SupplierReturnQuantity = master.SupplierReturnQuantity,
                     LastAdjustmentQuantity = transactions
                         .Where(t => t.BuyerCode == buyerCode && t.Order == order && t.ItemCode == master.ItemCode && t.TransactionType == AdjustmentTypeCode)
                         .Sum(t => (decimal?)t.Quantity) ?? 0m,
@@ -375,8 +387,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
 
             // Balance is derived, never persisted — same convention already used for
             // OrderwiseStockMaster's own Issued/Received running totals (see that model's
-            // comments). Formula: Received - Issued + TransferIn - TransferOut - Damaged
-            // - SupplierReturn + LastAdjustment.
+            // comments). Formula: Received - Issued + Returned + TransferIn - TransferOut
+            // - Damaged - SupplierReturn + LastAdjustment. ReturnedQuantity added so RTN
+            // (Goods Return Note) postings correctly free up balance again - see
+            // OrderwiseStockMaster.ReturnedQuantity's own comments for why it's additive
+            // here rather than decrementing IssuedQuantity in place. SupplierReturnQuantity
+            // is now real data too (SRN, confirmed "7S") rather than the always-zero
+            // placeholder it used to be.
             return joinedLambda.Select(l => new StockMovementReportLineServiceModel
             {
                 ItemCode = l.ItemCode,
@@ -386,12 +403,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 ReceivedQuantity = l.ReceivedQuantity,
                 RequisitionedQuantity = l.RequisitionedQuantity,
                 IssuedQuantity = l.IssuedQuantity,
+                ReturnedQuantity = l.ReturnedQuantity,
                 DamagedQuantity = l.DamagedQuantity,
                 TransferInQuantity = l.TransferInQuantity,
                 TransferOutQuantity = l.TransferOutQuantity,
                 SupplierReturnQuantity = l.SupplierReturnQuantity,
                 LastAdjustmentQuantity = l.LastAdjustmentQuantity,
-                BalanceQuantity = l.ReceivedQuantity - l.IssuedQuantity + l.TransferInQuantity
+                BalanceQuantity = l.ReceivedQuantity - l.IssuedQuantity + l.ReturnedQuantity + l.TransferInQuantity
                                    - l.TransferOutQuantity - l.DamagedQuantity - l.SupplierReturnQuantity
                                    + l.LastAdjustmentQuantity,
             });

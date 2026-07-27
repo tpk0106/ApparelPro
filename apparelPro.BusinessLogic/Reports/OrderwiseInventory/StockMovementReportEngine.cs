@@ -14,8 +14,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderwiseInventory
         // Status colors reserved for movement direction — never reused as a generic accent.
         private const string InboundColor = "#0CA30C";
         private const string OutboundColor = "#D03B3B";
-        private const string DiscrepancyFill = "#FAB219";
-        private const string DiscrepancyText = "#111111";
+        private const string DiscrepancyColor = "#FAB219";
 
         public static byte[] GenerateStockMovementReportPdf(
             StockMovementReportHeaderServiceModel header,
@@ -54,6 +53,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderwiseInventory
                             columns.RelativeColumn(2);  // Received
                             columns.RelativeColumn(2);  // Requested
                             columns.RelativeColumn(2);  // Issued
+                            columns.RelativeColumn(2);  // Returned
                             columns.RelativeColumn(2);  // Trans In
                             columns.RelativeColumn(2);  // Trans Out
                             columns.RelativeColumn(2);  // Damaged
@@ -67,8 +67,8 @@ namespace apparelPro.BusinessLogic.Reports.OrderwiseInventory
                             foreach (var title in new[]
                             {
                                 "Item Code", "Description", "Unit", "Order Qty", "Received",
-                                "Requested", "Issued", "Trans. In", "Trans. Out", "Damaged",
-                                "Ret.Supp.", "Last Adj.", "Qty in Hand"
+                                "Requested", "Issued", "Returned", "Trans. In", "Trans. Out",
+                                "Damaged", "Ret.Supp.", "Last Adj.", "Qty in Hand"
                             })
                             {
                                 headerRow.Cell().BorderBottom(1.5f).Padding(3).Text(title).Bold().FontSize(8);
@@ -84,11 +84,12 @@ namespace apparelPro.BusinessLogic.Reports.OrderwiseInventory
                             QuantityCell(table, line.ReceivedQuantity, InboundColor);
                             table.Cell().Padding(3).AlignRight().Text($"{line.RequisitionedQuantity:N2}");
                             QuantityCell(table, line.IssuedQuantity, OutboundColor);
+                            QuantityCell(table, line.ReturnedQuantity, InboundColor);
                             QuantityCell(table, line.TransferInQuantity, InboundColor);
                             QuantityCell(table, line.TransferOutQuantity, OutboundColor);
-                            QuantityCell(table, line.DamagedQuantity, null, DiscrepancyFill);
+                            QuantityCell(table, line.DamagedQuantity, DiscrepancyColor);
                             QuantityCell(table, line.SupplierReturnQuantity, OutboundColor);
-                            QuantityCell(table, line.LastAdjustmentQuantity, null, DiscrepancyFill);
+                            QuantityCell(table, line.LastAdjustmentQuantity, DiscrepancyColor);
                             table.Cell().Padding(3).AlignRight().Text($"{line.BalanceQuantity:N2}").Bold();
                         }
                     });
@@ -111,16 +112,15 @@ namespace apparelPro.BusinessLogic.Reports.OrderwiseInventory
             return memoryStream.ToArray();
         }
 
-        // Discrepancy cells (Damaged / Last Adjustment) use a filled amber badge rather
-        // than amber text — amber-on-white fails WCAG contrast for body text, so dark
-        // text on an amber fill keeps the discrepancy signal readable in print, while
-        // still visually distinct from the plain inbound/outbound colored text cells.
-        private static void QuantityCell(TableDescriptor table, decimal value, string? textColor, string? fillColor = null)
+        // All colored quantity columns (Inbound/Outbound/Discrepancy) now render the
+        // same way: plain bold colored text, only when the value is nonzero. Damaged/
+        // Last Adjustment previously used a filled amber badge instead of text, and
+        // that fill was applied unconditionally — even for a 0.00 row it painted an
+        // orange square, which read as a rendering glitch rather than a signal.
+        private static void QuantityCell(TableDescriptor table, decimal value, string? textColor)
         {
             var cell = table.Cell().Padding(3).AlignRight();
-            if (fillColor is not null)
-                cell.Background(fillColor).Text($"{value:N2}").FontColor(DiscrepancyText).Bold();
-            else if (textColor is not null && value != 0)
+            if (textColor is not null && value != 0)
                 cell.Text($"{value:N2}").FontColor(textColor).Bold();
             else
                 cell.Text($"{value:N2}");

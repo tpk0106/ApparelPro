@@ -1,8 +1,8 @@
 ﻿namespace ApparelPro.WebApi.APIModels.OrderManagement
 {
-    public class CreateFeatureAPIModel
+    public class CreateItemFeatureAPIModel
     {
-        public int Id { get; set; }
+        public string FeatureCode { get; set; }
         public string? Description { get; set; } = null;
     }
 }

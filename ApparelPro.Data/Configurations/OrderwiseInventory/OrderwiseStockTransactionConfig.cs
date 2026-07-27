@@ -43,6 +43,15 @@ namespace ApparelPro.Data.Configurations.OrderwiseInventory
             entity.Property(e => e.SourceDocumentNumber).HasColumnType("varchar(10)").IsRequired(false);
             entity.Property(e => e.Price).HasColumnType("decimal(10,4)").IsRequired(false);
             entity.Property(e => e.Currency).HasColumnType("varchar(3)").IsRequired(false);
+
+            // GTN traceability additions — counterpart Buyer/Order for a Transfer-Out ('6T')
+            // or Transfer-In ('1T') row (legacy t_buyer/t_order).
+            entity.Property(e => e.CounterpartyBuyerCode).HasColumnType("int").IsRequired(false);
+            entity.Property(e => e.CounterpartyOrder).HasColumnType("varchar(12)").IsRequired(false);
+
+            // SRN traceability addition — the Supplier a Supplier Return Note ('7S') row
+            // was returned to (legacy supp_cd).
+            entity.Property(e => e.SupplierCode).HasColumnType("int").IsRequired(false);
         }
     }
 }

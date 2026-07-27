@@ -1,8 +1,8 @@
 ﻿namespace ApparelPro.WebApi.APIModels
 {
-    public class FeatureAPIModel
+    public class ItemFeatureAPIModel
     {
-        public int Id { get; set; }
+        public string FeatureCode { get; set; }
         public string? Description { get; set; } = null;
     }
 }

@@ -368,13 +368,13 @@ namespace apparelPro.BusinessLogic.Services.Mappings
                 .ReverseMap();
 
             // feature
-            CreateMap<CreateFeatureServiceModel, Feature>().MaxDepth(2)
-                .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
+            CreateMap<CreateItemFeatureServiceModel, ItemFeature>().MaxDepth(2)
+                .ForMember(src => src.FeatureCode, opt => opt.MapFrom(src => src.FeatureCode))
                 .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description))
                 .ReverseMap();
 
-            CreateMap<FeatureServiceModel, Feature>().MaxDepth(2)
-               .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
+            CreateMap<ItemFeatureServiceModel, ItemFeature>().MaxDepth(2)
+               .ForMember(src => src.FeatureCode, opt => opt.MapFrom(src => src.FeatureCode))
                 .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description))
                 .ReverseMap();
 

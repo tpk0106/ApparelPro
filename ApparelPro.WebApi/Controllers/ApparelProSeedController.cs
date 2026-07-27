@@ -33,6 +33,7 @@ namespace ApparelPro.WebApi.Controllers
             var merchandiserManager = "Merchandiser Manager";
             var inventory = "Inventory";
             var administrator = "Administrator";
+            var storeManager = "Store Manager";
         
             // create the default roles (if they don't exist yet)
             if (await _roleManager.FindByNameAsync(merchandiser) == null)
@@ -54,6 +55,15 @@ namespace ApparelPro.WebApi.Controllers
             if (await _roleManager.FindByNameAsync(administrator) == null)
             {
                 await _roleManager.CreateAsync(new IdentityRole(administrator));
+            }
+            if (await _roleManager.FindByNameAsync(storeManager) == null)
+            {
+                // Higher-authority role: gates access to Stock Adjustment Note (SAN),
+                // which directly overwrites physical stock counts with no ceiling check
+                // (see StockAdjustmentNoteService's class-level comment) — restricted to
+                // this role plus Administrator rather than the broad Inventory/
+                // Merchandiser/Order Entry Operator access every other note allows.
+                await _roleManager.CreateAsync(new IdentityRole(storeManager));
             }
 
             // create a list to track the newly added users
@@ -89,6 +99,11 @@ namespace ApparelPro.WebApi.Controllers
                 var res = await _userManager.AddToRoleAsync(_userMerchandiser!,administrator);
                 userRolesUpatedList.Add(_userMerchandiser!);
                 Console.WriteLine("$_userMerchandiser : {0} ", res);
+
+                // tpk0106@yahoo.com granted Store Manager access, per explicit request,
+                // so this account can use Stock Adjustment Note.
+                var storeManagerRes = await _userManager.AddToRoleAsync(_userMerchandiser!, storeManager);
+                Console.WriteLine("$_userMerchandiser storeManager : {0} ", storeManagerRes);
             }
 
             var Stores_Email = "thusith@gmail.com";

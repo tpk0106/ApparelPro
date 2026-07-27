@@ -133,7 +133,8 @@ namespace ApparelPro.WebApi.Controllers
             return NoContent();
         }
 
-        [HttpPut("/{buyerCode}/{addressId}")]
+        [HttpPut("{buyerCode}/{addressId}")]
+        [Authorize("Merchandising")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
         //  [ServiceFilter(typeof(ValidationFilterAttribute))]
@@ -148,9 +149,19 @@ namespace ApparelPro.WebApi.Controllers
             if (resultAddressAPIModel == null)
             {
                 return UnprocessableEntity("Address is not available for buyercode :" + buyerCode);
-            }           
-          
-            var updateAddressSeviceModel = _mapper.Map<UpdateAddressServiceModel>(updateAddressAPIModel);
+            }
+
+            resultAddressAPIModel.AddressId = addressId;
+            resultAddressAPIModel.BuyerCode = buyerCode;
+            resultAddressAPIModel.StreetAddress = updateAddressAPIModel.StreetAddress;
+            resultAddressAPIModel.AddressType = updateAddressAPIModel.AddressType;
+            resultAddressAPIModel.State = updateAddressAPIModel.State;
+            resultAddressAPIModel.City = updateAddressAPIModel.City;
+            resultAddressAPIModel.CountryCode = updateAddressAPIModel.CountryCode;            
+            resultAddressAPIModel.PostCode = updateAddressAPIModel.PostCode;            
+            resultAddressAPIModel.Default = updateAddressAPIModel.Default;
+           
+            var updateAddressSeviceModel = _mapper.Map<UpdateAddressServiceModel>(resultAddressAPIModel);
             await _addressService.UpdateDefaultAddressAsync(updateAddressSeviceModel);
             
             return NoContent();

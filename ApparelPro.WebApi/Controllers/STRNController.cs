@@ -95,14 +95,14 @@ namespace ApparelPro.WebApi.Controllers
 
         // GET: api/orderwise-inventory-strn/available-choices?buyerCode=2&order=1017-18
         [HttpGet("available-choices")]
-        public async Task<IActionResult> GetAvailableChoices([FromQuery] int buyerCode, [FromQuery] string order, [FromQuery] string storeCode)
+        public async Task<IActionResult> GetAvailableChoices([FromQuery] int buyerCode, [FromQuery] string order)
         {
-            if (string.IsNullOrEmpty(order) || string.IsNullOrEmpty(storeCode))
-                return BadRequest("Parameters 'order' and 'storeCode' are required.");
+            if (string.IsNullOrEmpty(order))
+                return BadRequest("Parameter 'order' is required.");
 
             try
             {
-                var choices = await _storesRequisitionService.GetAvailableStockChoicesAsync(buyerCode, order, storeCode);
+                var choices = await _storesRequisitionService.GetAvailableStockChoicesAsync(buyerCode, order);
                 var choicesAPIModel = _mapper.Map<List<StockLookupRowAPIModel>>(choices);
                 return Ok(choicesAPIModel);
             }

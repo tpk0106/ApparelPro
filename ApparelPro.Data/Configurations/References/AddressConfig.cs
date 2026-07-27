@@ -65,12 +65,12 @@ namespace ApparelPro.Data.Configurations.References
              .HasColumnType("nvarchar");            
 
             entity.Property(p => p.CountryCode)
-             .HasMaxLength(2)
+             .HasMaxLength(3)
              .IsRequired(false)
              .HasColumnType("nvarchar");
 
             entity.Property(p => p.State)
-            .HasMaxLength(3)
+            .HasMaxLength(5)
             .IsRequired(false)
             .HasColumnType("nvarchar");
 

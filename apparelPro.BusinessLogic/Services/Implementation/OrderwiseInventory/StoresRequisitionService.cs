@@ -200,15 +200,19 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
         //    return resultList.OrderBy(r => r.ItemCode).ToList();
         //}
 
-        public async Task<List<OrderwiseStockLookupRowServiceModel>> GetAvailableStockChoicesAsync(int buyerCode, string order, string storeCode)
+        public async Task<List<OrderwiseStockLookupRowServiceModel>> GetAvailableStockChoicesAsync(int buyerCode, string order)
         {
             order = order.Trim();
-            storeCode = storeCode.Trim().ToUpper();
 
-            // FIXED: Strictly filter the stock pool down to the selected Buyer, Order, AND Store/Basis combination!
+            // Basis is a per-line choice now, not a whole-document filter - an item can
+            // legitimately exist under more than one Basis grouping for the same
+            // Buyer/Order, so every row is returned and each carries its own true
+            // StoreCode (Basis). This also fixes the item dropdown coming back empty,
+            // which happened because the caller used to pass the Issuing Department
+            // code here instead of a real Basis value.
             var stockRecords = await _apparelProDbContext.OrderwiseStocks
                 .AsNoTracking()
-                .Where(s => s.BuyerCode == buyerCode && s.Order == order && s.StoreCode == storeCode)
+                .Where(s => s.BuyerCode == buyerCode && s.Order == order)
                 .ToListAsync();
 
             // Real material descriptions live on StyleMaterialCostProfiles (od_sacc2), keyed by the

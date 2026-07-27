@@ -83,7 +83,7 @@ namespace ApparelPro.WebApi.Extensions
             services.AddTransient(typeof(IAddressService), typeof(AddressService));
             services.AddTransient(typeof(ISupplierService), typeof(SupplierService));
             services.AddTransient(typeof(IPortDestinationService), typeof(PortDestinationService));
-            services.AddTransient(typeof(IFeatureService), typeof(FeatureService));
+            services.AddTransient(typeof(IItemFeatureService), typeof(ItemFeatureService));
             services.AddTransient(typeof(IUnitConversionService), typeof(UnitConversionService));
             services.AddTransient(typeof(IDepartmentService), typeof(DepartmentService));
 
@@ -117,6 +117,11 @@ namespace ApparelPro.WebApi.Extensions
             services.AddScoped<IStoresRequisitionService, StoresRequisitionService>();
             services.AddScoped<IGoodsIssueService, GoodsIssueService>();
             services.AddScoped<IGoodsReceivedNoteService, GoodsReceivedNoteService>();
+            services.AddScoped<IGoodsReturnNoteService, GoodsReturnNoteService>();
+            services.AddScoped<IGoodsTransferNoteService, GoodsTransferNoteService>();
+            services.AddScoped<ISupplierReturnNoteService, SupplierReturnNoteService>();
+            services.AddScoped<IDamagedGoodsNoteService, DamagedGoodsNoteService>();
+            services.AddScoped<IStockAdjustmentNoteService, StockAdjustmentNoteService>();
             services.AddScoped<IStockMovementReportService, StockMovementReportService>();
 
             // shared service

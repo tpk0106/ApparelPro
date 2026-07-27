@@ -51,13 +51,42 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 .ToListAsync();
             var stockByStoreItem = stockRows.ToDictionary(s => (s.StoreCode, s.ItemCode));
 
+            // 3. Resolve item descriptions with the same two-tier lookup convention already
+            // established for STRN/RTN: StyleMaterialCostProfiles (od_sacc2) is the authoritative,
+            // style-specific source; StockItems is a generic ItemCode -> Description catalog fallback
+            // for anything without a matching cost profile row.
+            var costProfiles = await _apparelProDbContext.StyleMaterialCostProfiles
+                .AsNoTracking()
+                .Where(p => p.BuyerCode == buyerCode && p.Order.Trim() == order)
+                .ToListAsync();
+            var profileByItemCode = costProfiles.ToDictionary(p => p.ItemCode.Trim(), p => p);
+
+            static string DecomposePart(string fullItemCode, int start, int length) =>
+                fullItemCode.Length >= start + length ? fullItemCode.Substring(start, length).Trim() : string.Empty;
+
+            var baseItemCodes = outstandingLines
+                .Select(l => DecomposePart(l.ItemCode, 2, 4))
+                .Distinct()
+                .ToList();
+            var catalogDescriptionByItemCode = await _apparelProDbContext.StockItems
+                .AsNoTracking()
+                .Where(c => baseItemCodes.Contains(c.ItemCode.Trim()))
+                .ToDictionaryAsync(c => c.ItemCode.Trim(), c => c.Description);
+
             var resultLines = outstandingLines.Select(l =>
             {
                 stockByStoreItem.TryGetValue((l.StoreCode, l.ItemCode), out var stock);
+
+                profileByItemCode.TryGetValue(l.ItemCode.Trim(), out var matchingProfile);
+                var description = matchingProfile?.Description?.Trim();
+                if (string.IsNullOrWhiteSpace(description))
+                    catalogDescriptionByItemCode.TryGetValue(DecomposePart(l.ItemCode, 2, 4), out description);
+
                 return new GinIssuableStrnLineServiceModel
                 {
                     StockCode = l.StockCode,
                     ItemCode = l.ItemCode,
+                    Description = !string.IsNullOrWhiteSpace(description) ? description!.Trim() : "(No description available)",
                     StoreCode = l.StoreCode,
                     Unit = l.Unit,
                     BalanceToReceive = l.BalanceToReceive,
