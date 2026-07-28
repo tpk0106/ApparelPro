@@ -4,6 +4,7 @@ using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
@@ -13,7 +14,7 @@ namespace ApparelPro.WebApi.Controllers
     [Route("api/bank")]
     [ApiController]
     // [Authorize("RegisteredUser")]
-    [Authorize(Roles = "Merchandiser, Merchandiser Manager")]
+    [Authorize(Roles = AccessPolicies.MerchandisingOnly)]
     public class BankController : ControllerBase
     {
         private readonly IBankService _bankService;
@@ -25,7 +26,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list")]
-        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
     //    [Authorize("Merchandising")] // policy applied
         //[Authorize(Roles = "Inventory")]
        //  [Authorize("RegisteredUser")]
@@ -46,7 +47,7 @@ namespace ApparelPro.WebApi.Controllers
 
 
         [HttpPost()]
-        //[Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        //[Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
         [ProducesResponseType(HttpStatusCodes.Created)]
         [SwaggerOperation(Tags = new[] { "Bank Endpoints" },
            Summary = "Add a Bank.",
@@ -60,7 +61,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/{code}", Name = "GetBankByBankCodeAsync")]
-        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
         [ProducesResponseType(typeof(BankAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [SwaggerOperation(Tags = new[] { "Bank Endpoints" },
@@ -79,7 +80,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut()]
-        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
         [SwaggerOperation(Tags = new[] { "Bank Endpoints" },

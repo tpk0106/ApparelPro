@@ -5,6 +5,7 @@ using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApparelPro.WebApi.Controllers
@@ -29,11 +30,12 @@ namespace ApparelPro.WebApi.Controllers
         }       
 
         [HttpGet("list")]
-        //  [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
-        //[Authorize("Merchandising")] // policy applied
-        [Authorize(Roles = "Merchandiser,Merchandiser Manager")]
-
-        // [Authorize("RegisteredUser")]
+        // Widened to match this controller's own Delete/Update endpoints below, plus
+        // Store Manager (SAN) and Administrator - every note-type workspace's Buyer
+        // dropdown calls this same endpoint, so narrowing it to only Merchandiser
+        // roles silently blocked Inventory/Order Entry Operator/Store Manager users
+        // from ever loading their own screens' Buyer list.
+        [Authorize(Roles = "Inventory, Merchandiser, Merchandiser Manager, Order Entry Operator, Store Manager, Administrator")]
         [ProducesResponseType(typeof(PaginationAPIModel<BuyerAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetBuyersAsync(
            [FromQuery] int pageSize,
@@ -82,7 +84,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpDelete("{buyerCode}")]
-        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> DeleteBuyerAsync(int buyerCode)
@@ -97,7 +99,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut()]
-        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
         //  [ServiceFilter(typeof(ValidationFilterAttribute))]

@@ -5,6 +5,7 @@ using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApparelPro.WebApi.Controllers
@@ -22,7 +23,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list")]
-        //  [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        //  [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
         [Authorize("Merchandising")] // policy applied
         //[Authorize(Roles = "Inventory")]
         // [Authorize("RegisteredUser")]
@@ -55,7 +56,7 @@ namespace ApparelPro.WebApi.Controllers
 
         [HttpGet("list/buyerCode/", Name = "GetAddressesByBuyerCodeAsync")]
         //[Authorize("Merchandiser")]
-        [Authorize(Roles = "Merchandiser, Merchandiser Manager")]
+        [Authorize(Roles = AccessPolicies.MerchandisingOnly)]
         [ProducesResponseType(typeof(PaginationAPIModel<AddressAPIModel>), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> GetAddressesByBuyerCodeAsync(
@@ -168,7 +169,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpDelete("{id}/{addressId}")]
-        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> DeleteBuyerAddressAsync(int id, string addressId)

@@ -5,6 +5,7 @@ using ApparelPro.WebApi.APIModels.Registration;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -74,7 +75,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost("revoke")]
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = AccessPolicies.AdministratorOnly)]
         [ProducesResponseType(typeof(NoContentResult),HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(BadRequestResult),HttpStatusCodes.BadRequest)]
         public IActionResult Revoke(string? user)

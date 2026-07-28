@@ -72,7 +72,8 @@ namespace ApparelPro.WebApi.Controllers
             var Merchandiser_Email = "tpk0106@yahoo.com";
             var Merchandiser_Phone = "041001917";
             var Merchandiser_KnownAs = "Sampath";
-            var Merchandiser_Password = "thusith7291##";
+            var Merchandiser_Password = "Thusith7291##";
+            var userCreationErrors = new List<string>();
 
             var userMerchandiser = new UserAPIModel();
             if (await _userManager.FindByNameAsync(Merchandiser_Email) == null)
@@ -85,12 +86,22 @@ namespace ApparelPro.WebApi.Controllers
                 userMerchandiser.EmailConfirmed = true;
                 userMerchandiser.LockoutEnabled = false;
 
-                await _userManager.CreateAsync(userMerchandiser, Merchandiser_Password);
-                await _userManager.AddToRolesAsync(userMerchandiser, [merchandiser, merchandiserManager]);
-                
-                userList.Add(userMerchandiser);
-                var res = await _userManager.IsInRoleAsync(userMerchandiser, merchandiser);
-                Console.WriteLine("$userMerchandiser : {0} ", res);
+                var createResult = await _userManager.CreateAsync(userMerchandiser, Merchandiser_Password);
+                if (createResult.Succeeded)
+                {
+                    await _userManager.AddToRolesAsync(userMerchandiser, [merchandiser, merchandiserManager]);
+                    userList.Add(userMerchandiser);
+                    var res = await _userManager.IsInRoleAsync(userMerchandiser, merchandiser);
+                    Console.WriteLine("$userMerchandiser : {0} ", res);
+                }
+                else
+                {
+                    // Never attempt AddToRoleAsync on a user CreateAsync failed to persist —
+                    // doing so previously caused an unhandled FK violation on AspNetUserRoles,
+                    // since the in-memory user object still carries a constructor-generated Id
+                    // that was never actually written to AspNetUsers.
+                    userCreationErrors.Add($"{Merchandiser_Email}: {string.Join("; ", createResult.Errors.Select(e => e.Description))}");
+                }
             }
 
             if (await _userManager.FindByNameAsync(Merchandiser_Email) != null)
@@ -109,7 +120,7 @@ namespace ApparelPro.WebApi.Controllers
             var Stores_Email = "thusith@gmail.com";
             var Stores_Phone = "0411111917";
             var stores_KnownAs = "Sampi";
-            var stores_Password = "thazli1978*";
+            var stores_Password = "Thazli1978*";
             var userStores = new ApparelProUser();
             if (await _userManager.FindByNameAsync(Stores_Email) == null)
             {               
@@ -122,13 +133,18 @@ namespace ApparelPro.WebApi.Controllers
                 userStores.EmailConfirmed = true;
                 userStores.LockoutEnabled = false;
 
-                await _userManager.CreateAsync(userStores, stores_Password);
-                await _userManager.AddToRoleAsync(userStores, inventory);
-
-                userList.Add(userStores);
-
-                var res = await _userManager.IsInRoleAsync(userStores, inventory);
-                Console.WriteLine("$userStores : {0} ", res);
+                var createResult = await _userManager.CreateAsync(userStores, stores_Password);
+                if (createResult.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(userStores, inventory);
+                    userList.Add(userStores);
+                    var res = await _userManager.IsInRoleAsync(userStores, inventory);
+                    Console.WriteLine("$userStores : {0} ", res);
+                }
+                else
+                {
+                    userCreationErrors.Add($"{Stores_Email}: {string.Join("; ", createResult.Errors.Select(e => e.Description))}");
+                }
             }
 
             if (userList.Count > 0)
@@ -138,7 +154,8 @@ namespace ApparelPro.WebApi.Controllers
                 Count = userList.Count,
                 Users = userList,
                 RolesCount = userRolesUpatedList.Count,
-                RolesUpdated = userRolesUpatedList
+                RolesUpdated = userRolesUpatedList,
+                Errors = userCreationErrors
             });
         }
     }

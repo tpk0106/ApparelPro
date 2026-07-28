@@ -4,6 +4,7 @@ using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using ApparelPro.WebApi.Authorization;
 using ApparelPro.WebApi.APIModels.OrderManagement;
 using apparelPro.BusinessLogic.Services.Models.Reference.IFeatureService;
 using apparelPro.BusinessLogic.Services;
@@ -31,7 +32,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list")]
-        //  [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        //  [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
         [Authorize("Merchandising")] // policy applied        
         [ProducesResponseType(typeof(PaginationAPIModel<BuyerAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetItemFeaturesAsync(
@@ -72,7 +73,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> DeleteFeatureAsync(string featureCode)
@@ -87,7 +88,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut()]
-        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]        
         public async Task<IActionResult> UpdateFeatureAsync([FromQuery] string featureCode, [FromBody] UpdateItemFeatureAPIModel

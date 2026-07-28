@@ -104,6 +104,14 @@ builder.Services.AddAuthentication(options =>
 
 }).AddJwtBearer(opt =>
 {
+    // .NET 8+ switched the default JWT bearer token handler to JsonWebTokenHandler,
+    // which - unlike the legacy JwtSecurityTokenHandler - does NOT remap short wire
+    // claim names ("role", "unique_name") back to the long ClaimTypes URIs that
+    // [Authorize(Roles = "...")] / User.IsInRole(...) actually check against. Without
+    // this, EVERY role-based authorization check in the app silently fails, even for
+    // a token that correctly contains the required roles (confirmed via decoded JWT:
+    // "role": ["Store Manager", "Administrator"] still got rejected before this fix).
+    opt.MapInboundClaims = true;
     opt.TokenValidationParameters = new TokenValidationParameters()
     {
         RequireExpirationTime = true,

@@ -18,6 +18,9 @@ namespace ApparelPro.Data
         {            
         }
 
+        public DbSet<Permission> Permissions { get; set; } = null!;
+        public DbSet<RolePermission> RolePermissions { get; set; } = null!;
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -45,6 +48,12 @@ namespace ApparelPro.Data
 
             // 2. Load the pluralization tracking definition to clear the mismatch
             builder.ApplyConfiguration(new IdentityAddressConfig());
+
+            // 3. Load the Permission / RolePermission catalog definitions (Stage 2
+            // of the access-control rework - see Authorization/AccessPolicies.cs
+            // for Stage 1's role-string constants).
+            builder.ApplyConfiguration(new PermissionConfig());
+            builder.ApplyConfiguration(new RolePermissionConfig());
         }
     }
 }

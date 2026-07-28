@@ -5,6 +5,7 @@ using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApparelPro.WebApi.Controllers
@@ -12,7 +13,7 @@ namespace ApparelPro.WebApi.Controllers
     [Route("api/currency")]
     [ApiController]
     //[Authorize("RegisteredUser")]
-    [Authorize(Roles = "Merchandiser, Merchandiser Manager")]
+    [Authorize(Roles = AccessPolicies.MerchandisingOnly)]
     public class CurrencyController : ControllerBase
     {
         private readonly ICurrencyService _currencyService;

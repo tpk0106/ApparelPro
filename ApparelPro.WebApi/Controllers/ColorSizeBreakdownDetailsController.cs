@@ -6,6 +6,7 @@ using ApparelPro.WebApi.APIModels.OrderManagement;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -32,7 +33,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list")]
-        [Authorize(Roles = "Merchandiser,Merchandiser Manager")]
+        [Authorize(Roles = AccessPolicies.MerchandisingOnly)]
         [ProducesResponseType(typeof(PaginationAPIModel<ColorSizeBreakdownDetailsAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetColorSizeDetailsAsync(
            [FromQuery] int pageSize,
@@ -49,7 +50,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost()]
-        //[Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        //[Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
         [ProducesResponseType(HttpStatusCodes.Created)]
         [SwaggerOperation(Tags = new[] { "Bank Endpoints" },
          Summary = "Add a Bank.",
@@ -63,7 +64,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("singleOrDefault-By-Style")]
-        [Authorize(Roles = "Merchandiser,Merchandiser Manager")]
+        [Authorize(Roles = AccessPolicies.MerchandisingOnly)]
         [SwaggerOperation(
             Tags = new[] { "Order Management Matrix Endpoints" },
             Summary = "Retrieve Single color/size breakdown matrices for a style.",

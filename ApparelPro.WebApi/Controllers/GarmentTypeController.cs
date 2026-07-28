@@ -5,13 +5,14 @@ using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/garmentType")]
     //[Authorize("RegisteredUser")]
-    [Authorize(Roles = "Merchandiser, Merchandiser Manager")]
+    [Authorize(Roles = AccessPolicies.MerchandisingOnly)]
     [ApiController]
     public class GarmentTypeController : ControllerBase
     {
@@ -26,7 +27,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list")]
-          [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+          [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
         //[Authorize("Merchandiser")] // policy applied
                                      //[Authorize(Roles = "Inventory")]
                                      // [Authorize("RegisteredUser")]
@@ -41,7 +42,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/all")]
-        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]        
+        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]        
         [ProducesResponseType(typeof(IEnumerable<GarmentTypeAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetAllGarmentTypeAsync()
         {

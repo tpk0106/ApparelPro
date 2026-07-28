@@ -3,13 +3,14 @@ using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/orderwise-inventory-gin")]
     [ApiController]
-    [Authorize(Roles = "Inventory, Merchandiser, Merchandiser Manager, Order Entry Operator")]
+    [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
     public class GINController : ControllerBase
     {
         private readonly IGoodsIssueService _goodsIssueService;

@@ -5,6 +5,7 @@ using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApparelPro.WebApi.Controllers
@@ -70,7 +71,7 @@ namespace ApparelPro.WebApi.Controllers
 
         [HttpPost()]
         [ProducesResponseType(HttpStatusCodes.Created)]
-        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
         public async Task<IActionResult> AddCurrencyExchangeAsync([FromBody] CreateCurrencyExchangeAPIModel createCurrencyExchangeAPIModel)
         {         
             var existingCurrencyExchange = await _currencyExchangeService
@@ -90,7 +91,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut()]
-        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), 
             HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
@@ -113,7 +114,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpDelete("{baseCurrency}/{quoteCurrency}/{exchangeDate}")]
-        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> DeleteCurrencyExchangeAsync([FromRoute] string baseCurrency, [FromRoute]string quoteCurrency, [FromRoute] DateTime exchangeDate)

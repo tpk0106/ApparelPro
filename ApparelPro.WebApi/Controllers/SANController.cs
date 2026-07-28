@@ -3,13 +3,14 @@ using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/orderwise-inventory-san")]
     [ApiController]
-    [Authorize(Roles = "Store Manager, Administrator")]
+    [Authorize(Roles = AccessPolicies.StoreManagementOnly)]
     public class SANController : ControllerBase
     {
         private readonly IStockAdjustmentNoteService _stockAdjustmentNoteService;

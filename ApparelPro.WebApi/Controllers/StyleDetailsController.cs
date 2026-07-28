@@ -8,6 +8,7 @@ using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApparelPro.WebApi.Controllers
@@ -25,7 +26,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list")]
-        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
         //[Authorize("Merchandising")] // policy applied
         //[Authorize(Roles = "Inventory")]
         // [Authorize("RegisteredUser")]

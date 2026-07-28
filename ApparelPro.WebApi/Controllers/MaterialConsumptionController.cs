@@ -5,6 +5,7 @@ using ApparelPro.WebApi.APIModels.OrderManagement;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
@@ -13,7 +14,7 @@ namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/material-consumption")]
     [ApiController]
-    [Authorize(Roles = "Merchandiser,Merchandiser Manager")]
+    [Authorize(Roles = AccessPolicies.MerchandisingOnly)]
     public class MaterialConsumptionController : ControllerBase
     {
         private readonly IMaterialConsumptionService _materialConsumptionService;

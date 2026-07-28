@@ -4,6 +4,7 @@ using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,7 +12,7 @@ namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/orderwise-inventory-strn")]
     [ApiController]
-    [Authorize(Roles = "Inventory, Merchandiser, Merchandiser Manager, Order Entry Operator")]
+    [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
     public class STRNController : ControllerBase
     {
         private readonly IStoresRequisitionService _storesRequisitionService;
