@@ -5,14 +5,11 @@ using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/garmentType")]
-    //[Authorize("RegisteredUser")]
-    [Authorize(Roles = AccessPolicies.MerchandisingOnly)]
     [ApiController]
     public class GarmentTypeController : ControllerBase
     {
@@ -27,10 +24,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list")]
-          [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
-        //[Authorize("Merchandiser")] // policy applied
-                                     //[Authorize(Roles = "Inventory")]
-                                     // [Authorize("RegisteredUser")]
+        [Authorize(Policy = "garment-type-view")]
         [ProducesResponseType(typeof(PaginationAPIModel<GarmentTypeAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetGarmentTypesAsync([FromQuery] int pageSize, [FromQuery] 
             int pageNumber, string? sortColumn = null, string? sortOrder = null, 
@@ -42,7 +36,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/all")]
-        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]        
+        [Authorize(Policy = "garment-type-view")]
         [ProducesResponseType(typeof(IEnumerable<GarmentTypeAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetAllGarmentTypeAsync()
         {
@@ -52,11 +46,11 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/{id}", Name = "GetGarmentTypeByIdAsync")]
+        [Authorize(Policy = "garment-type-view")]
         [ProducesResponseType(typeof(GarmentTypeAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> GetGarmentTypeByIdAsync(int id)
         {
-            //Response.Headers.AccessControlAllowOrigin = "*";
             var garmentType = await _garmentTypeService.GetGarmentTypeByIdAsync(id);
             if (garmentType == null)
             {
@@ -67,9 +61,9 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut()]
+        [Authorize(Policy = "garment-type-manage")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
-        
         public async Task<IActionResult> UpdateGarmentTypeAsync([FromQuery] int id, [FromBody] UpdateGarmentTypeAPIModel
            updateGarmentTypeAPIModel)
         {
@@ -86,6 +80,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPatch()]
+        [Authorize(Policy = "garment-type-manage")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
         public async Task<IActionResult> UpdateGarmentAsync()
@@ -94,6 +89,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "garment-type-manage")]
         [ProducesResponseType(typeof(CreatedResult),  HttpStatusCodes.Created)]
         public async Task<IActionResult> AddGarmentTypeAsync([FromBody] CreateGarmentTypeAPIModel createGarmentTypeAPIModel)
         {

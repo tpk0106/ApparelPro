@@ -48,8 +48,7 @@ namespace ApparelPro.Data
         public virtual DbSet<Unit> Units { get; set; }
         public virtual DbSet<UnitConversion> UnitConversion { get; set; }
         public virtual DbSet<Stock> Stocks { get; set; }
-        public virtual DbSet<Feature> Features { get; set; }
-        public virtual DbSet<StockItem> StockItems { get; set; }       
+        public virtual DbSet<StockItem> StockItems { get; set; }
         public virtual DbSet<PODetails>  PODetails { get; set; }
         public virtual DbSet<CurrencyExchange> CurrencyExchanges { get; set; }
         public virtual DbSet<User> Users { get; set; }
@@ -100,7 +99,6 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new BasisConfig());
             modelBuilder.ApplyConfiguration(new UnitConfig());
             modelBuilder.ApplyConfiguration(new UnitConversionConfig());
-            modelBuilder.ApplyConfiguration(new FeatureConfig());
             modelBuilder.ApplyConfiguration(new StockConfig());
             modelBuilder.ApplyConfiguration(new StockItemConfig());
             modelBuilder.ApplyConfiguration(new PODetailsConfig());

@@ -1,4 +1,4 @@
-using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
+﻿using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
 using AutoMapper;
@@ -10,7 +10,7 @@ namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/orderwise-inventory-san")]
     [ApiController]
-    [Authorize(Roles = AccessPolicies.StoreManagementOnly)]
+    [Authorize(Policy = "san")]
     public class SANController : ControllerBase
     {
         private readonly IStockAdjustmentNoteService _stockAdjustmentNoteService;

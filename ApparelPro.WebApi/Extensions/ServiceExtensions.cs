@@ -14,7 +14,9 @@ using ApparelPro.Data;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Shared.LookupConstants;
 using ApparelPro.Shared.LookupConstants.ApparelProContext;
+using ApparelPro.WebApi.Authorization;
 using ApparelPro.WebApi.Misc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileSystemGlobbing.Internal;
 using Serilog;
@@ -74,6 +76,7 @@ namespace ApparelPro.WebApi.Extensions
             services.AddTransient(typeof(IUnitServiceT<UnitServiceModel>), typeof(UnitServiceT));
             services.AddTransient(typeof(IUnitService), typeof(UnitService));
             services.AddTransient(typeof(IUserService), typeof(UserService));
+            services.AddTransient(typeof(IPermissionService), typeof(PermissionService));
             services.AddTransient(typeof(ISecurityService), typeof(SecurityService));
             services.AddTransient(typeof(ICurrencyExchangeService), typeof(CurrencyExchangeService));
             services.AddTransient(typeof(IGarmentTypeService), typeof(GarmentTypeService));
@@ -143,6 +146,21 @@ namespace ApparelPro.WebApi.Extensions
             config.Inject(configuration);
             //AuthorizationConfig.Inject(configuration);
             services.AddAuthorization(AuthorizationConfig.GetAuthroizationOptions);
-        }    
+        }
+
+        public static void ConfigurePermissionAuthorizationInfrastructure(IServiceCollection services)
+        {
+            // Stage 2 access-control groundwork: dynamic, RolePermissions-table-backed
+            // authorization policies (see ApparelPro.WebApi/Authorization/). Registered
+            // AFTER AddAuthorization() so these override the default
+            // IAuthorizationPolicyProvider/IAuthorizationHandler that AddAuthorization()
+            // adds via TryAddSingleton. No controller uses this yet - the cutover from
+            // raw [Authorize(Roles = ...)] to [Authorize(Policy = ...)] is a deliberately
+            // separate, later pass.
+            services.AddMemoryCache();
+            services.AddSingleton<IRolePermissionCache, RolePermissionCache>();
+            services.AddSingleton<IAuthorizationPolicyProvider, DynamicPermissionPolicyProvider>();
+            services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        }
     }
 }

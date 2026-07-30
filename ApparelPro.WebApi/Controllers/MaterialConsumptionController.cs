@@ -14,7 +14,7 @@ namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/material-consumption")]
     [ApiController]
-    [Authorize(Roles = AccessPolicies.MerchandisingOnly)]
+    [Authorize(Policy = "material-consumption")]
     public class MaterialConsumptionController : ControllerBase
     {
         private readonly IMaterialConsumptionService _materialConsumptionService;

@@ -1,10 +1,9 @@
-﻿using apparelPro.BusinessLogic.Services;
+using apparelPro.BusinessLogic.Services;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +24,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list")]
-        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]       
+        [Authorize(Policy = "department-view")]
         [ProducesResponseType(typeof(PaginationAPIModel<DepartmentAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetDepartmentsAsync(
           [FromQuery] int pageSize,
@@ -43,16 +42,15 @@ namespace ApparelPro.WebApi.Controllers
 
         // GET: api/department/lookup
         [HttpGet("lookup")]
-        //[Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
+        [Authorize(Policy = "department-view")]
         [ProducesResponseType(typeof(IEnumerable<DepartmentAPIModel>), HttpStatusCodes.OK)]
-
         public async Task<IActionResult> GetDepartmentsLookup()
         {
             try
             {
                 // Queries your seeded od_dept table records directly out of SQL Server!
                 var departments = await _departmentService.GetDepartmentsLookup();
-                var departmentAPIModels = _mapper.Map<IEnumerable<DepartmentAPIModel>>(departments); 
+                var departmentAPIModels = _mapper.Map<IEnumerable<DepartmentAPIModel>>(departments);
 
                 return Ok(departmentAPIModels);
             }

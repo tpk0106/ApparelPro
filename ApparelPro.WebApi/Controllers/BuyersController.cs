@@ -1,11 +1,10 @@
-﻿using apparelPro.BusinessLogic.Services;
+using apparelPro.BusinessLogic.Services;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBuyerService;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApparelPro.WebApi.Controllers
@@ -27,15 +26,10 @@ namespace ApparelPro.WebApi.Controllers
             }
             _mapper = mapper;
             _buyerService = buyerService;
-        }       
+        }
 
         [HttpGet("list")]
-        // Widened to match this controller's own Delete/Update endpoints below, plus
-        // Store Manager (SAN) and Administrator - every note-type workspace's Buyer
-        // dropdown calls this same endpoint, so narrowing it to only Merchandiser
-        // roles silently blocked Inventory/Order Entry Operator/Store Manager users
-        // from ever loading their own screens' Buyer list.
-        [Authorize(Roles = "Inventory, Merchandiser, Merchandiser Manager, Order Entry Operator, Store Manager, Administrator")]
+        [Authorize(Policy = "buyers-view")]
         [ProducesResponseType(typeof(PaginationAPIModel<BuyerAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetBuyersAsync(
            [FromQuery] int pageSize,
@@ -52,6 +46,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list-1")]
+        [Authorize(Policy = "buyers-view")]
         [ProducesResponseType(typeof(IEnumerable<BuyerAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetBuyersAsync()
         {
@@ -61,6 +56,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "buyers-manage")]
         [ProducesResponseType(HttpStatusCodes.Created)]
         public async Task<IActionResult> AddBuyerAsync([FromBody] CreateBuyerAPIModel createBuyerAPIModel)
         {
@@ -70,6 +66,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/{buyerCode}", Name = "GetBuyerByBuyerCodeAsync")]
+        [Authorize(Policy = "buyers-view")]
         [ProducesResponseType(typeof(BuyerAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> GetBuyerByBuyerCodeAsync(int buyerCode)
@@ -84,7 +81,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpDelete("{buyerCode}")]
-        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
+        [Authorize(Policy = "buyers-manage")]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> DeleteBuyerAsync(int buyerCode)
@@ -99,15 +96,14 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut()]
-        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
+        [Authorize(Policy = "buyers-manage")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
-        //  [ServiceFilter(typeof(ValidationFilterAttribute))]
         public async Task<IActionResult> UpdateBuyerAsync([FromQuery] int buyerCode, [FromBody] UpdateBuyerAPIModel
             updateBuyerAPIModel)
         {
             var resultBuyerAPIModel = _mapper.Map<BuyerAPIModel>(await _buyerService.GetBuyerByBuyerCodeAsync(buyerCode));
-            
+
             if (resultBuyerAPIModel == null)
             {
                 return UnprocessableEntity("Buyer is not available for code :" + buyerCode);
@@ -119,6 +115,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPatch()]
+        [Authorize(Policy = "buyers-manage")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
         public async Task<IActionResult> UpdateBuyerAsync()

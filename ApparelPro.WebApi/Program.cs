@@ -96,6 +96,11 @@ builder.Services.AddAutoMapper(cfg =>
 // authorization
 ServiceExtensions.AddAuthorization(builder.Services, builder.Configuration);
 
+// Stage 2 access-control groundwork (see ApparelPro.WebApi/Authorization/) - registers
+// the dynamic, permission-table-backed IAuthorizationPolicyProvider/IAuthorizationHandler.
+// No controller uses this yet; that cutover is a deliberately separate, later pass.
+ServiceExtensions.ConfigurePermissionAuthorizationInfrastructure(builder.Services);
+
 // authentication
 builder.Services.AddAuthentication(options =>
 {

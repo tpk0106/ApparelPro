@@ -18,6 +18,7 @@ using apparelPro.BusinessLogic.Services.Models.Reference.IPortDestinationService
 using apparelPro.BusinessLogic.Services.Models.Reference.ISupplierService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitConversionService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitService;
+using apparelPro.BusinessLogic.Services.Models.Registration.IPermissionService;
 using apparelPro.BusinessLogic.Services.Models.Registration.IUserService;
 using ApparelPro.Data.Models.OrderManagement;
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
@@ -433,6 +434,9 @@ namespace apparelPro.BusinessLogic.Services.Mappings
             //CreateMap<StyleApprovalDetailsServiceModel, OrderItemServiceModel>().MaxDepth(2);
 
             //CreateMap<ColorSizeDetails, StyleDimensionsLookupServiceModel>().MaxDepth(2);
+
+            // permissions (Stage 2 access-control rework)
+            CreateMap<Permission, PermissionServiceModel>().MaxDepth(2).ReverseMap();
         }
     }
 }

@@ -19,7 +19,7 @@ namespace ApparelPro.WebApi.Controllers
 
         // POST: api/style-approval/approve-events
         [HttpPost("approve-events")]
-        [Authorize(Roles = "Merchandiser Manager")]
+        [Authorize(Policy = "style-approval")]
         public async Task<IActionResult> ApproveEvents([FromBody] StyleApprovalAPIModel styleApprovalAPIModel)
         {
             if (styleApprovalAPIModel == null) 

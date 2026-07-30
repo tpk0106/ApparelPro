@@ -26,5 +26,13 @@ namespace apparelPro.BusinessLogic.Services
         // code. Never revokes or removes an existing grant, even if a default
         // mapping was later hand-edited via the admin screen.
         Task SeedDefaultCatalogAsync();
+
+        // Explicit, opt-in removal of a fixed, hand-maintained list of catalog keys
+        // that a controller cutover has retired (e.g. "bank" -> "bank-view" +
+        // "bank-manage"). Deletes the Permission row and any RolePermission grants
+        // pointing at it. Deliberately separate from SeedDefaultCatalogAsync so a key
+        // is only ever removed because someone explicitly listed it as obsolete, not
+        // because it silently fell out of DEFAULT_CATALOG.
+        Task RemoveObsoleteCatalogEntriesAsync();
     }
 }

@@ -33,7 +33,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list")]
-        [Authorize(Roles = AccessPolicies.MerchandisingOnly)]
+        [Authorize(Policy = "color-size-breakdown")]
         [ProducesResponseType(typeof(PaginationAPIModel<ColorSizeBreakdownDetailsAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetColorSizeDetailsAsync(
            [FromQuery] int pageSize,
@@ -64,7 +64,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("singleOrDefault-By-Style")]
-        [Authorize(Roles = AccessPolicies.MerchandisingOnly)]
+        [Authorize(Policy = "color-size-breakdown")]
         [SwaggerOperation(
             Tags = new[] { "Order Management Matrix Endpoints" },
             Summary = "Retrieve Single color/size breakdown matrices for a style.",
@@ -84,7 +84,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost("bulk-save")]
-        [Authorize(Roles = "Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [Authorize(Policy = "color-size-breakdown-bulk-save")]
         [ProducesResponseType(HttpStatusCodes.OK)]
         [SwaggerOperation(
             Tags = new[] { "Order Management Matrix Endpoints" },

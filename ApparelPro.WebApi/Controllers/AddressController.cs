@@ -1,11 +1,10 @@
-﻿using apparelPro.BusinessLogic.Services;
+using apparelPro.BusinessLogic.Services;
 using apparelPro.BusinessLogic.Services.Implementation.Shared;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApparelPro.WebApi.Controllers
@@ -15,18 +14,15 @@ namespace ApparelPro.WebApi.Controllers
     public class AddressController : ControllerBase
     {
         private readonly IMapper _mapper;
-        private readonly IAddressService _addressService; 
+        private readonly IAddressService _addressService;
         public AddressController(IMapper mapper, IAddressService addressService)
         {
             _mapper = mapper;
-            _addressService = addressService;            
+            _addressService = addressService;
         }
 
         [HttpGet("list")]
-        //  [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
-        [Authorize("Merchandising")] // policy applied
-        //[Authorize(Roles = "Inventory")]
-        // [Authorize("RegisteredUser")]
+        [Authorize(Policy = "address-view")]
         [ProducesResponseType(typeof(PaginationAPIModel<AddressAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetCountriesAsync(
              [FromQuery] int pageSize,
@@ -43,20 +39,19 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/AddressId/{addressId}", Name = "GetAddressesByAddressIdAsync")]
-        [Authorize("Merchandising")]
+        [Authorize(Policy = "address-view")]
         [ProducesResponseType(typeof(IEnumerable<AddressAPIModel>), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> GetAddressesByAddressIdAsync(Guid addressId)
         {
             var addresseServiceModels = await _addressService.GetAddressesByAddresIdAsync(addressId);
-                
+
             var addresses = _mapper.Map<IEnumerable<AddressAPIModel>>(addresseServiceModels);
             return Ok(addresses);
         }
 
         [HttpGet("list/buyerCode/", Name = "GetAddressesByBuyerCodeAsync")]
-        //[Authorize("Merchandiser")]
-        [Authorize(Roles = AccessPolicies.MerchandisingOnly)]
+        [Authorize(Policy = "address-view")]
         [ProducesResponseType(typeof(PaginationAPIModel<AddressAPIModel>), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> GetAddressesByBuyerCodeAsync(
@@ -76,7 +71,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/byAddressId/", Name = "GetAddressesForBuyerByAddressIdAsync")]
-        [Authorize("Merchandising")]
+        [Authorize(Policy = "address-view")]
         [ProducesResponseType(typeof(PaginationAPIModel<AddressAPIModel>), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> GetAddressesForBuyerByAddressIdAsync(
@@ -96,7 +91,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/byIdAndAddressId/", Name = "GetAddressByIdAndAddresIdAsync")]
-        [Authorize("Merchandising")]
+        [Authorize(Policy = "address-view")]
         [ProducesResponseType(typeof(AddressAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> GetAddressByIdAndAddresIdAsync([FromQuery] Guid addressId, [FromQuery] int id)
@@ -107,18 +102,19 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "address-manage")]
         [ProducesResponseType(HttpStatusCodes.Created)]
         public async Task<IActionResult> AddAddressAsync([FromBody] CreateAddressAPIModel createAddressAPIModel)
         {
-            var createAddressServiceModel = _mapper.Map<CreateAddressServiceModel>(createAddressAPIModel);           
+            var createAddressServiceModel = _mapper.Map<CreateAddressServiceModel>(createAddressAPIModel);
             var addedAddress = await _addressService.AddAddressAsync(createAddressServiceModel);
             return CreatedAtRoute(nameof(GetAddressesByAddressIdAsync), new {  addedAddress.Id, addedAddress.AddressId }, null);
         }
 
         [HttpPut()]
+        [Authorize(Policy = "address-manage")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
-        //  [ServiceFilter(typeof(ValidationFilterAttribute))]
         public async Task<IActionResult> UpdateAddressAsync([FromQuery] int id, Guid addressId, [FromBody] UpdateAddressAPIModel
          updateAddressAPIModel)
         {
@@ -135,12 +131,10 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut("{buyerCode}/{addressId}")]
-        [Authorize("Merchandising")]
+        [Authorize(Policy = "address-manage")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
-        //  [ServiceFilter(typeof(ValidationFilterAttribute))]
-
-        public async Task<IActionResult> UpdateAddressByBuyerCodeAsync([FromRoute] int buyerCode, Guid addressId, 
+        public async Task<IActionResult> UpdateAddressByBuyerCodeAsync([FromRoute] int buyerCode, Guid addressId,
             [FromBody] UpdateAddressAPIModel updateAddressAPIModel)
         {
             var resultAddressAPIModel = _mapper.Map<AddressAPIModel>(
@@ -158,18 +152,18 @@ namespace ApparelPro.WebApi.Controllers
             resultAddressAPIModel.AddressType = updateAddressAPIModel.AddressType;
             resultAddressAPIModel.State = updateAddressAPIModel.State;
             resultAddressAPIModel.City = updateAddressAPIModel.City;
-            resultAddressAPIModel.CountryCode = updateAddressAPIModel.CountryCode;            
-            resultAddressAPIModel.PostCode = updateAddressAPIModel.PostCode;            
+            resultAddressAPIModel.CountryCode = updateAddressAPIModel.CountryCode;
+            resultAddressAPIModel.PostCode = updateAddressAPIModel.PostCode;
             resultAddressAPIModel.Default = updateAddressAPIModel.Default;
-           
+
             var updateAddressSeviceModel = _mapper.Map<UpdateAddressServiceModel>(resultAddressAPIModel);
             await _addressService.UpdateDefaultAddressAsync(updateAddressSeviceModel);
-            
+
             return NoContent();
         }
 
         [HttpDelete("{id}/{addressId}")]
-        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
+        [Authorize(Policy = "address-manage")]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> DeleteBuyerAddressAsync(int id, string addressId)

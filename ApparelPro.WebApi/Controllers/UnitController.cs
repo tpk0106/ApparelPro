@@ -1,4 +1,4 @@
-﻿using apparelPro.BusinessLogic.Services;
+using apparelPro.BusinessLogic.Services;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitService;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.Reference;
@@ -11,21 +11,19 @@ namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/unit")]
     [ApiController]
-    [Authorize("RegisteredUser")]
     public class UnitController : ControllerBase
     {
-        //private readonly IUnitServiceT<UnitServiceModel> _unitService;
         private readonly IUnitService _unitService;
-      //  private readonly IUnitService _unitService;
         private readonly IMapper _mapper;
 
-        public UnitController(IUnitService unitService,/*IUnitServiceT<UnitServiceModel> unitService*/  IMapper mapper)
+        public UnitController(IUnitService unitService, IMapper mapper)
         {
             _unitService = unitService;
-            _mapper = mapper;            
+            _mapper = mapper;
         }
 
         [HttpGet("list")]
+        [Authorize(Policy = "unit-view")]
         [ProducesResponseType(typeof(PaginationAPIModel<UnitAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetUnitsAsync(
             [FromQuery] int pageSize,
@@ -37,10 +35,11 @@ namespace ApparelPro.WebApi.Controllers
         {
             var unitServiceModels = await _unitService.GetUnitsAsync(pageNumber, pageSize, sortColumn, sortOrder, filterColumn, filterQuery);
             var units = _mapper.Map<PaginationAPIModel<UnitAPIModel>>(unitServiceModels);
-            return Ok(units);          
+            return Ok(units);
         }
 
         [HttpPost]
+        [Authorize(Policy = "unit-manage")]
         [ProducesResponseType(HttpStatusCodes.Created)]
         public async Task<IActionResult> AddUnitAsync([FromBody] CreateUnitAPIModel createUnitAPIModel)
         {
@@ -50,14 +49,14 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut()]
+        [Authorize(Policy = "unit-manage")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
-        //  [ServiceFilter(typeof(ValidationFilterAttribute))]
         public async Task<IActionResult> UpdateUnitAsync([FromQuery] string code, [FromBody] UpdateUnitAPIModel
          updateUnitAPIModel)
         {
             var resultUnitAPIModel = _mapper.Map<UnitAPIModel>(await _unitService.GetUnitByCodeAsync(code));
-            
+
             if (resultUnitAPIModel == null)
             {
                 return UnprocessableEntity("Unit is not available for code :" + code);
@@ -69,6 +68,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/{code}", Name = "GetUnitByCodeAsync")]
+        [Authorize(Policy = "unit-view")]
         [ProducesResponseType(typeof(UnitAPIModel), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetUnitByCodeAsync(string code)
         {
@@ -78,6 +78,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/does-unit-exist/{code}", Name = "DoesUnitExistAsync")]
+        [Authorize(Policy = "unit-view")]
         [ProducesResponseType(typeof(bool), HttpStatusCodes.OK)]
         public async Task<IActionResult> DoesUnitExistAsync(string code)
         {

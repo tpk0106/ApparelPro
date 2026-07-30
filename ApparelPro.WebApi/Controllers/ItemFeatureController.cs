@@ -1,10 +1,9 @@
-﻿using ApparelPro.WebApi.APIModels.Reference;
+using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using ApparelPro.WebApi.Authorization;
 using ApparelPro.WebApi.APIModels.OrderManagement;
 using apparelPro.BusinessLogic.Services.Models.Reference.IFeatureService;
 using apparelPro.BusinessLogic.Services;
@@ -32,8 +31,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list")]
-        //  [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
-        [Authorize("Merchandising")] // policy applied        
+        [Authorize(Policy = "item-feature-view")]
         [ProducesResponseType(typeof(PaginationAPIModel<BuyerAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetItemFeaturesAsync(
          [FromQuery] int pageSize,
@@ -50,6 +48,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/{featureCode}", Name = "GetItemFeatureByFeatureCodeAsync")]
+        [Authorize(Policy = "item-feature-view")]
         [ProducesResponseType(typeof(ItemFeatureAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> GetItemFeatureByFeatureCodeAsync([FromRoute] string featureCode)
@@ -64,6 +63,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "item-feature-manage")]
         [ProducesResponseType(HttpStatusCodes.Created)]
         public async Task<IActionResult> AddFeatureAsync([FromBody] CreateItemFeatureAPIModel createItemFeatureAPIModel)
         {
@@ -72,8 +72,8 @@ namespace ApparelPro.WebApi.Controllers
             return CreatedAtRoute(nameof(GetItemFeatureByFeatureCodeAsync), new { id = addedFeature.FeatureCode }, null);
         }
 
-        [HttpDelete("{id}")]
-        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
+        [HttpDelete("{featureCode}")]
+        [Authorize(Policy = "item-feature-manage")]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> DeleteFeatureAsync(string featureCode)
@@ -88,9 +88,9 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut()]
-        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
+        [Authorize(Policy = "item-feature-manage")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
-        [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]        
+        [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
         public async Task<IActionResult> UpdateFeatureAsync([FromQuery] string featureCode, [FromBody] UpdateItemFeatureAPIModel
             updateItemFeatureAPIModel)
         {

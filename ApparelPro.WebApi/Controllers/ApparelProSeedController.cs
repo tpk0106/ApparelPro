@@ -1,4 +1,6 @@
-﻿using ApparelPro.Data;
+﻿using apparelPro.BusinessLogic.Services;
+using apparelPro.BusinessLogic.Services.Models.Registration.IPermissionService;
+using ApparelPro.Data;
 using ApparelPro.Data.Models.Registration;
 using ApparelPro.WebApi.APIModels.Registration;
 using Microsoft.AspNetCore.Identity;
@@ -15,13 +17,15 @@ namespace ApparelPro.WebApi.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly IConfiguration _configuration;
+        private readonly IPermissionService _permissionService;
 
-        public ApparelProSeedController(UserManager<ApparelProUser> userManager, RoleManager<IdentityRole> roleManager, ApparelProDbContext apparelProDbContext, IConfiguration configuration)
+        public ApparelProSeedController(UserManager<ApparelProUser> userManager, RoleManager<IdentityRole> roleManager, ApparelProDbContext apparelProDbContext, IConfiguration configuration, IPermissionService permissionService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _apparelProDbContext = apparelProDbContext;
             _configuration = configuration;
+            _permissionService = permissionService;
         }
 
 
@@ -157,6 +161,14 @@ namespace ApparelPro.WebApi.Controllers
                 RolesUpdated = userRolesUpatedList,
                 Errors = userCreationErrors
             });
+        }
+
+        [HttpGet("seed-permissions")]
+        public async Task<ActionResult> SeedPermissionsAsync()
+        {
+            await _permissionService.SeedDefaultCatalogAsync();
+            await _permissionService.RemoveObsoleteCatalogEntriesAsync();
+            return Ok(new { Message = "Permission catalog and default role grants seeded (idempotent - existing grants were not touched); obsolete catalog keys removed." });
         }
     }
 }

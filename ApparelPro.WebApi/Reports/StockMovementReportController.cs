@@ -1,4 +1,4 @@
-using apparelPro.BusinessLogic.Reports.OrderwiseInventory;
+﻿using apparelPro.BusinessLogic.Reports.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
@@ -13,7 +13,7 @@ namespace ApparelPro.WebApi.Reports
     // GRN/GIN/STRN controllers are all role-gated; a report over the same inventory
     // data gets the same gate (StylewiseReportController currently has none — an
     // oversight there, not a pattern to repeat here).
-    [Authorize(Roles = "Inventory, Merchandiser, Merchandiser Manager, Order Entry Operator")]
+    [Authorize(Policy = "stock-movement-report")]
     public class StockMovementReportController : ControllerBase
     {
         private readonly IStockMovementReportService _stockMovementReportService;

@@ -1,19 +1,16 @@
-﻿using apparelPro.BusinessLogic.Services;
+using apparelPro.BusinessLogic.Services;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyService;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/currency")]
     [ApiController]
-    //[Authorize("RegisteredUser")]
-    [Authorize(Roles = AccessPolicies.MerchandisingOnly)]
     public class CurrencyController : ControllerBase
     {
         private readonly ICurrencyService _currencyService;
@@ -23,20 +20,22 @@ namespace ApparelPro.WebApi.Controllers
         public CurrencyController(ICurrencyService currencyService, IMapper mapper, ICountryService countryService)
         {
             _currencyService = currencyService;
-            _mapper = mapper;   
+            _mapper = mapper;
             _countryService = countryService;
         }
 
         [HttpGet("list")]
+        [Authorize(Policy = "currency-view")]
         [ProducesResponseType(typeof(PaginationAPIModel<CurrencyAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetCurrenciesAsync(int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery)
         {
             var currencyServiceModels = await _currencyService.GetCurrenciesAsync(pageNumber, pageSize, sortColumn,sortOrder, filterColumn, filterQuery);
-            var currencies = _mapper.Map<PaginationAPIModel<CurrencyAPIModel>>(currencyServiceModels);            
+            var currencies = _mapper.Map<PaginationAPIModel<CurrencyAPIModel>>(currencyServiceModels);
             return Ok(currencies);
         }
 
         [HttpGet("list/{code}", Name = "GetCurrencyByCodeAsync")]
+        [Authorize(Policy = "currency-view")]
         [ProducesResponseType(typeof(CurrencyAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> GetCurrencyByCodeAsync(string code)
@@ -52,6 +51,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpDelete("{code}")]
+        [Authorize(Policy = "currency-manage")]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> DeleteCurrencyAsync(string code)
@@ -66,6 +66,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "currency-manage")]
         [ProducesResponseType(HttpStatusCodes.Created)]
         public async Task<IActionResult> AddCurrencyAsync([FromBody] CreateCurrencyAPIModel createCurrencyAPIModel)
         {
@@ -82,6 +83,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut()]
+        [Authorize(Policy = "currency-manage")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
         public async Task<IActionResult> UpdateCurrencyAsync([FromQuery] string code, [FromBody] UpdateCurrencyAPIModel
@@ -99,6 +101,7 @@ namespace ApparelPro.WebApi.Controllers
 
 
         [HttpGet("list/does-currency-exist/{code}-{countryCode}", Name = "DoesCurrencyExistAsync")]
+        [Authorize(Policy = "currency-view")]
         [ProducesResponseType(typeof(bool), HttpStatusCodes.OK)]
         public async Task<IActionResult> DoesCurrencyExistAsync(string code, string countryCode)
         {

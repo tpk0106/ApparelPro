@@ -1,4 +1,4 @@
-﻿using apparelPro.BusinessLogic.Services;
+using apparelPro.BusinessLogic.Services;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.OrderManagement;
 using ApparelPro.WebApi.APIModels.Reference;
@@ -12,7 +12,6 @@ namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/unit-conversions")]
     [ApiController]
-    //[Authorize(Roles = "Merchandiser, Merchandiser Manager")]
     public class UnitConversionController : ControllerBase
     {
         private readonly IUnitConversionService _unitConversion;
@@ -24,7 +23,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list")]
-        //[Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]        
+        [Authorize(Policy = "unit-conversion-view")]
         [ProducesResponseType(typeof(PaginationAPIModel<UnitConversionAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetCountriesAsync(
           [FromQuery] int pageSize,

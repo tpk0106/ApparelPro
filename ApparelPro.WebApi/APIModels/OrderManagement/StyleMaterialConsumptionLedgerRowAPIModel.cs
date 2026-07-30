@@ -21,6 +21,7 @@ namespace ApparelPro.WebApi.APIModels.OrderManagement
         public string ItemUnit { get; set; } = null!;
         public decimal QuantityPerGarment { get; set; }
         public string SupplierCode { get; set; } = null!;
+        public string SupplierName { get; set; } = null!;
         public decimal TotalConsumption { get; set; }
         public decimal PercentageAllowance { get; set; }
 

@@ -1,4 +1,4 @@
-using apparelPro.BusinessLogic.Reports.OrderwiseInventory;
+﻿using apparelPro.BusinessLogic.Reports.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
@@ -12,7 +12,7 @@ namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/orderwise-inventory-strn")]
     [ApiController]
-    [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
+    [Authorize(Policy = "strn")]
     public class STRNController : ControllerBase
     {
         private readonly IStoresRequisitionService _storesRequisitionService;

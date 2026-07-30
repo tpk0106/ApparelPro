@@ -4,7 +4,6 @@ using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
@@ -13,8 +12,6 @@ namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/bank")]
     [ApiController]
-    // [Authorize("RegisteredUser")]
-    [Authorize(Roles = AccessPolicies.MerchandisingOnly)]
     public class BankController : ControllerBase
     {
         private readonly IBankService _bankService;
@@ -26,10 +23,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list")]
-        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
-    //    [Authorize("Merchandising")] // policy applied
-        //[Authorize(Roles = "Inventory")]
-       //  [Authorize("RegisteredUser")]
+        [Authorize(Policy = "bank-view")]
         [ProducesResponseType(typeof(PaginationAPIModel<BankAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetCountriesAsync(
           [FromQuery] int pageSize,
@@ -47,7 +41,7 @@ namespace ApparelPro.WebApi.Controllers
 
 
         [HttpPost()]
-        //[Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
+        [Authorize(Policy = "bank-manage")]
         [ProducesResponseType(HttpStatusCodes.Created)]
         [SwaggerOperation(Tags = new[] { "Bank Endpoints" },
            Summary = "Add a Bank.",
@@ -61,7 +55,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/{code}", Name = "GetBankByBankCodeAsync")]
-        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
+        [Authorize(Policy = "bank-view")]
         [ProducesResponseType(typeof(BankAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [SwaggerOperation(Tags = new[] { "Bank Endpoints" },
@@ -80,18 +74,17 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut()]
-        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
+        [Authorize(Policy = "bank-manage")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
         [SwaggerOperation(Tags = new[] { "Bank Endpoints" },
             Summary = "Update a Bank.",
             Description = "Returns 200 - OK with No content")
-        ]        
+        ]
         public async Task<IActionResult> UpdateBankAsync([FromQuery] string bankCode, [FromBody] UpdateBankAPIModel
             updateBankAPIModel)
         {
             var resultBankAPIModel = _mapper.Map<BankAPIModel>(await _bankService.GetBankByBankCodeAsync(bankCode));
-            // Response.Headers.AccessControlAllowOrigin = "*";
             if (resultBankAPIModel == null)
             {
                 return UnprocessableEntity("Country is not available for code :" + bankCode);

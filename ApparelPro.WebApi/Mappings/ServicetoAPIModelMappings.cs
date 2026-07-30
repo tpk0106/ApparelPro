@@ -17,6 +17,7 @@ using apparelPro.BusinessLogic.Services.Models.Reference.IPortDestinationService
 using apparelPro.BusinessLogic.Services.Models.Reference.ISupplierService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitConversionService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitService;
+using apparelPro.BusinessLogic.Services.Models.Registration.IPermissionService;
 using apparelPro.BusinessLogic.Services.Models.Registration.IUserService;
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Models.References;
@@ -607,6 +608,11 @@ namespace ApparelPro.WebApi.Mappings
             // orderwise inventory - stock movement report
             CreateMap<StockMovementReportHeaderServiceModel, StockMovementReportHeaderAPIModel>().MaxDepth(2);
             CreateMap<StockMovementReportLineServiceModel, StockMovementReportLineAPIModel>().MaxDepth(2);
+
+            // permissions (Stage 2 access-control rework)
+            CreateMap<PermissionServiceModel, PermissionAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<RolePermissionMatrixRoleServiceModel, RolePermissionMatrixRoleAPIModel>().MaxDepth(2);
+            CreateMap<UpdateRolePermissionsAPIModel, UpdateRolePermissionsServiceModel>().MaxDepth(2);
         }
 
         public class PaginationResultToPaginationAPITypeConverter<sourceT, destT> : ITypeConverter<PaginationResult<sourceT>, PaginationAPIModel<destT>>

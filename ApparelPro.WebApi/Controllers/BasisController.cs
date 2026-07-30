@@ -1,4 +1,4 @@
-﻿using apparelPro.BusinessLogic.Services;
+using apparelPro.BusinessLogic.Services;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBasisService;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.Reference;
@@ -12,7 +12,6 @@ namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/basis")]
     [ApiController]
-    [Authorize("RegisteredUser")]
     public class BasisController : ControllerBase
     {
         private readonly IMapper _mapper;
@@ -24,9 +23,8 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list")]
-        //[Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
-        [ProducesResponseType(HttpStatusCodes.OK)]        
-        [Authorize("Merchandising")] // policy applied                                  
+        [Authorize(Policy = "basis-view")]
+        [ProducesResponseType(HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(PaginationAPIModel<BasisAPIModel>), HttpStatusCodes.OK)]
         [SwaggerOperation(Tags = new[] { "Basis Endpoints" },
            Summary = "Basis list.",
@@ -47,7 +45,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost()]
-        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [Authorize(Policy = "basis-manage")]
         [ProducesResponseType(HttpStatusCodes.Created)]
         [SwaggerOperation(Tags = new[] { "Basis Endpoints" },
            Summary = "Add a Basis.",
@@ -75,7 +73,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/{code}", Name = "GetBasisByCodeAsync")]
-        [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
+        [Authorize(Policy = "basis-view")]
         [ProducesResponseType(typeof(BasisAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [SwaggerOperation(Tags = new[] { "Basis Endpoints" },
@@ -101,7 +99,8 @@ namespace ApparelPro.WebApi.Controllers
             }
         }
 
-        [HttpDelete()]        
+        [HttpDelete()]
+        [Authorize(Policy = "basis-manage")]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [SwaggerOperation(Tags = new[] { "Basis Endpoints" },
@@ -120,12 +119,13 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut()]
+        [Authorize(Policy = "basis-manage")]
         [ProducesResponseType(typeof(BadRequestResult), HttpStatusCodes.BadRequest)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
         [SwaggerOperation(Tags = new[] { "Basis Endpoints" },
            Summary = "Update a Basis.",
            Description = "Returns 200 - OK with No content")
-       ]        
+       ]
         public async Task<IActionResult> UpdateBasisAsync([FromQuery] string code, [FromBody] UpdateBasisAPIModel
            updateBasisAPIModel)
         {
@@ -144,7 +144,7 @@ namespace ApparelPro.WebApi.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new { message = ex.Message });
-            }          
+            }
         }
     }
 }

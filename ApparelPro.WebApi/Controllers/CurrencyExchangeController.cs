@@ -1,18 +1,16 @@
-﻿using apparelPro.BusinessLogic.Services;
+using apparelPro.BusinessLogic.Services;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyExchangeService;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/currencyExchange")]
     [ApiController]
-    [Authorize("RegisteredUser")]
     public class CurrencyExchangeController : ControllerBase
     {
         private readonly IMapper _mapper;
@@ -20,18 +18,18 @@ namespace ApparelPro.WebApi.Controllers
         public CurrencyExchangeController(IMapper mapper, ICurrencyExchangeService currencyExchangeService)
         {
             _mapper = mapper;
-            _currencyExchangeService = currencyExchangeService;            
+            _currencyExchangeService = currencyExchangeService;
         }
 
         [HttpGet("list")]
-       // [Authorize("Merchandising")] // policy applied
+        [Authorize(Policy = "currency-exchange-view")]
         [ProducesResponseType(typeof(PaginationAPIModel<CurrencyExchangeAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetCurrencyExchangesAsync(
-            [FromQuery] int pageSize, 
-            [FromQuery] int pageNumber, 
-            [FromQuery] string? sortColumn = null, 
-            [FromQuery] string? sortOrder = null, 
-            [FromQuery] string? filterColumn = null, 
+            [FromQuery] int pageSize,
+            [FromQuery] int pageNumber,
+            [FromQuery] string? sortColumn = null,
+            [FromQuery] string? sortOrder = null,
+            [FromQuery] string? filterColumn = null,
             [FromQuery] string? filterQuery = null)
         {
             var currencyExchangeServiceModels = await _currencyExchangeService.GetCurrencyExchangesAsync(pageNumber, pageSize, sortColumn , sortOrder , filterColumn , filterQuery);
@@ -40,6 +38,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/byDate")]
+        [Authorize(Policy = "currency-exchange-view")]
         [ProducesResponseType(typeof(IEnumerable<CurrencyExchangeAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetCurrencyExchangesByDateAsync()
         {
@@ -49,16 +48,18 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/{baseCurrency}", Name = "GetCurrencyExchangesByBaseCurrencyAsync")]
+        [Authorize(Policy = "currency-exchange-view")]
         [ProducesResponseType(typeof(IEnumerable<CurrencyExchangeAPIModel>), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> GetCurrencyExchangesByBaseCurrencyAsync(string baseCurrency)
-        {            
-            var currencyExchanges = await _currencyExchangeService.GetCurrencyExchangesByBaseCurrencyAsync(baseCurrency);           
+        {
+            var currencyExchanges = await _currencyExchangeService.GetCurrencyExchangesByBaseCurrencyAsync(baseCurrency);
             var currencyExchangeAPIModels = _mapper.Map<IEnumerable<CurrencyExchangeAPIModel>>(currencyExchanges);
             return Ok(currencyExchangeAPIModels);
         }
 
         [HttpGet("list/{baseCurrency}/{quoteCurrency}/{date}", Name = "GetCurrencyExchangeByBaseCurrencyAndQuoteCurrencyOnDateAsync")]
+        [Authorize(Policy = "currency-exchange-view")]
         [ProducesResponseType(typeof(CurrencyExchangeAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> GetCurrencyExchangeByBaseCurrencyAndQuoteCurrencyOnDateAsync(string baseCurrency, string quoteCurrency, DateTime date)
@@ -70,10 +71,10 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost()]
+        [Authorize(Policy = "currency-exchange-manage")]
         [ProducesResponseType(HttpStatusCodes.Created)]
-        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
         public async Task<IActionResult> AddCurrencyExchangeAsync([FromBody] CreateCurrencyExchangeAPIModel createCurrencyExchangeAPIModel)
-        {         
+        {
             var existingCurrencyExchange = await _currencyExchangeService
                 .GetCurrencyExchangeByBaseCurrencyAndQuoteCurrencyOnDateAsync(
                 baseCurrency: createCurrencyExchangeAPIModel!.BaseCurrency!,
@@ -91,8 +92,8 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut()]
-        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
-        [ProducesResponseType(typeof(UnprocessableEntityResult), 
+        [Authorize(Policy = "currency-exchange-manage")]
+        [ProducesResponseType(typeof(UnprocessableEntityResult),
             HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
         public async Task<IActionResult> UpdateCurrencyExchangeAsync(
@@ -114,7 +115,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpDelete("{baseCurrency}/{quoteCurrency}/{exchangeDate}")]
-        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
+        [Authorize(Policy = "currency-exchange-manage")]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> DeleteCurrencyExchangeAsync([FromRoute] string baseCurrency, [FromRoute]string quoteCurrency, [FromRoute] DateTime exchangeDate)

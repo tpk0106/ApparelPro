@@ -289,6 +289,10 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         Feature2 = request.Feature2.Trim(),
                         Feature3 = request.Feature3.Trim(),
                         Feature4 = request.Feature4.Trim(),
+                        StoreCode = string.Empty, // No store/warehouse concept at BOM-entry stage (see
+                                                   // Phase 1 note above) - blank, matching how the legacy
+                                                   // od_sacc3.dbf character field behaves, not left unset.
+                                                   // Store gets assigned later at goods-received time.
                         ConsumptionUnit = request.ConsumptionUnit.Trim(),
                         ItemUnit = request.ItemUnit.Trim(),
                         QuantityPerGarment = request.QuantityPerGarment,
@@ -622,6 +626,14 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 .AsNoTracking()
                 .ToDictionaryAsync(i => (i.StockCode, i.ItemCode), i => i.Description);
 
+            // Same bulk-fetch pattern for supplier names. Suppliers.SupplierCode is a
+            // real int PK, while the ledger's SupplierCode is a legacy DBF-style
+            // varchar(6) - parse-compare rather than string-compare so historical
+            // rows saved with leading zeros still resolve correctly.
+            var supplierNameLookup = await _apparelProDbContext.Suppliers
+                .AsNoTracking()
+                .ToDictionaryAsync(s => s.SupplierCode, s => s.Name);
+
             return ledgerRows.Select(l => new StyleMaterialConsumptionLedgerRowServiceModel
             {
                 BuyerCode = l.BuyerCode,
@@ -644,6 +656,10 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 ItemUnit = l.ItemUnit,
                 QuantityPerGarment = l.QuantityPerGarment,
                 SupplierCode = l.SupplierCode,
+                SupplierName = int.TryParse(l.SupplierCode?.Trim(), out var supplierCode) &&
+                    supplierNameLookup.TryGetValue(supplierCode, out var supplierName)
+                        ? supplierName
+                        : "-",
                 TotalConsumption = l.TotalConsumption,
                 PercentageAllowance = l.PercentageAllowance,
                 IsAdditionalCost = l.IsAdditionalCost,

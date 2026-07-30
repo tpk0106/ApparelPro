@@ -26,24 +26,19 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
         public async Task<ItemFeatureServiceModel> AddItemFeatureAsync(CreateItemFeatureServiceModel createItemFeatureServiceModel)
         {
-            var itemFeatureDbModel = _mapper.Map<Feature>(createItemFeatureServiceModel);
-            _apparelProDbContext.Features.Add(itemFeatureDbModel);
+            var itemFeatureDbModel = _mapper.Map<ItemFeature>(createItemFeatureServiceModel);
+            _apparelProDbContext.ItemFeatures.Add(itemFeatureDbModel);
             await _apparelProDbContext.SaveChangesAsync();
             return _mapper.Map<ItemFeatureServiceModel>(itemFeatureDbModel);
         }
 
-        public async Task DeleteFeatureAsync(int id)
+        public async Task DeleteItemFeatureAsync(string featureCode)
         {
-            var featureDbModel = await _apparelProDbContext.Features
-              .Where(feature => feature.Id == id)
-              .FirstOrDefaultAsync();
-            _apparelProDbContext.Features.Remove(featureDbModel!);
+            var itemFeatureDbModel = await _apparelProDbContext.ItemFeatures
+                .Where(feature => feature.FeatureCode == featureCode)
+                .FirstOrDefaultAsync();
+            _apparelProDbContext.ItemFeatures.Remove(itemFeatureDbModel!);
             await _apparelProDbContext.SaveChangesAsync();
-        }
-
-        public Task DeleteItemFeatureAsync(string featureCode)
-        {
-            throw new NotImplementedException();
         }
 
         public async Task<ItemFeatureServiceModel> GetItemFeatureByFeatureCodeAsync(string featureCode)

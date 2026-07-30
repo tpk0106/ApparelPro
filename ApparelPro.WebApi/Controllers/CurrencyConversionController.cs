@@ -1,4 +1,4 @@
-﻿using apparelPro.BusinessLogic.Services;
+using apparelPro.BusinessLogic.Services;
 using apparelPro.BusinessLogic.Services.Implementation.Reference;
 using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.APIModels;
@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/currencyConversion")]
-    [Authorize("RegisteredUser")]
     [ApiController]
     public class CurrencyConversionController : ControllerBase
     {
@@ -24,7 +23,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list")]
-        [Authorize("Merchandising")] // policy applied
+        [Authorize(Policy = "currency-conversion-view")]
         [ProducesResponseType(typeof(PaginationAPIModel<CurrencyExchangeAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetCurrencyConversionsAsync(
            [FromQuery] int pageSize,

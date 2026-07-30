@@ -1,11 +1,10 @@
-﻿using apparelPro.BusinessLogic.Services;
+using apparelPro.BusinessLogic.Services;
 using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using ApparelPro.WebApi.Authorization;
 using apparelPro.BusinessLogic.Services.Models.Reference.IPortDestinationService;
 
 namespace ApparelPro.WebApi.Controllers
@@ -31,8 +30,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list")]
-        [Authorize("Merchandising")] // policy applied
-        // [Authorize("RegisteredUser")]
+        [Authorize(Policy = "port-destination-view")]
         [ProducesResponseType(typeof(PaginationAPIModel<PortDestinationAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetPortDestinationsAsync(
            [FromQuery] int pageSize,
@@ -49,6 +47,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "port-destination-manage")]
         [ProducesResponseType(HttpStatusCodes.Created)]
         public async Task<IActionResult> AddPortDestinationAsync([FromBody] CreatePortDestinationAPIModel createPortDestinationAPIModel)
         {
@@ -59,6 +58,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/{id}/{countryCode}", Name = "GetPortDestinationByIdAndCountryCodeAsync")]
+        [Authorize(Policy = "port-destination-view")]
         [ProducesResponseType(typeof(PortDestinationAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> GetPortDestinationByIdAndCountryCodeAsync(int id, string countryCode)
@@ -73,9 +73,9 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut()]
-        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
+        [Authorize(Policy = "port-destination-manage")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
-        [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]        
+        [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
         public async Task<IActionResult> UpdateBuyerAsync([FromQuery] int id,string countryCode, [FromBody] UpdatePortDestinationAPIModel
            updatePortDestinationAPIModel)
         {
@@ -92,7 +92,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpDelete("{id}/{countryCode}")]
-        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
+        [Authorize(Policy = "port-destination-manage")]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> DeletePortDestinationAsync(int id, string countryCode )

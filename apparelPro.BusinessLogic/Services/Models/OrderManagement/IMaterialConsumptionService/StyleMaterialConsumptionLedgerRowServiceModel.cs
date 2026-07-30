@@ -26,6 +26,9 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialCons
         public string ItemUnit { get; set; } = null!;
         public decimal QuantityPerGarment { get; set; }
         public string SupplierCode { get; set; } = null!;
+        // Joined from Suppliers by SupplierCode (see GetLedgerEntriesByStyleAsync) so
+        // the grid can display the supplier's name instead of the raw numeric code.
+        public string SupplierName { get; set; } = null!;
         public decimal TotalConsumption { get; set; }
         public decimal PercentageAllowance { get; set; }
 

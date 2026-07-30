@@ -26,7 +26,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list")]
-        [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
+        [Authorize(Policy = "style-details")]
         //[Authorize("Merchandising")] // policy applied
         //[Authorize(Roles = "Inventory")]
         // [Authorize("RegisteredUser")]

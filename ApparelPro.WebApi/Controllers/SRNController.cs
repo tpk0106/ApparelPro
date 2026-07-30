@@ -1,4 +1,4 @@
-using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
+﻿using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
 using AutoMapper;
@@ -10,7 +10,7 @@ namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/orderwise-inventory-srn")]
     [ApiController]
-    [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
+    [Authorize(Policy = "srn")]
     public class SRNController : ControllerBase
     {
         private readonly ISupplierReturnNoteService _supplierReturnNoteService;

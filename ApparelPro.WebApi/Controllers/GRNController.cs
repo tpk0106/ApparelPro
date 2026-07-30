@@ -1,4 +1,4 @@
-using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
+﻿using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
 using AutoMapper;
@@ -10,7 +10,7 @@ namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/orderwise-inventory-grn")]
     [ApiController]
-    [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
+    [Authorize(Policy = "grn")]
     public class GRNController : ControllerBase
     {
         private readonly IGoodsReceivedNoteService _goodsReceivedNoteService;

@@ -1,4 +1,4 @@
-using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
+﻿using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
 using AutoMapper;
@@ -10,7 +10,7 @@ namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/orderwise-inventory-gtn")]
     [ApiController]
-    [Authorize(Roles = AccessPolicies.OrderwiseInventoryStandard)]
+    [Authorize(Policy = "gtn")]
     public class GTNController : ControllerBase
     {
         private readonly IGoodsTransferNoteService _goodsTransferNoteService;

@@ -75,7 +75,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost("revoke")]
-        [Authorize(Roles = AccessPolicies.AdministratorOnly)]
+        [Authorize(Policy = "security-administration")]
         [ProducesResponseType(typeof(NoContentResult),HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(BadRequestResult),HttpStatusCodes.BadRequest)]
         public IActionResult Revoke(string? user)
