@@ -30,16 +30,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
     {
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly ISharedService _sharedService;
-        private readonly IUnitConversionService _unitConversionService;
 
         public GoodsTransferNoteService(
             ApparelProDbContext apparelProDbContext,
-            ISharedService sharedService,
-            IUnitConversionService unitConversionService)
+            ISharedService sharedService)
         {
             _apparelProDbContext = apparelProDbContext;
             _sharedService = sharedService;
-            _unitConversionService = unitConversionService;
         }
 
         public async Task<List<GtnTransferableStockRowServiceModel>> GetTransferableStockAsync(
@@ -213,12 +210,12 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         if (fromStockRecord == null)
                             throw new InvalidOperationException($"Item '{line.ItemCode}' under basis '{line.StoreCode}' does not exist in the From Buyer/Order stock.");
 
-                        decimal requestedInFromStockUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, fromStockRecord.Unit, line.Quantity);
+                        decimal requestedInFromStockUnit = await _sharedService.ConvertUnitAsync(line.Unit, fromStockRecord.Unit, line.Quantity);
 
                         // 6. Hard block — mirrors legacy "m_qty > convert(unit,m_unit,(qty_in_hd-shdw_bal))",
                         // "Attempt to Exceed Balance Quantity." (ShadowBalance omitted — see class-level note.)
                         if (requestedInFromStockUnit > fromStockRecord.QtyInHand)
-                            throw new InvalidOperationException($"Attempt to Exceed Balance Quantity for Item '{line.ItemCode}'. Requested: {line.Quantity} {line.Unit}, Available: {await _unitConversionService.ConvertUnitAsync(fromStockRecord.Unit, line.Unit, fromStockRecord.QtyInHand)} {line.Unit}.");
+                            throw new InvalidOperationException($"Attempt to Exceed Balance Quantity for Item '{line.ItemCode}'. Requested: {line.Quantity} {line.Unit}, Available: {await _sharedService.ConvertUnitAsync(fromStockRecord.Unit, line.Unit, fromStockRecord.QtyInHand)} {line.Unit}.");
 
                         // 7. Lock and validate the To-side physical stock row — mirrors legacy
                         // "seek xtbuyer+xtorder+m_store_cd+m_item_cd" on in_stock, "Item Code
@@ -236,7 +233,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         if (toStockRecord == null)
                             throw new InvalidOperationException($"Item '{line.ItemCode}' under basis '{line.StoreCode}' does not exist in the To Buyer/Order stock.");
 
-                        decimal requestedInToStockUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, toStockRecord.Unit, line.Quantity);
+                        decimal requestedInToStockUnit = await _sharedService.ConvertUnitAsync(line.Unit, toStockRecord.Unit, line.Quantity);
 
                         // 8. Write both legs of the GTN transaction. "6T" (Transfer-Out) and
                         // "1T" (Transfer-In) are the exact legacy codes (IN_GTN1.PRG: "repl ...
@@ -305,7 +302,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
 
                         if (fromMasterRow != null)
                         {
-                            decimal requestedInFromMasterUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, fromMasterRow.Unit, line.Quantity);
+                            decimal requestedInFromMasterUnit = await _sharedService.ConvertUnitAsync(line.Unit, fromMasterRow.Unit, line.Quantity);
                             fromMasterRow.TransferOutQuantity += requestedInFromMasterUnit;
                             _apparelProDbContext.OrderwiseStockMasters.Update(fromMasterRow);
                         }
@@ -319,7 +316,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
 
                         if (toMasterRow != null)
                         {
-                            decimal requestedInToMasterUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, toMasterRow.Unit, line.Quantity);
+                            decimal requestedInToMasterUnit = await _sharedService.ConvertUnitAsync(line.Unit, toMasterRow.Unit, line.Quantity);
                             toMasterRow.TransferInQuantity += requestedInToMasterUnit;
                             _apparelProDbContext.OrderwiseStockMasters.Update(toMasterRow);
                         }

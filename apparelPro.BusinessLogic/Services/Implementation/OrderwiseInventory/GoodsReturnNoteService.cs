@@ -17,16 +17,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
     {
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly ISharedService _sharedService;
-        private readonly IUnitConversionService _unitConversionService;
 
         public GoodsReturnNoteService(
             ApparelProDbContext apparelProDbContext,
-            ISharedService sharedService,
-            IUnitConversionService unitConversionService)
+            ISharedService sharedService)
         {
             _apparelProDbContext = apparelProDbContext;
             _sharedService = sharedService;
-            _unitConversionService = unitConversionService;
         }
 
         public async Task<List<RtnReturnableStockRowServiceModel>> GetReturnableStockByBuyerOrderAsync(int buyerCode, string order)
@@ -166,12 +163,12 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         if (stockRecord == null)
                             throw new InvalidOperationException($"Item '{line.ItemCode}' under basis '{line.StoreCode}' does not exist in the stock master file.");
 
-                        decimal requestedInStockUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, stockRecord.Unit, line.Quantity);
+                        decimal requestedInStockUnit = await _sharedService.ConvertUnitAsync(line.Unit, stockRecord.Unit, line.Quantity);
 
                         // 6. Hard block — mirrors legacy "m_qty > convert(unit,m_unit,to_dt_iss)",
                         // "Return Quantity cannot be greater than Total issues."
                         if (requestedInStockUnit > stockRecord.ToDateIssued)
-                            throw new InvalidOperationException($"Return Quantity cannot be greater than Total Issued for Item '{line.ItemCode}'. Requested: {line.Quantity} {line.Unit}, Issued to date: {await _unitConversionService.ConvertUnitAsync(stockRecord.Unit, line.Unit, stockRecord.ToDateIssued)} {line.Unit}.");
+                            throw new InvalidOperationException($"Return Quantity cannot be greater than Total Issued for Item '{line.ItemCode}'. Requested: {line.Quantity} {line.Unit}, Issued to date: {await _sharedService.ConvertUnitAsync(stockRecord.Unit, line.Unit, stockRecord.ToDateIssued)} {line.Unit}.");
 
                         // 7. Write the RTN transaction row. TransactionType "2R" is the exact
                         // legacy code (IN_RTN1.PRG: "seek xdocno+'2R'") — kept as-is rather than
@@ -218,7 +215,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
 
                         if (masterRow != null)
                         {
-                            decimal requestedInMasterUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, masterRow.Unit, line.Quantity);
+                            decimal requestedInMasterUnit = await _sharedService.ConvertUnitAsync(line.Unit, masterRow.Unit, line.Quantity);
                             masterRow.ReturnedQuantity += requestedInMasterUnit;
                             _apparelProDbContext.OrderwiseStockMasters.Update(masterRow);
                         }

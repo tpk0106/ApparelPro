@@ -12,6 +12,6 @@ namespace apparelPro.BusinessLogic.Services
         Task<GarmentTypeServiceModel> GetGarmentTypeByIdAsync(int id);
         Task<GarmentTypeServiceModel> CreateGarmentTypeAsync(CreateGarmentTypeServiceModel createGarmentTypeServiceModel);
         Task UpdateGarmentTypeAsync(UpdateGarmentTypeServiceModel updateGarmentTypeServiceModel);
-        Task DeleteGarmentTypeAsync(string code);
+        Task DeleteGarmentTypeAsync(int id);
     }
 }

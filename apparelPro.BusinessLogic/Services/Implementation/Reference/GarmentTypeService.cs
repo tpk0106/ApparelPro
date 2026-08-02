@@ -87,9 +87,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             throw new NotImplementedException();
         }
 
-        public Task DeleteGarmentTypeAsync(string code)
+        public async Task DeleteGarmentTypeAsync(int id)
         {
-            throw new NotImplementedException();
+            var garmentTypeDbModel = await _apparelProDbContext.GarmentTypes
+                .Where(garmentType => garmentType.Id == id)
+                .FirstOrDefaultAsync();
+            _apparelProDbContext.GarmentTypes.Remove(garmentTypeDbModel!);
+            await _apparelProDbContext.SaveChangesAsync();
         }
 
         public Task<IEnumerable<GarmentTypeServiceModel>> FilterGarmentTypeByCodeAsync(string filter, int pageNumber, int pageSize)

@@ -15,7 +15,6 @@ namespace apparelPro.BusinessLogic.Services
 
         // 2. Looks up the item mapping rules and swaps metadata keys for clear user labels
         Task<OrderItemFeatureServiceModel?> GetDynamicFeatureHeadersAsync(string stockCode, string itemCode);
-        Task<decimal> ConvertUnitAsync(string fromUnit, string toUnit, decimal quantity);
         Task<decimal> CalculateMaterialConsumptionAsync(
             int buyerCode, string order, int typeCode, string styleCode,
             string? garmentColor, string? garmentSize,

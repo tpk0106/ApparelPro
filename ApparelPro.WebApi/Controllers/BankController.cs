@@ -94,5 +94,20 @@ namespace ApparelPro.WebApi.Controllers
             await _bankService.UpdateBankAsync(updateBankSeviceModel);
             return NoContent();
         }
+
+        [HttpDelete("{code}")]
+        [Authorize(Policy = "bank-manage")]
+        [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
+        [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        public async Task<IActionResult> DeleteBankAsync(string code)
+        {
+            var bank = await _bankService.GetBankByBankCodeAsync(code);
+            if (bank == null)
+            {
+                return UnprocessableEntity("Bank is not available for code :" + code);
+            }
+            await _bankService.DeleteBankAsync(code);
+            return NoContent();
+        }
     }
 }

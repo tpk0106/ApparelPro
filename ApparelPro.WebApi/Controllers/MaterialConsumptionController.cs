@@ -202,27 +202,7 @@ namespace ApparelPro.WebApi.Controllers
             var data = await _materialConsumptionService.GetMaterialCatalogAsync();
             var result = _mapper.Map<List<MaterialCatalogGroupAPIModel>>(data);
             return Ok(result);
-        }
-
-        //[HttpGet("style-dimensions")]
-        //[ProducesResponseType(typeof(StyleDimensionsLookupAPIModel), HttpStatusCodes.OK)]
-        //public async Task<IActionResult> GetStyleDimensions(
-        //    [FromQuery] int buyerCode,
-        //    [FromQuery] string order,
-        //    [FromQuery] int typeCode,
-        //    [FromQuery] string styleCode)
-        //{
-        //    try
-        //    {
-        //        var data = await _materialConsumptionService.GetStyleDimensionsAsync(buyerCode, order, typeCode, styleCode);
-        //       var styleDimensionsLookupAPIModel = _mapper.Map<StyleDimensionsLookupAPIModel>(data);
-        //        return Ok(styleDimensionsLookupAPIModel);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, new { Error = $"Failed to look up style colour/size dimensional metrics: {ex.Message}" });
-        //    }
-        //}
+        }     
 
     }
 }

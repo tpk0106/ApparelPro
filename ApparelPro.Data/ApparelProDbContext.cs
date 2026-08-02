@@ -6,12 +6,14 @@ using ApparelPro.Data.Configurations.OrderManagement.Stylewise_events;
 using ApparelPro.Data.Configurations.OrderwiseInventory;
 using ApparelPro.Data.Configurations.References;
 using ApparelPro.Data.Configurations.Registration;
+using ApparelPro.Data.Configurations.SystemConfiguration;
 using ApparelPro.Data.Models.OrderManagement;
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Models.OrderManagement.Shipments;
 using ApparelPro.Data.Models.OrderwiseInventory;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Data.Models.Registration;
+using ApparelPro.Data.Models.SystemConfiguration;
 using ApparelPro.WebApi.APIModels.OrderManagement;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,11 +25,11 @@ namespace ApparelPro.Data
         public ApparelProDbContext()
         {
         }
-        public ApparelProDbContext(DbContextOptions<ApparelProDbContext> options):base(options) 
-        { 
+        public ApparelProDbContext(DbContextOptions<ApparelProDbContext> options):base(options)
+        {
         }
 
-        // this entry is used to bypass program.cs in case of connection issues, instead offline via this 
+        // this entry is used to bypass program.cs in case of connection issues, instead offline via this
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -84,10 +86,13 @@ namespace ApparelPro.Data
         public virtual DbSet<PartShipment> PartShipments { get; set; } = null!;
         public virtual DbSet<QuotaTransaction> QuotaTransactions { get; set; } = null!;
 
+        // system configuration
+        public virtual DbSet<SystemParameter> SystemParameters { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            
+
             modelBuilder.ApplyConfiguration(new BuyerConfig());
             modelBuilder.ApplyConfiguration(new CurrencyConfig());
             modelBuilder.ApplyConfiguration(new DestinationConfig());
@@ -104,7 +109,7 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new PODetailsConfig());
             modelBuilder.ApplyConfiguration(new CurrencyExchangeConfig());
             modelBuilder.ApplyConfiguration(new UserConfig());
-            modelBuilder.ApplyConfiguration(new SupplierConfig());            
+            modelBuilder.ApplyConfiguration(new SupplierConfig());
             modelBuilder.ApplyConfiguration(new CurrencyConversionConfig());
 
             // order management
@@ -135,12 +140,15 @@ namespace ApparelPro.Data
             // shipments
             modelBuilder.ApplyConfiguration(new PartShipmentConfig());
             modelBuilder.ApplyConfiguration(new QuotaTransactionConfig());
+
+            // system configuration
+            modelBuilder.ApplyConfiguration(new SystemParameterConfig());
         }
 
         //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         //{
         //    base.OnConfiguring(optionsBuilder);
-        //    optionsBuilder.UseSqlServer("ApparelProConnection");              
+        //    optionsBuilder.UseSqlServer("ApparelProConnection");
         //}
-    }   
+    }
 }

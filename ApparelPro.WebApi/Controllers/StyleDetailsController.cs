@@ -10,6 +10,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ApparelPro.WebApi.Controllers
 {
@@ -46,24 +47,41 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "style-details")]
         [ProducesResponseType(HttpStatusCodes.Created)]
+        [ProducesResponseType(HttpStatusCodes.BadRequest)]
         public async Task<IActionResult> AddStyleDetailsAsync([FromBody] CreateStyleDetailsAPIModel createStyleDetailsAPIModel)
         {
-            var createStyleDetailsServiceModel = _mapper.Map<CreateStyleDetailsServiceModel>(createStyleDetailsAPIModel);
-            var addedStyle = await _styleDetailsService.AddStyleDetailsAsync(createStyleDetailsServiceModel);
-            return CreatedAtRoute(nameof(GetStyleDetailsByBuyerOrderTypeStyleAsync),
-                new
-                {
-                    buyer = addedStyle.BuyerCode,
-                    order = addedStyle.Order,
-                    type = addedStyle.TypeCode,
-                    style = addedStyle.StyleCode
-                }, null);
+            try
+            {
+                // ClaimTypes.Name carries the authenticated user's email (see SecurityService.
+                // GetClaimsAsync) - the only identity claim issued, used here purely for the
+                // quantity-override audit trail. Null if the request is unauthenticated.
+                var currentUserEmail = User.FindFirst(ClaimTypes.Name)?.Value;
+                var createStyleDetailsServiceModel = _mapper.Map<CreateStyleDetailsServiceModel>(createStyleDetailsAPIModel);
+                var addedStyle = await _styleDetailsService.AddStyleDetailsAsync(createStyleDetailsServiceModel, currentUserEmail);
+                return CreatedAtRoute(nameof(GetStyleDetailsByBuyerOrderTypeStyleAsync),
+                    new
+                    {
+                        buyer = addedStyle.BuyerCode,
+                        order = addedStyle.Order,
+                        type = addedStyle.TypeCode,
+                        style = addedStyle.StyleCode
+                    }, null);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Total Quantity exceeded, or the entered Unit has no conversion path to the
+                // order's unit - see StyleDetailsService.ValidateStyleQuantityAsync.
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPut()]
+        [Authorize(Policy = "style-details")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
+        [ProducesResponseType(HttpStatusCodes.BadRequest)]
         public async Task<IActionResult> UpdateStyleDetailsAsync([FromBody] UpdateStyleDetailsAPIModel updateStyleDetailsAPIModel)
         {
             int buyerCode = updateStyleDetailsAPIModel.BuyerCode;
@@ -73,7 +91,7 @@ namespace ApparelPro.WebApi.Controllers
 
             var resultStyleAPIModel = _mapper.Map<StyleAPIModel>(
                 await _styleDetailsService.GetStyleDetailsByBuyerOrderTypeStyleAsync(buyerCode, order, type,style));
-            
+
             if (resultStyleAPIModel == null)
             {
                 return UnprocessableEntity("Style is not available for code :" + style);
@@ -83,9 +101,30 @@ namespace ApparelPro.WebApi.Controllers
             resultStyleAPIModel.Unit = updateStyleDetailsAPIModel.Unit;
 
             var updateStyleDetailsServiceModel = _mapper.Map<UpdateStyleDetailsServiceModel>(resultStyleAPIModel);
-            await _styleDetailsService.UpdateStyleDetailsAsync(updateStyleDetailsServiceModel); 
-            
+
+            try
+            {
+                var currentUserEmail = User.FindFirst(ClaimTypes.Name)?.Value;
+                await _styleDetailsService.UpdateStyleDetailsAsync(updateStyleDetailsServiceModel, currentUserEmail);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+
             return NoContent();
+        }
+
+        // Live running total for the Order Confirmation Styles grid header - sum of every
+        // style's quantity (converted into the order's unit) plus the order's own Total
+        // Quantity, so the frontend can display both and flag an overage without needing to
+        // page through every style row itself (the list endpoint above is paginated).
+        [HttpGet("list/buyer/order/totals", Name = "GetStyleTotalsAsync")]
+        [ProducesResponseType(typeof(StyleTotalsAPIModel), HttpStatusCodes.OK)]
+        public async Task<IActionResult> GetStyleTotalsAsync([FromQuery] int buyerCode, [FromQuery] string order)
+        {
+            var totals = await _styleDetailsService.GetStyleTotalsAsync(buyerCode, order);
+            return Ok(_mapper.Map<StyleTotalsAPIModel>(totals));
         }
 
         [HttpGet("list/buyer/order", Name = "GetStyleDetailsByBuyerAndOrderAsync")]
@@ -142,20 +181,32 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut("/paging")]
+        [Authorize(Policy = "style-details")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
-        [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]        
+        [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
+        [ProducesResponseType(HttpStatusCodes.BadRequest)]
         public async Task<IActionResult> UpdateStyleDetailsAsync([FromQuery] int buyerCode, string order, int typeCode, string style, [FromBody] UpdateStyleAPIModel
           updateStyleAPIModel)
         {
             var resultStyleAPIModel = _mapper.Map<StyleAPIModel>(await _styleDetailsService.GetStyleDetailsByBuyerOrderTypeStyleAsync(buyerCode,order, typeCode, style));
-            
+
             if (resultStyleAPIModel == null)
             {
                 return UnprocessableEntity("Style is not available for Buyer/Order :" + buyerCode + "/" + order);
             }
             updateStyleAPIModel.Id = resultStyleAPIModel.Id;
             var updateStyleSeviceModel = _mapper.Map<UpdateStyleDetailsServiceModel>(updateStyleAPIModel);
-            await _styleDetailsService.UpdateStyleDetailsAsync(updateStyleSeviceModel);
+
+            try
+            {
+                var currentUserEmail = User.FindFirst(ClaimTypes.Name)?.Value;
+                await _styleDetailsService.UpdateStyleDetailsAsync(updateStyleSeviceModel, currentUserEmail);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+
             return NoContent();
         }
 

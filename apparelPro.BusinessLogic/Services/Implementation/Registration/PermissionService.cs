@@ -222,7 +222,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
         // Role-name groupings, reused across the catalog below. These mirror the exact
         // role literal strings ApparelProSeedController.LoadData creates.
         // ---------------------------------------------------------------------------
-        private static readonly string[] OrderwiseInventoryStandardRoles = { "Inventory", "Merchandiser", "Merchandiser Manager", "Order Entry Operator" };
+        private static readonly string[] OrderwiseInventoryStandardRoles = { "Inventory", "Merchandiser", "Merchandiser Manager", "Order Entry Operator", "Administrator" };
         private static readonly string[] MerchandisingOnlyRoles = { "Merchandiser", "Merchandiser Manager" };
         private static readonly string[] StoreManagementOnlyRoles = { "Store Manager", "Administrator" };
         private static readonly string[] AdministratorOnlyRoles = { "Administrator" };

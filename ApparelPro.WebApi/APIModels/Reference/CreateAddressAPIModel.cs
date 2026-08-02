@@ -15,6 +15,7 @@ namespace ApparelPro.WebApi.APIModels.Reference
         public string? State { get; set; }
         public string? CountryCode { get; set; }
         public string? BuyerCode { get; set; }
+        public string? BankCode { get; set; }
 
         [DefaultValue(false)]
         public bool? Default { get; set; }       

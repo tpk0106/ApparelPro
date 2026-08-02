@@ -166,9 +166,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             return _mapper.Map<BankServiceModel>(bankDbModel);            
         }
 
-        public Task DeleteBankAsync(string code)
+        public async Task DeleteBankAsync(string code)
         {
-            throw new NotImplementedException();
+            var bankDbModel = await _apparelProDbContext.Banks
+                .Where(bank => bank.BankCode == code)
+                .FirstOrDefaultAsync();
+            _apparelProDbContext.Banks.Remove(bankDbModel!);
+            await _apparelProDbContext.SaveChangesAsync();
         }
 
         public Task<bool> DoesBankExistAsync(string code)

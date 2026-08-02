@@ -55,7 +55,7 @@ namespace ApparelPro.WebApi.Controllers
         {
             try
             {
-                var basis = _basisService.GetBasisByCodeAsync(createBasisAPIModel.Code);
+                var basis = await _basisService.GetBasisByCodeAsync(createBasisAPIModel.Code);
                 if (basis != null)
                 {
                     return BadRequest(new { message = "Basis already exists" });
@@ -99,7 +99,7 @@ namespace ApparelPro.WebApi.Controllers
             }
         }
 
-        [HttpDelete()]
+        [HttpDelete("{code}")]
         [Authorize(Policy = "basis-manage")]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
@@ -107,7 +107,7 @@ namespace ApparelPro.WebApi.Controllers
            Summary = "Delete a Basis.",
            Description = "Returns 200 - OK with No content")
        ]
-        public async Task<IActionResult> DeleteBasisAsync([FromQuery] string code)
+        public async Task<IActionResult> DeleteBasisAsync(string code)
         {
             var basis = await _basisService.GetBasisByCodeAsync(code);
             if (basis == null)

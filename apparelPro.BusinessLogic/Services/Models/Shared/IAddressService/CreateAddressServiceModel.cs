@@ -18,5 +18,6 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Shared
         public string? CountryCode { get; set; }
         public bool? Default { get; set; }
         public int? BuyerCode { get; set; }
+        public string? BankCode { get; set; }
     }
 }

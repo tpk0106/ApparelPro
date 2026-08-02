@@ -1,14 +1,14 @@
-﻿using apparelPro.BusinessLogic.Configuration;
+using apparelPro.BusinessLogic.Configuration;
 using apparelPro.BusinessLogic.Services;
 using apparelPro.BusinessLogic.Services.Implementation.OrderManagement;
 using apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Implementation.Reference;
 using apparelPro.BusinessLogic.Services.Implementation.Registration;
 using apparelPro.BusinessLogic.Services.Implementation.Shared;
+using apparelPro.BusinessLogic.Services.Implementation.SystemConfiguration;
 using apparelPro.BusinessLogic.Services.interfaces.ISharedService;
 using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitService;
-using apparelPro.BusinessLogic.Services.Models.Shared;
 using apparelPro.BusinessLogic.Services.Reports.Interfaces;
 using ApparelPro.Data;
 using ApparelPro.Data.Models.References;
@@ -36,18 +36,23 @@ namespace ApparelPro.WebApi.Extensions
         //  The recommended pattern: configure a minimum command execution time so you only log queries that actually
         //  cross a performance budget -- not every query in your application.
 
-        public static void ConfigureApparelProDatabase(IServiceCollection services, IConfiguration configuration)        
-        {           
+        public static void ConfigureApparelProDatabase(IServiceCollection services, IConfiguration configuration, bool isDevelopment)
+        {
             var migrationAssemblyName = typeof(ApparelProDbContext).Assembly.GetName().Name;
             //In ASP.NET Core, register your context as scoped (the default):
             services.AddDbContext<ApparelProDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("ApparelProConnection"),                
-                action => action.MigrationsAssembly(migrationAssemblyName))
-                                .EnableSensitiveDataLogging(true)  // ⚠️ Only in development -- logs actual parameter values including PII
-                                .EnableDetailedErrors()
-                                .UseLoggerFactory(LoggerFactory.Create(lb => lb.AddSerilog()))
-                                //Ensure that sensitive data logging is wrapped in a check so it only activates in the Development environment.
-                                );
+            {
+                options.UseSqlServer(configuration.GetConnectionString("ApparelProConnection"),
+                    action => action.MigrationsAssembly(migrationAssemblyName))
+                    .UseLoggerFactory(LoggerFactory.Create(lb => lb.AddSerilog()));
+
+                if (isDevelopment)
+                {
+                    // ⚠️ Only in development -- logs actual parameter values including PII
+                    options.EnableSensitiveDataLogging(true)
+                           .EnableDetailedErrors();
+                }
+            });
             //services.AddDbContextPool<ApparelProDbContext>(options => { options.EnableSensitiveDataLogging(); });
         }
 
@@ -72,7 +77,7 @@ namespace ApparelPro.WebApi.Extensions
             // reference services
             services.AddTransient<ICurrencyService, CurrencyService>();
             services.AddTransient<ILookupConstants, LookupConstants>();
-            services.AddTransient<ICountryService, CountryService>();            
+            services.AddTransient<ICountryService, CountryService>();
             services.AddTransient(typeof(IUnitServiceT<UnitServiceModel>), typeof(UnitServiceT));
             services.AddTransient(typeof(IUnitService), typeof(UnitService));
             services.AddTransient(typeof(IUserService), typeof(UserService));
@@ -89,6 +94,7 @@ namespace ApparelPro.WebApi.Extensions
             services.AddTransient(typeof(IItemFeatureService), typeof(ItemFeatureService));
             services.AddTransient(typeof(IUnitConversionService), typeof(UnitConversionService));
             services.AddTransient(typeof(IDepartmentService), typeof(DepartmentService));
+            services.AddTransient(typeof(ISystemParameterService), typeof(SystemParameterService));
 
             services.AddTransient(typeof(PaginationResultToPaginationAPITypeConverter<,>));
             //  services.AddTransient<IUnitServiceT<UnitServiceModel>>(x=> x.GetRequiredService<IUnitServiceT<UnitServiceModel>>());
@@ -98,7 +104,7 @@ namespace ApparelPro.WebApi.Extensions
         {
             // order management srevices
             services.AddTransient(typeof(IColorSizeBreakdownDetailsService), typeof(ColorSizeBreakdownDetailsService));
-            services.AddTransient<IPurchaseOrderService, PurchaseOrderService>();            
+            services.AddTransient<IPurchaseOrderService, PurchaseOrderService>();
             services.AddTransient(typeof(IStyleDetailsService),typeof(StyleDetailsService));
 
             // material consumption

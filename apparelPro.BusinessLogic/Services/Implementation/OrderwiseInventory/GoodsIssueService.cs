@@ -11,16 +11,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
     {
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly ISharedService _sharedService;
-        private readonly IUnitConversionService _unitConversionService;
 
         public GoodsIssueService(
             ApparelProDbContext apparelProDbContext,
-            ISharedService sharedService,
-            IUnitConversionService unitConversionService)
+            ISharedService sharedService)
         {
             _apparelProDbContext = apparelProDbContext;
             _sharedService = sharedService;
-            _unitConversionService = unitConversionService;
         }
 
         public async Task<GinStrnLookupResultServiceModel> GetIssuableStrnLinesAsync(string strnNumber)
@@ -51,42 +48,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 .ToListAsync();
             var stockByStoreItem = stockRows.ToDictionary(s => (s.StoreCode, s.ItemCode));
 
-            // 3. Resolve item descriptions with the same two-tier lookup convention already
-            // established for STRN/RTN: StyleMaterialCostProfiles (od_sacc2) is the authoritative,
-            // style-specific source; StockItems is a generic ItemCode -> Description catalog fallback
-            // for anything without a matching cost profile row.
-            var costProfiles = await _apparelProDbContext.StyleMaterialCostProfiles
-                .AsNoTracking()
-                .Where(p => p.BuyerCode == buyerCode && p.Order.Trim() == order)
-                .ToListAsync();
-            var profileByItemCode = costProfiles.ToDictionary(p => p.ItemCode.Trim(), p => p);
-
-            static string DecomposePart(string fullItemCode, int start, int length) =>
-                fullItemCode.Length >= start + length ? fullItemCode.Substring(start, length).Trim() : string.Empty;
-
-            var baseItemCodes = outstandingLines
-                .Select(l => DecomposePart(l.ItemCode, 2, 4))
-                .Distinct()
-                .ToList();
-            var catalogDescriptionByItemCode = await _apparelProDbContext.StockItems
-                .AsNoTracking()
-                .Where(c => baseItemCodes.Contains(c.ItemCode.Trim()))
-                .ToDictionaryAsync(c => c.ItemCode.Trim(), c => c.Description);
-
             var resultLines = outstandingLines.Select(l =>
             {
                 stockByStoreItem.TryGetValue((l.StoreCode, l.ItemCode), out var stock);
-
-                profileByItemCode.TryGetValue(l.ItemCode.Trim(), out var matchingProfile);
-                var description = matchingProfile?.Description?.Trim();
-                if (string.IsNullOrWhiteSpace(description))
-                    catalogDescriptionByItemCode.TryGetValue(DecomposePart(l.ItemCode, 2, 4), out description);
-
                 return new GinIssuableStrnLineServiceModel
                 {
                     StockCode = l.StockCode,
                     ItemCode = l.ItemCode,
-                    Description = !string.IsNullOrWhiteSpace(description) ? description!.Trim() : "(No description available)",
                     StoreCode = l.StoreCode,
                     Unit = l.Unit,
                     BalanceToReceive = l.BalanceToReceive,
@@ -156,9 +124,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         if (strnLine == null)
                             throw new InvalidOperationException($"Item '{line.ItemCode}' under store '{line.StoreCode}' was not requisitioned on STRN '{header.SourceStrnNumber}'.");
 
-                        decimal requestedInStrnUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, strnLine.Unit, line.Quantity);
+                        decimal requestedInStrnUnit = await _sharedService.ConvertUnitAsync(line.Unit, strnLine.Unit, line.Quantity);
                         if (requestedInStrnUnit > strnLine.BalanceToReceive)
-                            throw new InvalidOperationException($"Attempt to exceed Balance Quantity for Item '{line.ItemCode}'. Requested: {line.Quantity} {line.Unit}, STRN balance remaining: {await _unitConversionService.ConvertUnitAsync(strnLine.Unit, line.Unit, strnLine.BalanceToReceive)} {line.Unit}.");
+                            throw new InvalidOperationException($"Attempt to exceed Balance Quantity for Item '{line.ItemCode}'. Requested: {line.Quantity} {line.Unit}, STRN balance remaining: {await _sharedService.ConvertUnitAsync(strnLine.Unit, line.Unit, strnLine.BalanceToReceive)} {line.Unit}.");
 
                         // 4. Lock and validate physical stock — hard block if issuing would exceed
                         // quantity actually in hand.
@@ -173,9 +141,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         if (stockRecord == null)
                             throw new InvalidOperationException($"Item '{line.ItemCode}' under store '{line.StoreCode}' does not exist in the stock master file.");
 
-                        decimal requestedInStockUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, stockRecord.Unit, line.Quantity);
+                        decimal requestedInStockUnit = await _sharedService.ConvertUnitAsync(line.Unit, stockRecord.Unit, line.Quantity);
                         if (requestedInStockUnit > stockRecord.QtyInHand)
-                            throw new InvalidOperationException($"Cannot issue below Quantity In Hand for Item '{line.ItemCode}'. Requested: {line.Quantity} {line.Unit}, Qty In Hand: {await _unitConversionService.ConvertUnitAsync(stockRecord.Unit, line.Unit, stockRecord.QtyInHand)} {line.Unit}.");
+                            throw new InvalidOperationException($"Cannot issue below Quantity In Hand for Item '{line.ItemCode}'. Requested: {line.Quantity} {line.Unit}, Qty In Hand: {await _sharedService.ConvertUnitAsync(stockRecord.Unit, line.Unit, stockRecord.QtyInHand)} {line.Unit}.");
 
                         // 5. Soft check: issuing below the pre-calculated exact-consumption floor.
                         // Order-level aggregate across every style under this order/item (STRN has no
@@ -193,14 +161,14 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                             decimal highestFloor = 0m;
                             foreach (var row in consumptionRows)
                             {
-                                decimal totalConsumptionInLineUnit = await _unitConversionService.ConvertUnitAsync(row.ItemUnit, line.Unit, row.TotalConsumption);
+                                decimal totalConsumptionInLineUnit = await _sharedService.ConvertUnitAsync(row.ItemUnit, line.Unit, row.TotalConsumption);
                                 decimal floor = row.PercentageAllowance == -100
                                     ? 0m
                                     : totalConsumptionInLineUnit / (100 + row.PercentageAllowance) * row.PercentageAllowance;
                                 if (floor > highestFloor) highestFloor = floor;
                             }
 
-                            decimal remainingAfterIssue = await _unitConversionService.ConvertUnitAsync(stockRecord.Unit, line.Unit, stockRecord.QtyInHand) - line.Quantity;
+                            decimal remainingAfterIssue = await _sharedService.ConvertUnitAsync(stockRecord.Unit, line.Unit, stockRecord.QtyInHand) - line.Quantity;
                             if (remainingAfterIssue < highestFloor)
                             {
                                 if (!isManagerOverrideAuthorized || !overrideExactConsumptionCheck)
@@ -250,7 +218,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         // 9. Update order-level master running total.
                         if (masterRow != null)
                         {
-                            decimal requestedInMasterUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, masterRow.Unit, line.Quantity);
+                            decimal requestedInMasterUnit = await _sharedService.ConvertUnitAsync(line.Unit, masterRow.Unit, line.Quantity);
                             masterRow.IssuedQuantity += requestedInMasterUnit;
                             _apparelProDbContext.OrderwiseStockMasters.Update(masterRow);
                         }

@@ -133,9 +133,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
                 .FirstOrDefaultAsync();
             return unitDbModel != null;
         }
-        public Task DeleteUnitAsync(string code)
+        public async Task DeleteUnitAsync(string code)
         {
-            throw new NotImplementedException();
+            var unitDbModel = await _apparelProDbContext.Units
+                .Where(unit => unit.Code == code)
+                .FirstOrDefaultAsync();
+            _apparelProDbContext.Units.Remove(unitDbModel!);
+            await _apparelProDbContext.SaveChangesAsync();
         }
     }
 }

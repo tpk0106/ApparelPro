@@ -96,7 +96,7 @@ namespace ApparelPro.WebApi.Controllers
             return CreatedAtRoute(nameof(GetSupplierBySupplierCodeAsync), new { addedSupplier.SupplierCode }, null);
         }
 
-        [HttpDelete("{code}")]
+        [HttpDelete("{supplierCode}")]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [SwaggerOperation(Tags = new[] { "Supplier Endpoints" },

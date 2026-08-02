@@ -52,7 +52,7 @@ builder.Services.AddIdentity<ApparelProUser, IdentityRole>(options =>
 
 // Add services to the container.
 
-ServiceExtensions.ConfigureApparelProDatabase(builder.Services, builder.Configuration);
+ServiceExtensions.ConfigureApparelProDatabase(builder.Services, builder.Configuration, builder.Environment.IsDevelopment());
 ServiceExtensions.ConfigureApparelProIdentity(builder.Services, builder.Configuration);
 
 ServiceExtensions.ConfigureApparelProServices(builder.Services);

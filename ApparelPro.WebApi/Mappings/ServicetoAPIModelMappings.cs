@@ -17,8 +17,8 @@ using apparelPro.BusinessLogic.Services.Models.Reference.IPortDestinationService
 using apparelPro.BusinessLogic.Services.Models.Reference.ISupplierService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitConversionService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitService;
-using apparelPro.BusinessLogic.Services.Models.Registration.IPermissionService;
 using apparelPro.BusinessLogic.Services.Models.Registration.IUserService;
+using apparelPro.BusinessLogic.Services.Models.SystemConfiguration.ISystemParameterService;
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Data.Models.Registration;
@@ -28,6 +28,7 @@ using ApparelPro.WebApi.APIModels.OrderManagement;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.APIModels.Registration;
+using ApparelPro.WebApi.APIModels.SystemConfiguration;
 using ApparelPro.WebApi.Reports.Models;
 using AutoMapper;
 
@@ -277,6 +278,10 @@ namespace ApparelPro.WebApi.Mappings
                 .ReverseMap();
             CreateMap<UpdateAddressAPIModel, UpdateAddressServiceModel>().MaxDepth(2);
             CreateMap<CreateAddressAPIModel, CreateAddressServiceModel>().MaxDepth(2);
+            // Needed by UpdateAddressByBuyerCodeAsync / UpdateAddressByBankCodeAsync, which
+            // build a merged AddressAPIModel (fetched row + incoming edits) and map it
+            // straight to UpdateAddressServiceModel before saving.
+            CreateMap<AddressAPIModel, UpdateAddressServiceModel>().MaxDepth(2);
 
 
             // Supplier
@@ -585,34 +590,13 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<RtnLineItemAPIModel, RtnLineItemServiceModel>().MaxDepth(2);
             CreateMap<RtnReturnableStockRowServiceModel, RtnReturnableStockRowAPIModel>().MaxDepth(2);
 
-            // orderwise inventory - GTN (Goods Transfer Note)
-            CreateMap<GtnHeaderAPIModel, GtnHeaderServiceModel>().MaxDepth(2);
-            CreateMap<GtnLineItemAPIModel, GtnLineItemServiceModel>().MaxDepth(2);
-            CreateMap<GtnTransferableStockRowServiceModel, GtnTransferableStockRowAPIModel>().MaxDepth(2);
-
-            // orderwise inventory - SRN (Supplier Return Note)
-            CreateMap<SrnHeaderAPIModel, SrnHeaderServiceModel>().MaxDepth(2);
-            CreateMap<SrnLineItemAPIModel, SrnLineItemServiceModel>().MaxDepth(2);
-            CreateMap<SrnReturnableStockRowServiceModel, SrnReturnableStockRowAPIModel>().MaxDepth(2);
-
-            // orderwise inventory - DGN (Damaged Goods Note)
-            CreateMap<DgnHeaderAPIModel, DgnHeaderServiceModel>().MaxDepth(2);
-            CreateMap<DgnLineItemAPIModel, DgnLineItemServiceModel>().MaxDepth(2);
-            CreateMap<DgnDamageableStockRowServiceModel, DgnDamageableStockRowAPIModel>().MaxDepth(2);
-
-            // orderwise inventory - SAN (Stock Adjustment Note)
-            CreateMap<SanHeaderAPIModel, SanHeaderServiceModel>().MaxDepth(2);
-            CreateMap<SanLineItemAPIModel, SanLineItemServiceModel>().MaxDepth(2);
-            CreateMap<SanAdjustableStockRowServiceModel, SanAdjustableStockRowAPIModel>().MaxDepth(2);
-
             // orderwise inventory - stock movement report
             CreateMap<StockMovementReportHeaderServiceModel, StockMovementReportHeaderAPIModel>().MaxDepth(2);
             CreateMap<StockMovementReportLineServiceModel, StockMovementReportLineAPIModel>().MaxDepth(2);
 
-            // permissions (Stage 2 access-control rework)
-            CreateMap<PermissionServiceModel, PermissionAPIModel>().MaxDepth(2).ReverseMap();
-            CreateMap<RolePermissionMatrixRoleServiceModel, RolePermissionMatrixRoleAPIModel>().MaxDepth(2);
-            CreateMap<UpdateRolePermissionsAPIModel, UpdateRolePermissionsServiceModel>().MaxDepth(2);
+            // order confirmation - style totals / system configuration
+            CreateMap<StyleTotalsServiceModel, StyleTotalsAPIModel>().MaxDepth(2);
+            CreateMap<SystemParameterServiceModel, SystemParameterAPIModel>().MaxDepth(2);
         }
 
         public class PaginationResultToPaginationAPITypeConverter<sourceT, destT> : ITypeConverter<PaginationResult<sourceT>, PaginationAPIModel<destT>>

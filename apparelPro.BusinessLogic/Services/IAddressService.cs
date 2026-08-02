@@ -11,7 +11,7 @@ namespace apparelPro.BusinessLogic.Services
 {
     public interface IAddressService
     {
-        Task<PaginationResult<AddressServiceModel>> GetAddressesAsync(int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery);
+        Task<PaginationResult<AddressServiceModel>> GetAllBuyerAddressesAsync(int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery);
         //   Task<PaginationResult<AddressServiceModel>> GetAddressesAsync(int pageNumber, int pageSize, string? filter, string? sortColumn, bool? descending);
 
         Task<PaginationResult<AddressServiceModel>> GetAddressesByAddresIdAsync(Guid addressId, int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery);
@@ -20,6 +20,9 @@ namespace apparelPro.BusinessLogic.Services
 
         Task<AddressServiceModel> GetAddressByBuyerCodeAndAddresIdAsync(int buyerCode, Guid addressId);
         Task<PaginationResult<AddressServiceModel>> GetAddressesByBuyerCodeAsync(int buyerCode, int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery);
+
+        Task<AddressServiceModel> GetAddressByBankCodeAndAddresIdAsync(string bankCode, Guid addressId);
+        Task<PaginationResult<AddressServiceModel>> GetAddressesByBankCodeAsync(string bankCode, int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery);
         //  Task<AddressServiceModel> GetAddressByIdAndAddresIdAsync(int id, string addressId);
 
         Task<IEnumerable<AddressServiceModel>> FilterAddressesByCodeAsync(string filter, int pageNumber, int pageSize);
@@ -29,6 +32,7 @@ namespace apparelPro.BusinessLogic.Services
         Task UpdateAddressAsync(UpdateAddressServiceModel updateAddressServiceModel);
 
         Task UpdateDefaultAddressAsync(UpdateAddressServiceModel updateAddressServiceModel);
+        Task UpdateDefaultAddressByBankAsync(UpdateAddressServiceModel updateAddressServiceModel);
 
         //Task UpdateAddressAsync(UpdateDefaultAddressServiceModel updateAddressServiceModel);
 

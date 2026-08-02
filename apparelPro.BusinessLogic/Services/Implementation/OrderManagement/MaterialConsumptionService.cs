@@ -1,4 +1,5 @@
-﻿using apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialConsumptionService;
+﻿using apparelPro.BusinessLogic.Services.interfaces.ISharedService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialConsumptionService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ISupplierService;
 using ApparelPro.Data;
@@ -16,11 +17,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
     {
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly IMapper _mapper;
+        private readonly ISharedService _sharedService;
 
-        public MaterialConsumptionService(IMapper mapper, ApparelProDbContext apparelProDbContext)
+        public MaterialConsumptionService(IMapper mapper, ApparelProDbContext apparelProDbContext, ISharedService sharedService)
         {
             _apparelProDbContext = apparelProDbContext;
             _mapper = mapper;
+            _sharedService = sharedService;
         }
 
         // Builds the 22-char composite ItemCode that StyleMaterialCostProfiles keys on
@@ -82,43 +85,6 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
             var orderItemFeature = _mapper.Map<OrderItemFeatureServiceModel>(result);
 
             return orderItemFeature;
-        }
-
-        public async Task<decimal> ConvertUnitAsync(string fromUnit, string toUnit, decimal quantity)
-        {
-            fromUnit = fromUnit.Trim().ToUpper();
-            toUnit = toUnit.Trim().ToUpper();
-
-            // Base Case Guard: No calculation needed if the unit codes are identical
-            if (fromUnit == toUnit) return quantity;
-
-            // 1. Look for a Forward Conversion rule (From Left to Right, e.g., GRS -> PCS)
-            var forwardRule = await _apparelProDbContext.UnitConversion
-                .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.FromUnit == fromUnit && u.ToUnit == toUnit);
-
-            if (forwardRule != null && forwardRule.Measure.HasValue)
-            {
-                // Multiply when moving forward from Left to Right
-                return quantity * forwardRule.Measure.Value;
-            }
-
-            // 2. Look for a Reverse Conversion rule (From Right to Left, e.g., PCS -> GRS)
-            var reverseRule = await _apparelProDbContext.UnitConversion
-                .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.FromUnit == toUnit && u.ToUnit == fromUnit);
-
-            if (reverseRule != null && reverseRule.Measure.HasValue)
-            {
-                // Safe Division Guard to prevent application crashes
-                if (reverseRule.Measure.Value == 0) return 0;
-
-                // Divide when moving backward from Right to Left
-                return quantity / reverseRule.Measure.Value;
-            }
-
-            // 3. System Error Trap: Block execution if no relational mapping rule exists in the database
-            throw new InvalidOperationException($"Unit Conversion Map Error: No conversion rule exists between unit code '{fromUnit}' and unit code '{toUnit}' inside the lookup tables.");
         }
 
         public async Task<decimal> CalculateMaterialConsumptionAsync(
@@ -192,7 +158,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
             // Step A: Convert the source garment volume count from the Order Base Unit to the Consumption Unit scale
             // e.g. If order is in "DZ" (Dozens) but consumption is mapped in "PCS" (Pieces)
-            decimal scaledGarmentVolume = await ConvertUnitAsync(parentOrderUnit, consumptionUnit, targetedGarmentCount);
+            decimal scaledGarmentVolume = await _sharedService.ConvertUnitAsync(parentOrderUnit, consumptionUnit, targetedGarmentCount);
 
             // Step B: Calculate net raw material requirements (Garments count * rate per individual garment)
             decimal netMaterialNeeded = quantityPerGarment * scaledGarmentVolume;
@@ -202,7 +168,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
             // Step D: Standardize the total consumption metrics to match the final Purchasing Unit used by suppliers
             // e.g. Converting required "PCS" up into "GRS" (Gross box counts)
-            decimal totalFinalUnitConsumption = await ConvertUnitAsync(consumptionUnit, finalItemUnit, grossCalculatedConsumption);
+            decimal totalFinalUnitConsumption = await _sharedService.ConvertUnitAsync(consumptionUnit, finalItemUnit, grossCalculatedConsumption);
 
             // Step E: Enforced Legacy Round-Up Ceiling Rule
             // If any fractional remainders exist, round up to the next full whole integer immediately

@@ -20,10 +20,12 @@ using apparelPro.BusinessLogic.Services.Models.Reference.IUnitConversionService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitService;
 using apparelPro.BusinessLogic.Services.Models.Registration.IPermissionService;
 using apparelPro.BusinessLogic.Services.Models.Registration.IUserService;
+using apparelPro.BusinessLogic.Services.Models.SystemConfiguration.ISystemParameterService;
 using ApparelPro.Data.Models.OrderManagement;
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Data.Models.Registration;
+using ApparelPro.Data.Models.SystemConfiguration;
 using ApparelPro.WebApi.APIModels.OrderManagement;
 using AutoMapper;
 
@@ -437,6 +439,9 @@ namespace apparelPro.BusinessLogic.Services.Mappings
 
             // permissions (Stage 2 access-control rework)
             CreateMap<Permission, PermissionServiceModel>().MaxDepth(2).ReverseMap();
+
+            // system configuration
+            CreateMap<SystemParameter, SystemParameterServiceModel>().MaxDepth(2).ReverseMap();
         }
     }
 }

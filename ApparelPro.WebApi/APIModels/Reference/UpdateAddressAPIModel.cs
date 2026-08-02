@@ -15,5 +15,6 @@ namespace ApparelPro.WebApi.APIModels.Reference
         public string? CountryCode { get; set; }        
         public bool? Default { get; set; }
         public int? BuyerCode { get; set; }
+        public string? BankCode { get; set; }
     }
 }

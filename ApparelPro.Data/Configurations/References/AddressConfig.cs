@@ -79,6 +79,11 @@ namespace ApparelPro.Data.Configurations.References
             .IsRequired(false)
             .HasColumnType("nvarchar");
 
+            entity.Property(p => p.BankCode)
+                .HasMaxLength(3)
+                .IsRequired(false)
+                .HasColumnType("nvarchar");
+
             entity.HasIndex(p => p.AddressId);
         }
     }

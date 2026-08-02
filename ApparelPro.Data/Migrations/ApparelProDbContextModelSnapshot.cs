@@ -379,6 +379,13 @@ namespace ApparelPro.Data.Migrations
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("QuantityOverriddenAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("QuantityOverriddenBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar");
+
                     b.Property<string>("Season")
                         .IsRequired()
                         .HasMaxLength(10)
@@ -875,7 +882,8 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("BankCode")
-                        .HasColumnType("nvarchar(3)");
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar");
 
                     b.Property<int?>("BuyerCode")
                         .HasColumnType("int");
@@ -1165,29 +1173,6 @@ namespace ApparelPro.Data.Migrations
                     b.ToTable("Destinations");
                 });
 
-            modelBuilder.Entity("ApparelPro.Data.Models.References.Feature", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("nvarchar");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Features");
-                });
-
             modelBuilder.Entity("ApparelPro.Data.Models.References.GarmentType", b =>
                 {
                     b.Property<int>("Id")
@@ -1471,6 +1456,48 @@ namespace ApparelPro.Data.Migrations
                     b.HasKey("Email");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.SystemConfiguration.SystemParameter", b =>
+                {
+                    b.Property<string>("ParameterKey")
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("varchar(50)")
+                        .HasDefaultValue("General");
+
+                    b.Property<string>("DataType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("varchar(20)")
+                        .HasDefaultValue("Text");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("Options")
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("varchar(200)");
+
+                    b.HasKey("ParameterKey");
+
+                    b.ToTable("SystemParameters", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            ParameterKey = "AllowOrderQuantityOverride",
+                            Category = "Order Management",
+                            DataType = "Boolean",
+                            Description = "When false (default), the sum of a purchase order's style quantities (converted into the order's own unit) cannot exceed the order's Total Quantity - Add/Update Style Details is rejected if it would. When true, the save is allowed even if it exceeds Total Quantity (the Styles grid still visually flags the overage).",
+                            Value = "false"
+                        });
                 });
 
             modelBuilder.Entity("ApparelPro.WebApi.APIModels.OrderManagement.GarmentTypeItems", b =>

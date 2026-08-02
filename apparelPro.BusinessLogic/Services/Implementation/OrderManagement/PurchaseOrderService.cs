@@ -1,4 +1,5 @@
 ﻿using apparelPro.BusinessLogic.Misc;
+using apparelPro.BusinessLogic.Services.interfaces.ISharedService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPurchaseOrderService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IGarmentTypeService;
@@ -20,14 +21,14 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
         private readonly IMapper _mapper;
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly ILookupConstants _lookupConstants;
-        private readonly IMaterialConsumptionService _materialConsumptionService;
-        public PurchaseOrderService(IMapper mapper, ApparelProDbContext apparelProDbContext, 
-            ILookupConstants lookupConstants, IMaterialConsumptionService materialConsumptionService)
+        private readonly ISharedService _sharedService;
+        public PurchaseOrderService(IMapper mapper, ApparelProDbContext apparelProDbContext,
+            ILookupConstants lookupConstants, ISharedService sharedService)
         {
             _mapper = mapper;
             _apparelProDbContext = apparelProDbContext;
             _lookupConstants = lookupConstants;
-            _materialConsumptionService = materialConsumptionService;
+            _sharedService = sharedService;
         }
 
         public async Task<PurchaseOrderServiceModel> AddPurchaseOrderAsync(CreatePurchaseOrderServiceModel createPOServiceModel)
@@ -282,10 +283,10 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         if (!string.IsNullOrEmpty(historicalUnit) && historicalQuantity > 0)
                         {
                             // Use your custom unit conversion method to align units with the cost profile
-                            historicalBalanceRebate = await _materialConsumptionService.ConvertUnitAsync(historicalUnit, costProfile.ItemUnit, historicalQuantity);
+                            historicalBalanceRebate = await _sharedService.ConvertUnitAsync(historicalUnit, costProfile.ItemUnit, historicalQuantity);
                         }
 
-                        decimal newlyOrderedQuantityInProfileUnit = await _materialConsumptionService
+                        decimal newlyOrderedQuantityInProfileUnit = await _sharedService
                             .ConvertUnitAsync(item.OrderUnit, costProfile.ItemUnit, item.OrderQuantity);
 
                         // Clipper formula alignment: (bal_qty + old_qty) - new_qty
@@ -315,9 +316,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     }
                     else
                     {
-                        decimal oldQtyInStockUnit = !string.IsNullOrEmpty(historicalUnit) ? 
-                            await _materialConsumptionService.ConvertUnitAsync(historicalUnit, stockRecord.Unit, historicalQuantity) : 0;
-                        decimal newQtyInStockUnit = await _materialConsumptionService.ConvertUnitAsync(item.OrderUnit, stockRecord.Unit, item.OrderQuantity);
+                        decimal oldQtyInStockUnit = !string.IsNullOrEmpty(historicalUnit) ?
+                            await _sharedService.ConvertUnitAsync(historicalUnit, stockRecord.Unit, historicalQuantity) : 0;
+                        decimal newQtyInStockUnit = await _sharedService.ConvertUnitAsync(item.OrderUnit, stockRecord.Unit, item.OrderQuantity);
 
                         stockRecord.OrderedQuantity = stockRecord.OrderedQuantity - oldQtyInStockUnit + newQtyInStockUnit;
                         _apparelProDbContext.OrderwiseStocks.Update(stockRecord);
@@ -342,9 +343,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     }
                     else
                     {
-                        decimal oldQtyInMasterUnit = !string.IsNullOrEmpty(historicalUnit) ? 
-                            await _materialConsumptionService.ConvertUnitAsync(historicalUnit, stockMaster.Unit, historicalQuantity) : 0;
-                        decimal newQtyInMasterUnit = await _materialConsumptionService.ConvertUnitAsync(item.OrderUnit, stockMaster.Unit, item.OrderQuantity);
+                        decimal oldQtyInMasterUnit = !string.IsNullOrEmpty(historicalUnit) ?
+                            await _sharedService.ConvertUnitAsync(historicalUnit, stockMaster.Unit, historicalQuantity) : 0;
+                        decimal newQtyInMasterUnit = await _sharedService.ConvertUnitAsync(item.OrderUnit, stockMaster.Unit, item.OrderQuantity);
 
                         stockMaster.OrderedQuantity = stockMaster.OrderedQuantity - oldQtyInMasterUnit + newQtyInMasterUnit;
                         stockMaster.Currency = currencyCode;

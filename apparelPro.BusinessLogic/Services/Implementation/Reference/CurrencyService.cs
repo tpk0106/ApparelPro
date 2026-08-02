@@ -89,16 +89,19 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
 
             var filteredDbCurrencies = await currencyPagination.ToListAsync();
             
-            var filteredCurrencyAndCountryJoined = filteredDbCurrencies.Join(_apparelProDbContext.Countries,
+            var filteredCurrencyAndCountryJoined = filteredDbCurrencies.GroupJoin(_apparelProDbContext.Countries,
                    currency => currency.CountryCode,
-                   Country => Country.Code,
-                   (currency, Country) => new { currency, Country })
+                   country => country.Code,
+                   (currency, countries) => new { currency, countries })
+                .SelectMany(
+                    r => r.countries.DefaultIfEmpty(),
+                    (r, country) => new { r.currency, Country = country })
                 .Select(r => new CurrencyServiceModel()
                 {
                     Code = r.currency.Code,
                     Name = r.currency.Name,
                     CountryCode = r.currency.CountryCode!,
-                    Country = r.Country,
+                    Country = r.Country ?? new Country(),
                     Id = r.currency.Id,
                     Minor = r.currency.Minor,
                     CurrencyDetails = r.currency.CurrencyDetails

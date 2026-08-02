@@ -1,4 +1,5 @@
-﻿using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPartShipmentService;
+﻿using apparelPro.BusinessLogic.Services.interfaces.ISharedService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPartShipmentService;
 using ApparelPro.Data;
 using ApparelPro.Data.Models.OrderManagement.Shipments;
 using AutoMapper;
@@ -9,17 +10,16 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
     public class PartShipmentService : IPartShipmentService
     {
         private readonly ApparelProDbContext _apparelProDbContext;
-        private readonly IMapper _mapper;        
-        private readonly IMaterialConsumptionService _materialConsumptionService;
+        private readonly IMapper _mapper;
+        private readonly ISharedService _sharedService;
 
         public PartShipmentService(
             ApparelProDbContext apparelProDbContext,
-            IMapper mapper,
-            IMaterialConsumptionService materialConsumptionService)
+            IMapper mapper, ISharedService sharedService)
         {
             _apparelProDbContext = apparelProDbContext;
             _mapper = mapper;
-            _materialConsumptionService = materialConsumptionService;
+            _sharedService = sharedService;
         }
 
         public async Task<StyleShippingSummaryServiceModel> GetStyleShippingSummaryAsync(int buyerCode,
@@ -45,7 +45,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
             foreach (var line in partialLines)
             {
-                totalScheduledInBaseUnit += await _materialConsumptionService.ConvertUnitAsync(line.Unit, baseUnit, line.Quantity);
+                totalScheduledInBaseUnit += await _sharedService.ConvertUnitAsync(line.Unit, baseUnit, line.Quantity);
             }
 
             return new StyleShippingSummaryServiceModel
@@ -82,7 +82,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
                     // 1. OVER-SHIPPING SECURITY AUDIT CAP
                     var summary = await GetStyleShippingSummaryAsync(request.BuyerCode, request.Order, request.TypeCode, request.StyleCode);
-                    decimal currentLineWeightInBase = await _materialConsumptionService.ConvertUnitAsync(request.Unit, summary.Unit, request.Quantity);
+                    decimal currentLineWeightInBase = await _sharedService.ConvertUnitAsync(request.Unit, summary.Unit, request.Quantity);
+
 
                     decimal originalRowWeightInBase = 0;
                     PartShipment existingLine = null!;
@@ -92,7 +93,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         existingLine = await _apparelProDbContext.PartShipments.FirstOrDefaultAsync(p => p.Id == request.Id);
                         if (existingLine != null)
                         {
-                            originalRowWeightInBase = await _materialConsumptionService.ConvertUnitAsync(existingLine.Unit, summary.Unit, existingLine.Quantity);
+                            originalRowWeightInBase = await _sharedService.ConvertUnitAsync(existingLine.Unit, summary.Unit, existingLine.Quantity);
+
 
                             // EXPORTED PIECES VALIDATION LOCK GUARD: check if row was partially exported
                             if (existingLine.Quantity != existingLine.Balance)
@@ -173,7 +175,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     foreach (var line in allUpdatedLinesForStyle)
                     {
                         cumulativeExportBalanceInBase +=
-                            await _materialConsumptionService.ConvertUnitAsync(line.Unit, summary.Unit, line.Balance);
+                            await _sharedService.ConvertUnitAsync(line.Unit, summary.Unit, line.Balance);
                     }
 
                     var parentStyle = await _apparelProDbContext.Styles
@@ -227,7 +229,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         foreach (var rem in remainingLines)
                         {
                             updatedExportBalance +=
-                                await _materialConsumptionService.ConvertUnitAsync(rem.Unit, parentStyle.Unit ?? "PCS", rem.Balance);
+                                await _sharedService.ConvertUnitAsync(rem.Unit, parentStyle.Unit ?? "PCS", rem.Balance);
                         }
                         parentStyle.ExportBalance = updatedExportBalance;
                         _apparelProDbContext.Styles.Update(parentStyle);
@@ -242,51 +244,6 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 }
             }
         }
-
-        // Internal cross-unit weights helper method simulation (e.g. Dozens to Pieces multiplying)
-        //private async Task<decimal> ConvertUnitAsync(string fromUnit, string toUnit, decimal qty)
-        //{
-        //    fromUnit = fromUnit.Trim().ToUpper();
-        //    toUnit = toUnit.Trim().ToUpper();
-
-        //    // 1. SAFE IMMEDIATE EXIT: If units match, return the original quantity with zero overhead
-        //    if (fromUnit == toUnit || qty <= 0) return qty;
-
-        //    try
-        //    {
-        //        // 2. LIVE DATABASE LOOKUP: Query your master UnitConversions registry table vertically
-        //        var conversionRule = await _dbContext.UnitConversions
-        //            .AsNoTracking()
-        //            .FirstOrDefaultAsync(u => (u.FromUnitCode == fromUnit && u.ToUnitCode == toUnit) ||
-        //                                      (u.FromUnitCode == toUnit && u.ToUnitCode == fromUnit));
-
-        //        if (conversionRule != null && conversionRule.ConversionFactor > 0)
-        //        {
-        //            if (conversionRule.FromUnitCode == fromUnit)
-        //            {
-        //                return qty * conversionRule.ConversionFactor;
-        //            }
-        //            else
-        //            {
-        //                return qty / conversionRule.ConversionFactor; // Inverse conversion pass
-        //            }
-        //        }
-
-        //        // 3. IN-MEMORY FALLBACK: Standard garment industrial defaults (Dozens to Pieces mapping)
-        //        if (fromUnit == "DOZ" && toUnit == "PCS") return qty * 12;
-        //        if (fromUnit == "PCS" && toUnit == "DOZ") return qty / 12;
-
-        //        // 4. LOG SAFE RETREAT BOUNDARY: Return base qty unchanged if conversion parameters are completely absent
-        //        return qty;
-        //    }
-        //    catch (Exception)
-        //    {
-        //        // Fail-safe protection fallback to ensure database commits don't halt during mathematical calculation runs
-        //        if (fromUnit == "DOZ" && toUnit == "PCS") return qty * 12;
-        //        if (fromUnit == "PCS" && toUnit == "DOZ") return qty / 12;
-        //        return qty;
-        //    }
-        //}
 
     }
 }

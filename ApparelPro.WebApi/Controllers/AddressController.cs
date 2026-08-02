@@ -24,7 +24,7 @@ namespace ApparelPro.WebApi.Controllers
         [HttpGet("list")]
         [Authorize(Policy = "address-view")]
         [ProducesResponseType(typeof(PaginationAPIModel<AddressAPIModel>), HttpStatusCodes.OK)]
-        public async Task<IActionResult> GetCountriesAsync(
+        public async Task<IActionResult> GetAllBuyerAddressesAsync(
              [FromQuery] int pageSize,
              [FromQuery] int pageNumber,
              [FromQuery] string? sortColumn = null,
@@ -32,7 +32,7 @@ namespace ApparelPro.WebApi.Controllers
              [FromQuery] string? filterColumn = null,
              [FromQuery] string? filterQuery = null)
         {
-            var addressServiceModels = await _addressService.GetAddressesAsync(pageNumber, pageSize,
+            var addressServiceModels = await _addressService.GetAllBuyerAddressesAsync(pageNumber, pageSize,
                 sortColumn, sortOrder, filterColumn, filterQuery);
             var addresses = _mapper.Map<PaginationAPIModel<AddressAPIModel>>(addressServiceModels);
             return Ok(addresses);
@@ -65,6 +65,26 @@ namespace ApparelPro.WebApi.Controllers
        )
         {
             var addresseServiceModels = await _addressService.GetAddressesByBuyerCodeAsync(buyerCode, pageNumber, pageSize,
+                sortColumn, sortOrder, filterColumn, filterQuery);
+            var addresses = _mapper.Map<PaginationAPIModel<AddressAPIModel>>(addresseServiceModels);
+            return Ok(addresses);
+        }
+
+        [HttpGet("list/bankCode/", Name = "GetAddressesByBankCodeAsync")]
+        [Authorize(Policy = "address-view")]
+        [ProducesResponseType(typeof(PaginationAPIModel<AddressAPIModel>), HttpStatusCodes.OK)]
+        [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        public async Task<IActionResult> GetAddressesByBankCodeAsync(
+            [FromQuery] string bankCode,
+            [FromQuery] int pageSize,
+            [FromQuery] int pageNumber,
+            [FromQuery] string? sortColumn = null,
+            [FromQuery] string? sortOrder = null,
+            [FromQuery] string? filterColumn = null,
+            [FromQuery] string? filterQuery = null
+       )
+        {
+            var addresseServiceModels = await _addressService.GetAddressesByBankCodeAsync(bankCode, pageNumber, pageSize,
                 sortColumn, sortOrder, filterColumn, filterQuery);
             var addresses = _mapper.Map<PaginationAPIModel<AddressAPIModel>>(addresseServiceModels);
             return Ok(addresses);
@@ -158,6 +178,38 @@ namespace ApparelPro.WebApi.Controllers
 
             var updateAddressSeviceModel = _mapper.Map<UpdateAddressServiceModel>(resultAddressAPIModel);
             await _addressService.UpdateDefaultAddressAsync(updateAddressSeviceModel);
+
+            return NoContent();
+        }
+
+        [HttpPut("bank/{bankCode}/{addressId}")]
+        [Authorize(Policy = "address-manage")]
+        [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
+        public async Task<IActionResult> UpdateAddressByBankCodeAsync([FromRoute] string bankCode, Guid addressId,
+            [FromBody] UpdateAddressAPIModel updateAddressAPIModel)
+        {
+            var resultAddressAPIModel = _mapper.Map<AddressAPIModel>(
+                await _addressService.GetAddressByBankCodeAndAddresIdAsync(bankCode, addressId)
+            );
+
+            if (resultAddressAPIModel == null)
+            {
+                return UnprocessableEntity("Address is not available for bank code :" + bankCode);
+            }
+
+            resultAddressAPIModel.AddressId = addressId;
+            resultAddressAPIModel.BankCode = bankCode;
+            resultAddressAPIModel.StreetAddress = updateAddressAPIModel.StreetAddress;
+            resultAddressAPIModel.AddressType = updateAddressAPIModel.AddressType;
+            resultAddressAPIModel.State = updateAddressAPIModel.State;
+            resultAddressAPIModel.City = updateAddressAPIModel.City;
+            resultAddressAPIModel.CountryCode = updateAddressAPIModel.CountryCode;
+            resultAddressAPIModel.PostCode = updateAddressAPIModel.PostCode;
+            resultAddressAPIModel.Default = updateAddressAPIModel.Default;
+
+            var updateAddressSeviceModel = _mapper.Map<UpdateAddressServiceModel>(resultAddressAPIModel);
+            await _addressService.UpdateDefaultAddressByBankAsync(updateAddressSeviceModel);
 
             return NoContent();
         }

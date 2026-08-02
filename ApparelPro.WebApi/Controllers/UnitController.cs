@@ -85,5 +85,20 @@ namespace ApparelPro.WebApi.Controllers
             var exist = await _unitService.DoesUnitExistAsync(code);
             return Ok(exist);
         }
+
+        [HttpDelete("{code}")]
+        [Authorize(Policy = "unit-manage")]
+        [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
+        [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        public async Task<IActionResult> DeleteUnitAsync(string code)
+        {
+            var unit = await _unitService.GetUnitByCodeAsync(code);
+            if (unit == null)
+            {
+                return UnprocessableEntity("Unit is not available for code :" + code);
+            }
+            await _unitService.DeleteUnitAsync(code);
+            return NoContent();
+        }
     }
 }

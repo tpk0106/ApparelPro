@@ -10,16 +10,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
     public class StoresRequisitionService : IStoresRequisitionService
     {
         private readonly ApparelProDbContext _apparelProDbContext;
-        private readonly IUnitConversionService _unitConversionService;
         private readonly ISharedService _sharedService;
 
-        public StoresRequisitionService(ApparelProDbContext apparelProDbContext, 
-            ISharedService sharedService,
-            IUnitConversionService unitConversionService)
+        public StoresRequisitionService(ApparelProDbContext apparelProDbContext,
+            ISharedService sharedService)
         {
             _apparelProDbContext = apparelProDbContext;
             _sharedService = sharedService;
-            _unitConversionService = unitConversionService;
         }
 
         public async Task<StockItemAvailabilityDetails> VerifyStockItemAvailabilityAsync(
@@ -44,9 +41,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 .FirstOrDefaultAsync(c => c.ItemCode == itemCode);
 
             // 3. Convert quantities to the target viewport unit type dynamically using your dependency service
-            decimal convertedInHand = await _unitConversionService.ConvertUnitAsync(stockRecord.Unit, targetUnit, stockRecord.QtyInHand);
-            decimal convertedShadow = await _unitConversionService.ConvertUnitAsync(stockRecord.Unit, targetUnit, stockRecord.ShadowBalance);
-            decimal convertedSrn = await _unitConversionService.ConvertUnitAsync(stockRecord.Unit, targetUnit, stockRecord.StrnBalance);
+            decimal convertedInHand = await _sharedService.ConvertUnitAsync(stockRecord.Unit, targetUnit, stockRecord.QtyInHand);
+            decimal convertedShadow = await _sharedService.ConvertUnitAsync(stockRecord.Unit, targetUnit, stockRecord.ShadowBalance);
+            decimal convertedSrn = await _sharedService.ConvertUnitAsync(stockRecord.Unit, targetUnit, stockRecord.StrnBalance);
 
             return new StockItemAvailabilityDetails
             {
@@ -104,12 +101,12 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         }
 
                         // Calculate net available inventory in the database record unit format using your injected service
-                        decimal requestedInStockUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, stockRecord.Unit, line.Quantity);
+                        decimal requestedInStockUnit = await _sharedService.ConvertUnitAsync(line.Unit, stockRecord.Unit, line.Quantity);
                         decimal netAvailableInStockUnit = stockRecord.QtyInHand - stockRecord.ShadowBalance - stockRecord.StrnBalance;
 
                         if (requestedInStockUnit > netAvailableInStockUnit)
                         {
-                            throw new InvalidOperationException($"Deficit Block: Attempted to exceed balance quantity for Item '{line.ItemCode}'. Requested: {line.Quantity} {line.Unit}, Available: {await _unitConversionService.ConvertUnitAsync(stockRecord.Unit, line.Unit, netAvailableInStockUnit)} {line.Unit}.");
+                            throw new InvalidOperationException($"Deficit Block: Attempted to exceed balance quantity for Item '{line.ItemCode}'. Requested: {line.Quantity} {line.Unit}, Available: {await _sharedService.ConvertUnitAsync(stockRecord.Unit, line.Unit, netAvailableInStockUnit)} {line.Unit}.");
                         }
 
                         // 3. WRITE TO THE TRANSACTION LEDGER RECORD TABLE (OrderwiseStockTransactions)
@@ -144,7 +141,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         if (catalogItem != null)
                         {
                             // Converts requested pieces back to your master catalog base unit safely
-                            decimal requestedInCatalogUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, catalogItem.Unit ?? "PCS", line.Quantity);
+                            decimal requestedInCatalogUnit = await _sharedService.ConvertUnitAsync(line.Unit, catalogItem.Unit ?? "PCS", line.Quantity);
 
                             // FIXED: 100% pure, type-safe C# assignment with no compilation tricks!
                             catalogItem.RequisitionedQuantity += requestedInCatalogUnit;
@@ -169,47 +166,11 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
             }
         }
 
-        //public async Task<List<OrderwiseStockLookupRowServiceModel>> GetAvailableStockChoicesAsync(int buyerCode, string order)
-        //{
-        //    order = order.Trim();
-
-        //    // 1. Fetch all stock ledger balance records for this order scope
-        //    var stockRecords = await _apparelProDbContext.OrderwiseStocks
-        //        .AsNoTracking()
-        //        .Where(s => s.BuyerCode == buyerCode && s.Order == order)
-        //        .ToListAsync();
-
-        //    var resultList = new List<OrderwiseStockLookupRowServiceModel>();
-
-        //    // 2. Loop and enrich each row with its matching catalog description case-insensitively
-        //    foreach (var stock in stockRecords)
-        //    {
-        //        var catalogItem = await _apparelProDbContext.StockItems
-        //            .AsNoTracking()
-        //            .FirstOrDefaultAsync(c => c.ItemCode == stock.ItemCode);
-
-        //        resultList.Add(new OrderwiseStockLookupRowServiceModel
-        //        {
-        //            ItemCode = stock.ItemCode,
-        //            StoreCode = stock.StoreCode,
-        //            Unit = stock.Unit,
-        //            Description = catalogItem?.Description ?? "Raw Material Component"
-        //        });
-        //    }
-
-        //    return resultList.OrderBy(r => r.ItemCode).ToList();
-        //}
-
         public async Task<List<OrderwiseStockLookupRowServiceModel>> GetAvailableStockChoicesAsync(int buyerCode, string order)
         {
             order = order.Trim();
 
-            // Basis is a per-line choice now, not a whole-document filter - an item can
-            // legitimately exist under more than one Basis grouping for the same
-            // Buyer/Order, so every row is returned and each carries its own true
-            // StoreCode (Basis). This also fixes the item dropdown coming back empty,
-            // which happened because the caller used to pass the Issuing Department
-            // code here instead of a real Basis value.
+            // 1. Fetch all stock ledger balance records for this order scope
             var stockRecords = await _apparelProDbContext.OrderwiseStocks
                 .AsNoTracking()
                 .Where(s => s.BuyerCode == buyerCode && s.Order == order)
@@ -402,9 +363,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
 //                .FirstOrDefaultAsync(c => c.StockCode == storeCode && c.ItemCode == itemCode);
 
 //            // 3. Convert quantities to the target viewport unit type dynamically using your strict conversion rules
-//            decimal convertedInHand = await _unitConversionService.ConvertUnitAsync(stockRecord.Unit, targetUnit, stockRecord.QtyInHand);
-//            decimal convertedShadow = await _unitConversionService.ConvertUnitAsync(stockRecord.Unit, targetUnit, stockRecord.ShadowBalance);
-//            decimal convertedSrn = await _unitConversionService.ConvertUnitAsync(stockRecord.Unit, targetUnit, stockRecord.SrnBalance);
+//            decimal convertedInHand = await _sharedService.ConvertUnitAsync(stockRecord.Unit, targetUnit, stockRecord.QtyInHand);
+//            decimal convertedShadow = await _sharedService.ConvertUnitAsync(stockRecord.Unit, targetUnit, stockRecord.ShadowBalance);
+//            decimal convertedSrn = await _sharedService.ConvertUnitAsync(stockRecord.Unit, targetUnit, stockRecord.SrnBalance);
 
 //            return new StockItemAvailabilityDetails
 //            {
@@ -455,12 +416,12 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
 //                        }
 
 //                        // Calculate net available inventory in the database record unit format
-//                        decimal requestedInStockUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, stockRecord.Unit, line.Quantity);
+//                        decimal requestedInStockUnit = await _sharedService.ConvertUnitAsync(line.Unit, stockRecord.Unit, line.Quantity);
 //                        decimal netAvailableInStockUnit = stockRecord.QtyInHand - stockRecord.ShadowBalance - stockRecord.SrnBalance;
 
 //                        if (requestedInStockUnit > netAvailableInStockUnit)
 //                        {
-//                            throw new InvalidOperationException($"Deficit Block: Attempted to exceed balance quantity for Item '{line.StockCode}{line.ItemCode}'. Requested: {line.Quantity} {line.Unit}, Available: {await _unitConversionService.ConvertUnitAsync(stockRecord.Unit, line.Unit, netAvailableInStockUnit)} {line.Unit}.");
+//                            throw new InvalidOperationException($"Deficit Block: Attempted to exceed balance quantity for Item '{line.StockCode}{line.ItemCode}'. Requested: {line.Quantity} {line.Unit}, Available: {await _sharedService.ConvertUnitAsync(stockRecord.Unit, line.Unit, netAvailableInStockUnit)} {line.Unit}.");
 //                        }
 
 //                        // 3. WRITE TO THE TRANSACTION LEDGER RECORD TABLE (OrderwiseStockTransactions)
@@ -486,7 +447,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
 
 //                        if (catalogItem != null)
 //                        {
-//                            decimal requestedInCatalogUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, catalogItem.UnitCode ?? "PCS", line.Quantity);
+//                            decimal requestedInCatalogUnit = await _sharedService.ConvertUnitAsync(line.Unit, catalogItem.UnitCode ?? "PCS", line.Quantity);
 
 //                            // Increment your target catalog requisitioned quantity metric column safely
 //                            catalogItem.RequisitionedQuantity += requestedInCatalogUnit;

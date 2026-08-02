@@ -73,8 +73,8 @@ namespace ApparelPro.WebApi.Controllers
             // create a list to track the newly added users
             var userList = new List<ApparelProUser>();            
             var userRolesUpatedList = new List<ApparelProUser>();            
-            var Merchandiser_Email = "tpk0106@yahoo.com";
-            var Merchandiser_Phone = "041001917";
+            var Merchandiser_Email = "tpk1966@yahoo.com";
+            var Merchandiser_Phone = "0410251917";
             var Merchandiser_KnownAs = "Sampath";
             var Merchandiser_Password = "Thusith7291##";
             var userCreationErrors = new List<string>();
@@ -115,7 +115,7 @@ namespace ApparelPro.WebApi.Controllers
                 userRolesUpatedList.Add(_userMerchandiser!);
                 Console.WriteLine("$_userMerchandiser : {0} ", res);
 
-                // tpk0106@yahoo.com granted Store Manager access, per explicit request,
+                // tpk1966@yahoo.com granted Store Manager access, per explicit request,
                 // so this account can use Stock Adjustment Note.
                 var storeManagerRes = await _userManager.AddToRoleAsync(_userMerchandiser!, storeManager);
                 Console.WriteLine("$_userMerchandiser storeManager : {0} ", storeManagerRes);
@@ -124,7 +124,7 @@ namespace ApparelPro.WebApi.Controllers
             var Stores_Email = "thusith@gmail.com";
             var Stores_Phone = "0411111917";
             var stores_KnownAs = "Sampi";
-            var stores_Password = "Thazli1978*";
+            var stores_Password = "fuckme1978*";
             var userStores = new ApparelProUser();
             if (await _userManager.FindByNameAsync(Stores_Email) == null)
             {               

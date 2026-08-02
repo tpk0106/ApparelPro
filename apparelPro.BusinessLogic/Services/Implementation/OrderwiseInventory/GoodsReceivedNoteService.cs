@@ -12,16 +12,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
     {
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly ISharedService _sharedService;
-        private readonly IUnitConversionService _unitConversionService;
 
         public GoodsReceivedNoteService(
             ApparelProDbContext apparelProDbContext,
-            ISharedService sharedService,
-            IUnitConversionService unitConversionService)
+            ISharedService sharedService)
         {
             _apparelProDbContext = apparelProDbContext;
             _sharedService = sharedService;
-            _unitConversionService = unitConversionService;
         }
 
         public async Task<GrnPoLookupResultServiceModel> GetReceivableLinesByPoAsync(string purchaseOrderNumber)
@@ -136,9 +133,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         if (poDetailRow == null)
                             throw new InvalidOperationException($"Item '{line.ItemCode}' was not found on Purchase Order '{header.PurchaseOrderNumber}'.");
 
-                        decimal requestedInOrderUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, poDetailRow.OrderUnit, line.Quantity);
+                        decimal requestedInOrderUnit = await _sharedService.ConvertUnitAsync(line.Unit, poDetailRow.OrderUnit, line.Quantity);
                         if (requestedInOrderUnit > poDetailRow.Balance)
-                            throw new InvalidOperationException($"Receipt Deficit: Attempted to receive more than the outstanding PO balance for Item '{line.ItemCode}'. Requested: {line.Quantity} {line.Unit}, Outstanding: {await _unitConversionService.ConvertUnitAsync(poDetailRow.OrderUnit, line.Unit, poDetailRow.Balance)} {line.Unit}.");
+                            throw new InvalidOperationException($"Receipt Deficit: Attempted to receive more than the outstanding PO balance for Item '{line.ItemCode}'. Requested: {line.Quantity} {line.Unit}, Outstanding: {await _sharedService.ConvertUnitAsync(poDetailRow.OrderUnit, line.Unit, poDetailRow.Balance)} {line.Unit}.");
 
                         // 4. Lock and validate the physical stock row (should already exist from PO placement).
                         var stockRecord = await _apparelProDbContext.OrderwiseStocks
@@ -152,7 +149,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         if (stockRecord == null)
                             throw new InvalidOperationException($"Item '{line.ItemCode}' under store '{header.StoreCode}' does not exist in the stock master file.");
 
-                        decimal requestedInStockUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, stockRecord.Unit, line.Quantity);
+                        decimal requestedInStockUnit = await _sharedService.ConvertUnitAsync(line.Unit, stockRecord.Unit, line.Quantity);
 
                         // 5. Write the GRN transaction row. StockCode is decomposed from the leading
                         // 2 characters of the 22-char compound ItemCode — same convention already
@@ -198,7 +195,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
 
                         if (masterRow != null)
                         {
-                            decimal requestedInMasterUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, masterRow.Unit ?? "PCS", line.Quantity);
+                            decimal requestedInMasterUnit = await _sharedService.ConvertUnitAsync(line.Unit, masterRow.Unit ?? "PCS", line.Quantity);
                             masterRow.ReceivedQuantity += requestedInMasterUnit;
                             _apparelProDbContext.OrderwiseStockMasters.Update(masterRow);
                         }

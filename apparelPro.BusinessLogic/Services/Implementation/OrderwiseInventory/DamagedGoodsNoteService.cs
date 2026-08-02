@@ -28,16 +28,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
     {
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly ISharedService _sharedService;
-        private readonly IUnitConversionService _unitConversionService;
 
         public DamagedGoodsNoteService(
             ApparelProDbContext apparelProDbContext,
-            ISharedService sharedService,
-            IUnitConversionService unitConversionService)
+            ISharedService sharedService)
         {
             _apparelProDbContext = apparelProDbContext;
             _sharedService = sharedService;
-            _unitConversionService = unitConversionService;
         }
 
         public async Task<List<DgnDamageableStockRowServiceModel>> GetDamageableStockByBuyerOrderAsync(
@@ -173,14 +170,14 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         if (stockRecord == null)
                             throw new InvalidOperationException($"Item '{line.ItemCode}' under basis '{line.StoreCode}' does not exist in stock.");
 
-                        decimal requestedInStockUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, stockRecord.Unit, line.Quantity);
+                        decimal requestedInStockUnit = await _sharedService.ConvertUnitAsync(line.Unit, stockRecord.Unit, line.Quantity);
 
                         // 6. Hard block — mirrors legacy "m_qty > qty_in_hd", "Attempt to
                         // Exceed Balance Quantity." Unlike IN_DGN1.PRG (which silently drops
                         // the line and continues), this aborts the whole commit — see the
                         // Pre-Migration Defect Audit note at the top of this class.
                         if (requestedInStockUnit > stockRecord.QtyInHand)
-                            throw new InvalidOperationException($"Attempt to Exceed Balance Quantity for Item '{line.ItemCode}'. Requested: {line.Quantity} {line.Unit}, Available: {await _unitConversionService.ConvertUnitAsync(stockRecord.Unit, line.Unit, stockRecord.QtyInHand)} {line.Unit}.");
+                            throw new InvalidOperationException($"Attempt to Exceed Balance Quantity for Item '{line.ItemCode}'. Requested: {line.Quantity} {line.Unit}, Available: {await _sharedService.ConvertUnitAsync(stockRecord.Unit, line.Unit, stockRecord.QtyInHand)} {line.Unit}.");
 
                         // 7. Write the DGN transaction row. "5D" is the exact legacy code
                         // (IN_DGN1.PRG: "id with '5D'") — kept as-is rather than inventing a
@@ -224,7 +221,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
 
                         if (masterRow != null)
                         {
-                            decimal requestedInMasterUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, masterRow.Unit, line.Quantity);
+                            decimal requestedInMasterUnit = await _sharedService.ConvertUnitAsync(line.Unit, masterRow.Unit, line.Quantity);
                             masterRow.DamagedQuantity += requestedInMasterUnit;
                             _apparelProDbContext.OrderwiseStockMasters.Update(masterRow);
                         }

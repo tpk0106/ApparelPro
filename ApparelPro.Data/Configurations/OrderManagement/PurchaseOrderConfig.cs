@@ -1,4 +1,4 @@
-﻿using ApparelPro.Data.Models.OrderManagement;
+using ApparelPro.Data.Models.OrderManagement;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -53,6 +53,18 @@ namespace ApparelPro.Data.Configurations.OrderManagement
 
             entity.Property(p => p.BasisValue)
               .HasColumnType("decimal(10,2)");
+
+            // Audit trail: who (email, from the JWT ClaimTypes.Name claim) and when overrode the
+            // Total Quantity limit via the 'AllowOrderQuantityOverride' system parameter. Both
+            // remain null unless an override has actually occurred for this order.
+            entity.Property(p => p.QuantityOverriddenBy)
+              .HasMaxLength(256)
+              .HasColumnType("nvarchar")
+              .IsRequired(false);
+
+            entity.Property(p => p.QuantityOverriddenAt)
+              .HasColumnType("datetime")
+              .IsRequired(false);
         }
     }
 }

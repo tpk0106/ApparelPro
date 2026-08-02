@@ -17,16 +17,14 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
         private readonly IMapper _mapper;
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly ILookupConstants _lookupConstants;
-        private readonly IMaterialConsumptionService _materialConsumptionService;
         private readonly ISharedService _sharedService;
         public SupplierPurchaseOrderService(IMapper mapper, ApparelProDbContext apparelProDbContext,
-            ILookupConstants lookupConstants, IMaterialConsumptionService materialConsumptionService,
+            ILookupConstants lookupConstants,
             ISharedService sharedService)
         {
             _mapper = mapper;
             _apparelProDbContext = apparelProDbContext;
             _lookupConstants = lookupConstants;
-            _materialConsumptionService = materialConsumptionService;
             _sharedService = sharedService;
         }
         public async Task<List<AvailableBudgetLineServiceModel>> GetUnfulfilledBudgetLinesAsync(int buyerCode, string order)
@@ -179,10 +177,10 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         decimal historicalBalanceRebate = 0;
                         if (!string.IsNullOrEmpty(historicalUnit) && historicalQuantity > 0)
                         {
-                            historicalBalanceRebate = await _materialConsumptionService.ConvertUnitAsync(historicalUnit, costProfile.ItemUnit, historicalQuantity);
+                            historicalBalanceRebate = await _sharedService.ConvertUnitAsync(historicalUnit, costProfile.ItemUnit, historicalQuantity);
                         }
 
-                        decimal newlyOrderedInProfileUnit = await _materialConsumptionService.ConvertUnitAsync(line.OrderUnit, costProfile.ItemUnit, line.OrderQuantity);
+                        decimal newlyOrderedInProfileUnit = await _sharedService.ConvertUnitAsync(line.OrderUnit, costProfile.ItemUnit, line.OrderQuantity);
                         decimal availableBeforeThisLine = costProfile.BalanceQuantity + historicalBalanceRebate;
 
                         // Server-side enforcement mirroring the client-side alert() check — the
@@ -190,7 +188,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         // exactly down to a balance of 0 (using up the full remaining budget is
                         // legitimate); only genuine overages are rejected.
                         if (newlyOrderedInProfileUnit > availableBeforeThisLine)
-                            throw new InvalidOperationException($"Budget Deficit: Attempted to order more than the remaining material budget for Item '{line.ItemCode}'. Requested: {line.OrderQuantity} {line.OrderUnit}, Available: {await _materialConsumptionService.ConvertUnitAsync(costProfile.ItemUnit, line.OrderUnit, availableBeforeThisLine)} {line.OrderUnit}.");
+                            throw new InvalidOperationException($"Budget Deficit: Attempted to order more than the remaining material budget for Item '{line.ItemCode}'. Requested: {line.OrderQuantity} {line.OrderUnit}, Available: {await _sharedService.ConvertUnitAsync(costProfile.ItemUnit, line.OrderUnit, availableBeforeThisLine)} {line.OrderUnit}.");
 
                         // Clipper math enforcement: 56.00 - (16.00 + 8.00) = 32.00 GRS!
                         costProfile.BalanceQuantity = availableBeforeThisLine - newlyOrderedInProfileUnit;
@@ -249,9 +247,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     }
                     else
                     {
-                        decimal oldQtyInStockUnit = !string.IsNullOrEmpty(historicalUnit) ? 
-                            await _materialConsumptionService.ConvertUnitAsync(historicalUnit, stockRecord.Unit, historicalQuantity) : 0;
-                        decimal newQtyInStockUnit = await _materialConsumptionService.ConvertUnitAsync(line.OrderUnit, stockRecord.Unit, line.OrderQuantity);
+                        decimal oldQtyInStockUnit = !string.IsNullOrEmpty(historicalUnit) ?
+                            await _sharedService.ConvertUnitAsync(historicalUnit, stockRecord.Unit, historicalQuantity) : 0;
+                        decimal newQtyInStockUnit = await _sharedService.ConvertUnitAsync(line.OrderUnit, stockRecord.Unit, line.OrderQuantity);
 
                         stockRecord.OrderedQuantity = stockRecord.OrderedQuantity - oldQtyInStockUnit + newQtyInStockUnit;
                         _apparelProDbContext.OrderwiseStocks.Update(stockRecord);
@@ -281,9 +279,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     }
                     else
                     {
-                        decimal oldQtyInMasterUnit = !string.IsNullOrEmpty(historicalUnit) ? 
-                            await _materialConsumptionService.ConvertUnitAsync(historicalUnit, stockMaster.Unit, historicalQuantity) : 0;
-                        decimal newQtyInMasterUnit = await _materialConsumptionService.ConvertUnitAsync(line.OrderUnit, stockMaster.Unit, line.OrderQuantity);
+                        decimal oldQtyInMasterUnit = !string.IsNullOrEmpty(historicalUnit) ?
+                            await _sharedService.ConvertUnitAsync(historicalUnit, stockMaster.Unit, historicalQuantity) : 0;
+                        decimal newQtyInMasterUnit = await _sharedService.ConvertUnitAsync(line.OrderUnit, stockMaster.Unit, line.OrderQuantity);
 
                         stockMaster.OrderedQuantity = stockMaster.OrderedQuantity - oldQtyInMasterUnit + newQtyInMasterUnit;
                         stockMaster.Currency = currencyCode;

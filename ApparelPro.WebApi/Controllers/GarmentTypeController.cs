@@ -105,5 +105,20 @@ namespace ApparelPro.WebApi.Controllers
                 throw new Exception(ex.Message);
             }
         }
+
+        [HttpDelete("{id}")]
+        [Authorize(Policy = "garment-type-manage")]
+        [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
+        [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        public async Task<IActionResult> DeleteGarmentTypeAsync(int id)
+        {
+            var garmentType = await _garmentTypeService.GetGarmentTypeByIdAsync(id);
+            if (garmentType == null)
+            {
+                return UnprocessableEntity("GarmentType is not available for id :" + id);
+            }
+            await _garmentTypeService.DeleteGarmentTypeAsync(id);
+            return NoContent();
+        }
     }
 }

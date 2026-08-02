@@ -52,7 +52,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Shared
             throw new NotImplementedException();
         }
         
-        public async Task<PaginationResult<AddressServiceModel>> GetAddressesAsync(int pageNumber, 
+        public async Task<PaginationResult<AddressServiceModel>> GetAllBuyerAddressesAsync(int pageNumber,
             int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery)
         {
             var filteredAddressAndCountryAndBuyerJoined = _apparelProDbContext.Addresses
@@ -279,7 +279,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Shared
         }
 
         public async Task<AddressServiceModel> GetAddressByBuyerCodeAndAddresIdAsync(int buyerCode, Guid addressId)
-        {           
+        {
             try
             {
                 var addressDbModel = await _apparelProDbContext.Addresses
@@ -292,6 +292,77 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Shared
             catch (Exception ex)
             {
                 throw new Exception("Address could not found for buyer code " + buyerCode);
+            }
+        }
+
+        public async Task<PaginationResult<AddressServiceModel>> GetAddressesByBankCodeAsync(string bankCode, int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery)
+        {
+            var addressPagination = _apparelProDbContext.Addresses
+               .Where(address => address.BankCode == bankCode)
+               .AsNoTracking()
+               .AsQueryable();
+
+            FilterResult fr = new();
+            fr.searchPattern = "{0}.Contains(@0)";
+            fr.FilterColumn = filterColumn;
+            fr.FilterQuery = filterQuery;
+            if (filterColumn != null && filterQuery != null)
+            {
+                fr = InputValidator.Validate(filterColumn!, filterQuery!, typeof(Address));
+                addressPagination = addressPagination.Where(string.Format(fr.searchPattern!, fr.FilterColumn), fr.FilterQuery);
+            }
+
+            int counter = 0;
+            counter = await addressPagination.CountAsync();
+
+            if (sortColumn != null)
+            {
+                sortOrder = !string.IsNullOrEmpty(sortOrder) && sortOrder.ToUpper() == "ASC" ? "ASC" : "DESC";
+                addressPagination = addressPagination.OrderBy(string.Format("{0} {1}", sortColumn, sortOrder));
+            }
+
+            var filteredDbAddresses = await addressPagination.ToListAsync();
+            var addressServiceModels = _mapper.Map<IList<AddressServiceModel>>(filteredDbAddresses);
+
+            return new PaginationResult<AddressServiceModel>(pageSize, pageNumber, counter, addressServiceModels,
+                sortColumn, sortOrder, filterColumn, filterQuery);
+        }
+
+        public async Task UpdateDefaultAddressByBankAsync(UpdateAddressServiceModel updateAddressServiceModel)
+        {
+            var bankCode = updateAddressServiceModel.BankCode;
+            var addressId = updateAddressServiceModel.AddressId;
+
+            var addressDbModel = _mapper.Map<Address>(updateAddressServiceModel);
+            _apparelProDbContext.Addresses.Update(addressDbModel);
+
+            // Only cascade "unset default" to the other addresses when this address is
+            // actually being promoted to the default — otherwise saving an address that's
+            // staying non-default would wipe out whichever address really is the default.
+            if (updateAddressServiceModel.Default == true)
+            {
+                await _apparelProDbContext.Addresses
+                    .Where(address => address.AddressId != addressId && address.BankCode == bankCode)
+                    .ExecuteUpdateAsync(p => p.SetProperty(p => p.Default, false));
+            }
+
+            await _apparelProDbContext.SaveChangesAsync();
+        }
+
+        public async Task<AddressServiceModel> GetAddressByBankCodeAndAddresIdAsync(string bankCode, Guid addressId)
+        {
+            try
+            {
+                var addressDbModel = await _apparelProDbContext.Addresses
+                .Where(address => address.BankCode == bankCode && address.AddressId == addressId)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+
+                return _mapper.Map<AddressServiceModel>(addressDbModel);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Address could not found for bank code " + bankCode);
             }
         }
     }

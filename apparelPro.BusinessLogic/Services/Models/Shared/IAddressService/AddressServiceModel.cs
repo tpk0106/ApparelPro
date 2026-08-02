@@ -20,5 +20,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Shared
         // public Buyer? Buyer { get; set; }
         [NotMapped]
         public int? BuyerCode { get; set; }
+        [NotMapped]
+        public string? BankCode { get; set; }
     }
 }

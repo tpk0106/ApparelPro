@@ -36,16 +36,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
     {
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly ISharedService _sharedService;
-        private readonly IUnitConversionService _unitConversionService;
 
         public StockAdjustmentNoteService(
             ApparelProDbContext apparelProDbContext,
-            ISharedService sharedService,
-            IUnitConversionService unitConversionService)
+            ISharedService sharedService)
         {
             _apparelProDbContext = apparelProDbContext;
             _sharedService = sharedService;
-            _unitConversionService = unitConversionService;
         }
 
         public async Task<List<SanAdjustableStockRowServiceModel>> GetAdjustableStockByBuyerOrderAsync(
@@ -172,7 +169,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         if (stockRecord == null)
                             throw new InvalidOperationException($"Item '{line.ItemCode}' under basis '{line.StoreCode}' does not exist in stock.");
 
-                        decimal newQtyInStockUnit = await _unitConversionService.ConvertUnitAsync(line.Unit, stockRecord.Unit, line.AdjustedQuantity);
+                        decimal newQtyInStockUnit = await _sharedService.ConvertUnitAsync(line.Unit, stockRecord.Unit, line.AdjustedQuantity);
 
                         // 6. Write the SAN transaction row. "3A" is the exact legacy code
                         // (IN_SAN1.PRG: "id with '3A'") — corrected here rather than reusing
