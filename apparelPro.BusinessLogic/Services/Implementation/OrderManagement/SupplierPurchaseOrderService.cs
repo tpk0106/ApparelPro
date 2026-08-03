@@ -18,14 +18,17 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly ILookupConstants _lookupConstants;
         private readonly ISharedService _sharedService;
+        private readonly IStyleApprovalService _styleApprovalService;
         public SupplierPurchaseOrderService(IMapper mapper, ApparelProDbContext apparelProDbContext,
             ILookupConstants lookupConstants,
-            ISharedService sharedService)
+            ISharedService sharedService,
+            IStyleApprovalService styleApprovalService)
         {
             _mapper = mapper;
             _apparelProDbContext = apparelProDbContext;
             _lookupConstants = lookupConstants;
             _sharedService = sharedService;
+            _styleApprovalService = styleApprovalService;
         }
         public async Task<List<AvailableBudgetLineServiceModel>> GetUnfulfilledBudgetLinesAsync(int buyerCode, string order)
         {
@@ -37,10 +40,67 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 .Where(p => p.BuyerCode == buyerCode && p.Order == order && p.BalanceQuantity > 0)
                 .ToListAsync();
 
+            // Bulk-fetch Trim Sheet Approval status for every distinct Style referenced above,
+            // instead of one IStyleApprovalService call per line - purely informational here
+            // (lets the picker UI show/grey out lines proactively); the real enforced gate is
+            // the hard check inside SaveSupplierPurchaseOrderAsync below, same "client-facing
+            // flag + server-side guard" split already used for the budget-deficit check in
+            // this file. Mirrors GetStyleApprovalDetailsAsync's own "is this locked" condition.
+            var approvedStyleKeys = await _apparelProDbContext.Styles
+                .AsNoTracking()
+                .Where(s => s.BuyerCode == buyerCode && s.Order == order &&
+                            s.ApprovedDate.HasValue && s.ApprovedDate != DateOnly.FromDateTime(DateTime.MinValue))
+                .Select(s => new { s.TypeCode, s.StyleCode })
+                .ToListAsync();
+
+            var approvedStyleSet = approvedStyleKeys
+                .Select(s => (s.TypeCode, s.StyleCode))
+                .ToHashSet();
+
+            // "Main Material" needs the SPECIFIC material type (BUTTON/FABRIC/ZIP), not the
+            // broad Stock category (e.g. "Raw material"/"Accessories" - confirmed too coarse by
+            // the user 2026-08-03). That specific granularity lives in the OrderItems catalog,
+            // keyed by (StockCode, ItemCode) - the same table MaterialConsumptionService already
+            // uses for this exact purpose (GetMaterialCatalogAsync/GetLedgerEntriesByStyleAsync's
+            // descriptionLookup). Bulk-fetch once, not per-line.
+            var orderItemDescriptionLookup = await _apparelProDbContext.OrderItems
+                .AsNoTracking()
+                .ToDictionaryAsync(i => (i.StockCode, i.ItemCode), i => i.Description);
+
+            // Kept as a fallback only (when an item has no OrderItems catalog entry) - the broad
+            // Stock category is still better than showing nothing.
+            var stockDescriptionLookup = await _apparelProDbContext.Stocks
+                .AsNoTracking()
+                .ToDictionaryAsync(s => s.StockCode, s => s.Description);
+
             var resultList = new List<AvailableBudgetLineServiceModel>();
 
             foreach (var profile in costProfiles)
             {
+                // Composite ItemCode layout: StockCode(2) + ItemCode(4) + Feature1-4(4 each) = 22 chars
+                // (ComposeCostProfileItemCode's own convention).
+                // .Trim() is required here: ComposeCostProfileItemCode's Segment() helper pads each
+                // fixed-width segment with TRAILING SPACES (Trim().PadRight(width)), so a raw Substring()
+                // extraction retains those trailing spaces (e.g. "BT" -> "BT  ") and silently fails to match
+                // the OrderItems dictionary's unpadded (StockCode, ItemCode) keys via TryGetValue - confirmed
+                // by the user 2026-08-03 ("still No ItemCode (02BT) description 'BUTTON' displays").
+                var stockCode = (profile.ItemCode.Length >= 2 ? profile.ItemCode.Substring(0, 2) : profile.ItemCode).Trim();
+                var itemCodeSegment = (profile.ItemCode.Length >= 6 ? profile.ItemCode.Substring(2, 4) : string.Empty).Trim();
+
+                string mainMaterialName;
+                if (orderItemDescriptionLookup.TryGetValue((stockCode, itemCodeSegment), out var itemDescription) && !string.IsNullOrWhiteSpace(itemDescription))
+                {
+                    mainMaterialName = itemDescription;
+                }
+                else if (stockDescriptionLookup.TryGetValue(stockCode, out var stockDescription) && !string.IsNullOrWhiteSpace(stockDescription))
+                {
+                    mainMaterialName = stockDescription;
+                }
+                else
+                {
+                    mainMaterialName = stockCode;
+                }
+
                 resultList.Add(new AvailableBudgetLineServiceModel
                 {
                     // StyleMaterialCostProfiles.ItemCode is already the full 22-char composite
@@ -53,7 +113,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     StyleCode = profile.StyleCode,
                     Description = !string.IsNullOrWhiteSpace(profile.Description)
                         ? profile.Description
-                        : "(No description available)"
+                        : "(No description available)",
+                    IsStyleApproved = approvedStyleSet.Contains((profile.TypeCode, profile.StyleCode)),
+                    MainMaterialName = mainMaterialName
                 });
             }
 
@@ -66,6 +128,23 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
             var header = request.Header;
             string storeCode = header.StoreCode.Trim();
             string currencyCode = header.CurrencyCode.Trim();
+
+            // TRIM SHEET APPROVAL GATE (2026-08-03): mirrors OD_ACORD.PRG's rajiva() function,
+            // which checks "!empty(od_style->userid)" before letting a material-balance line be
+            // pulled into a Purchase Order, else "Trim Sheet not Approved." A Supplier P/O in
+            // this modern system is scoped to a single Buyer/Order/Type/Style per request
+            // (POHeaderServiceModel), unlike legacy's multi-style-per-P/O loop, so this only
+            // needs to run once here rather than per line item. Checked before opening the
+            // transaction below - a cheap fail-fast, no need to touch the database for a request
+            // we're about to reject anyway.
+            var approvalDetails = await _styleApprovalService.GetStyleApprovalDetailsAsync(
+                header.BuyerCode, header.OrderNumber, header.TypeCode, header.StyleCode);
+
+            if (approvalDetails == null)
+            {
+                throw new InvalidOperationException(
+                    $"Cannot raise a Purchase Order: the Trim Sheet for Style '{header.StyleCode}' has not been approved yet. Approve the Material Consumption sheet for this style first.");
+            }
 
             using (var dbTransaction = await _apparelProDbContext.Database.BeginTransactionAsync())
             {

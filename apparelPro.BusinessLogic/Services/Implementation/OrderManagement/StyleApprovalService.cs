@@ -35,8 +35,15 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
             }
 
             // 3. APPLY METADATA FOOTPRINT KEYS ATOMICALY
-            styleRow.EstimateApprovalUserName = approvedByUserId; // Maps to ea_userid
-            styleRow.ApprovedDate = DateOnly.FromDateTime(approvalDate);         // Maps to ea_date
+            // FIXED (2026-08-03): this action is Trim Sheet Approval (legacy od_aprvl.prg,
+            // od_style->userid/aprv_date) - NOT the separate Style-wise Events Approval
+            // (legacy od_evapr.prg, od_style->ea_userid/ea_date). Username/ApprovedDate are
+            // the correct pair for this: StylewiseEventService already reads styleHeader.Username
+            // expecting exactly this approver stamp. Previously this wrote the approver name to
+            // EstimateApprovalUserName instead, so Username was never actually populated by this
+            // action and any UI reading Username for "approved by" always showed blank.
+            styleRow.Username = approvedByUserId;
+            styleRow.ApprovedDate = DateOnly.FromDateTime(approvalDate);
 
             _apparelProDbContext.Styles.Update(styleRow);
             await _apparelProDbContext.SaveChangesAsync();
@@ -57,10 +64,12 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
             if (styleHeader != null && styleHeader.ApprovedDate.HasValue &&
                 styleHeader.ApprovedDate.Value != DateOnly.FromDateTime(DateTime.MinValue))
             {
-                // Return the payload data structure straight to the controller layer
+                // Return the payload data structure straight to the controller layer.
+                // Reads Username (see the matching fix in ApproveStyleEventsAsync above) -
+                // not EstimateApprovalUserName, which is a different legacy flag entirely.
                 return new StyleApprovalDetailsServiceModel
                 {
-                    EstimateApprovalUserName = styleHeader.EstimateApprovalUserName ?? "SYSTEM_ADMIN",
+                    EstimateApprovalUserName = styleHeader.Username ?? "SYSTEM_ADMIN",
                     EstimateApprovalDate = styleHeader.ApprovedDate.Value
                 };
             }

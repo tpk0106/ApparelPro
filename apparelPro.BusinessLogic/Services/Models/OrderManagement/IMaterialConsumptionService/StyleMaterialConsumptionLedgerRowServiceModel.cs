@@ -1,4 +1,4 @@
-namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialConsumptionService
+﻿namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialConsumptionService
 {
     // Style-scoped consumption ledger row (mirrors the od_sacc3.dbf-backed
     // StyleMaterialConsumptionLedger entity) plus a joined Description, so the
@@ -34,5 +34,11 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialCons
 
         public bool IsAdditionalCost { get; set; }
         public bool CalculateConsumption { get; set; }
+
+        // Joined from StyleMaterialCostProfiles by composite ItemCode (see
+        // GetLedgerEntriesByStyleAsync), so the edit form can recall the previously
+        // entered unit price/currency instead of always showing 0.
+        public decimal UnitPrice { get; set; }
+        public string Currency { get; set; } = null!;
     }
 }

@@ -24,7 +24,7 @@ namespace ApparelPro.Data.Configurations.References
                 .IsRequired();
 
             entity.Property(p => p.Description)
-                .HasColumnType("varchar(50)")
+                .HasColumnType("varchar(100)")
                 .HasColumnName("Description")
                 .IsRequired();
 

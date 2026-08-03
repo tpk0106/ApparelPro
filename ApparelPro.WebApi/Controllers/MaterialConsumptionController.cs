@@ -158,12 +158,17 @@ namespace ApparelPro.WebApi.Controllers
         [ProducesResponseType(typeof(BadRequestResult), HttpStatusCodes.BadRequest)]
         public async Task<IActionResult> DeleteEntry(
             [FromQuery] int buyerCode, [FromQuery] string order, [FromQuery] int typeCode, [FromQuery] string styleCode,
-            [FromQuery] string stockCode, [FromQuery] string itemCode, [FromQuery] string color, [FromQuery] string size)
+            // Nullable: with <Nullable>enable</Nullable>, ASP.NET Core implicitly treats a
+            // non-nullable string action parameter as [Required], and RequiredAttribute rejects
+            // an empty string as well as a missing one. A blank/universal Color or Size is a
+            // legitimate value here (matches how it's stored - see StyleMaterialConsumptionLedger),
+            // so these must be nullable to avoid a false "field is required" validation error.
+            [FromQuery] string stockCode, [FromQuery] string itemCode, [FromQuery] string? color, [FromQuery] string? size)
         {
             try
             {
                 var success = await _materialConsumptionService.DeleteConsumptionEntryAsync(
-                    buyerCode, order, typeCode, styleCode, stockCode, itemCode, color, size
+                    buyerCode, order, typeCode, styleCode, stockCode, itemCode, color ?? "", size ?? ""
                 );
 
                 if (!success)
@@ -203,6 +208,49 @@ namespace ApparelPro.WebApi.Controllers
             var result = _mapper.Map<List<MaterialCatalogGroupAPIModel>>(data);
             return Ok(result);
         }     
+
+        [HttpPost("copy-from-style")]
+        [ProducesResponseType(typeof(CopyMaterialsFromStyleResultAPIModel), HttpStatusCodes.OK)]
+        [SwaggerOperation(Tags = new[] { "order Item Feature Endpoints" },
+             Summary = "Bulk-copy all material lines from another Buyer/Order/Type/Style",
+             Description = "Copies every StyleMaterialConsumptionLedger/StyleMaterialCostProfiles line from a source style into the target style, skipping any item that already exists at the target.")
+         ]
+        public async Task<IActionResult> CopyMaterialsFromStyle([FromBody] CopyMaterialsFromStyleRequestAPIModel request)
+        {
+            if (request == null) return BadRequest("Copy request data payload cannot be empty.");
+
+            try
+            {
+                var approvalDetails = await _styleApprovalService.GetStyleApprovalDetailsAsync(
+                    request.TargetBuyerCode, request.TargetOrder, request.TargetTypeCode, request.TargetStyleCode
+                );
+
+                if (approvalDetails != null)
+                {
+                    bool isHigherAuthority = User.IsInRole("Merchandising Manager") || User.IsInRole("Merchandiser Manager") || User.IsInRole("Executive Director");
+
+                    if (!isHigherAuthority)
+                    {
+                        string formattedDate = approvalDetails.EstimateApprovalDate.HasValue
+                            ? approvalDetails.EstimateApprovalDate.Value.ToString("dd-MMM-yyyy")
+                            : "an Unknown Date";
+
+                        return StatusCode(403, new
+                        {
+                            Error = $"🛑 ACCESS DENIED: This material sheet was officially approved and locked by [ {approvalDetails.EstimateApprovalUserName} ] on {formattedDate}. Alterations are restricted to higher management authority accounts only."
+                        });
+                    }
+                }
+
+                var serviceRequest = _mapper.Map<CopyMaterialsFromStyleRequestServiceModel>(request);
+                var result = await _materialConsumptionService.CopyMaterialsFromStyleAsync(serviceRequest);
+                return Ok(_mapper.Map<CopyMaterialsFromStyleResultAPIModel>(result));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to copy materials from source style: {ex.Message}" });
+            }
+        }
 
     }
 }

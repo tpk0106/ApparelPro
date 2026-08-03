@@ -31,7 +31,7 @@ namespace ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption
             // OrderwiseStockTransaction and PODetails.ItemCode.
             entity.Property(e => e.ItemCode).HasColumnType("varchar(22)").HasColumnName("ItemCode");
 
-            entity.Property(e => e.Description).HasColumnType("varchar(40)").HasColumnName("Description");
+            entity.Property(e => e.Description).HasColumnType("varchar(100)").HasColumnName("Description");
             entity.Property(e => e.ItemUnit).HasColumnType("varchar(3)").HasColumnName("ItemUnit");
             entity.Property(e => e.Currency).HasColumnType("varchar(3)").HasColumnName("CurrencyCode");
             entity.Property(e => e.UnitPrice).HasColumnType("decimal(10,4)").HasColumnName("Price");

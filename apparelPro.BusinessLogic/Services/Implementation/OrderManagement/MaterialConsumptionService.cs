@@ -212,11 +212,67 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 // lookup table with no auto-routing rules — there was never a legacy rule mapping a
                 // stock category like "02" to a specific store).
 
+                decimal historicalConsumptionDelta = 0;
+
+                // COLOR/SIZE RESELECT FIX (2026-08-03): if the merchandiser changed Color/Size
+                // while editing an existing line, the lookup below (which matches on the NEW
+                // Color/Size) will never find the row saved under the OLD Color/Size, so it falls
+                // into the CREATE branch and leaves the original row behind as an orphaned
+                // duplicate. When the request tells us what the original Color/Size was, find and
+                // remove that old row first (same PO-raised guard as DeleteConsumptionEntryAsync),
+                // folding its TotalConsumption into the delta so the cost profile balance nets out.
+                string originalColorClean = (request.OriginalColor ?? request.Color).Trim();
+                string originalSizeClean = (request.OriginalSize ?? request.Size).Trim();
+                bool colorOrSizeChanged = originalColorClean != request.Color.Trim() || originalSizeClean != request.Size.Trim();
+
+                if (colorOrSizeChanged)
+                {
+                    var oldLedgerRow = await _apparelProDbContext.StyleMaterialConsumptionLedgers
+                        .FirstOrDefaultAsync(l => l.BuyerCode == request.BuyerCode &&
+                                                  l.Order == request.Order.Trim() &&
+                                                  l.TypeCode == request.TypeCode &&
+                                                  l.StyleCode == request.StyleCode.Trim() &&
+                                                  l.Color == originalColorClean &&
+                                                  l.Size == originalSizeClean &&
+                                                  l.StockCode == request.StockCode.Trim() &&
+                                                  l.ItemCode == request.ItemCode.Trim() &&
+                                                  l.Feature1 == request.Feature1.Trim() &&
+                                                  l.Feature2 == request.Feature2.Trim() &&
+                                                  l.Feature3 == request.Feature3.Trim() &&
+                                                  l.Feature4 == request.Feature4.Trim());
+
+                    if (oldLedgerRow != null)
+                    {
+                        // Same Stock/Item/Features -> same composite cost-profile key as the new
+                        // row, so a PO raised against it blocks this whole re-save exactly like a
+                        // normal delete would.
+                        string oldCompositeItemCode = ComposeCostProfileItemCode(
+                            request.StockCode, request.ItemCode, request.Feature1, request.Feature2, request.Feature3, request.Feature4);
+
+                        var isPoRaisedOnOld = await _apparelProDbContext.PODetails
+                            .AnyAsync(d => d.Buyer == request.BuyerCode &&
+                                           d.Order == request.Order.Trim() &&
+                                           d.Type == request.TypeCode &&
+                                           d.Style == request.StyleCode.Trim() &&
+                                           d.ItemCode == oldCompositeItemCode);
+
+                        if (isPoRaisedOnOld)
+                        {
+                            return false; // Blocked: a supplier PO already draws against the old Color/Size line.
+                        }
+
+                        historicalConsumptionDelta += oldLedgerRow.TotalConsumption;
+                        _apparelProDbContext.StyleMaterialConsumptionLedgers.Remove(oldLedgerRow);
+                    }
+                }
+
                 var existingLedgerRow = await _apparelProDbContext.StyleMaterialConsumptionLedgers
                     .FirstOrDefaultAsync(l => l.BuyerCode == request.BuyerCode &&
                                               l.Order == request.Order.Trim() &&
                                               l.TypeCode == request.TypeCode &&
                                               l.StyleCode == request.StyleCode.Trim() &&
+                                              l.Color == request.Color.Trim() &&
+                                              l.Size == request.Size.Trim() &&
                                               l.StockCode == request.StockCode.Trim() &&
                                               l.ItemCode == request.ItemCode.Trim() &&
                                               l.Feature1 == request.Feature1.Trim() &&
@@ -224,11 +280,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                                               l.Feature3 == request.Feature3.Trim() &&
                                               l.Feature4 == request.Feature4.Trim());
 
-                decimal historicalConsumptionDelta = 0;
-
                 if (existingLedgerRow != null)
                 {
-                    historicalConsumptionDelta = existingLedgerRow.TotalConsumption;
+                    historicalConsumptionDelta += existingLedgerRow.TotalConsumption;
 
                     existingLedgerRow.QuantityPerGarment = request.QuantityPerGarment;
                     existingLedgerRow.PercentageAllowance = request.PercentageAllowance;
@@ -298,7 +352,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     costProfile.BalanceQuantity = (costProfile.BalanceQuantity - historicalConsumptionDelta) + request.TotalConsumption;
                     costProfile.TotalConsumption = (costProfile.TotalConsumption - historicalConsumptionDelta) + request.TotalConsumption;
                     costProfile.UnitPrice = request.UnitPrice;
-                    costProfile.Description = $"{request.StockCode}/{request.ItemCode} Component Entry Matched";
+                    costProfile.Description = !string.IsNullOrWhiteSpace(request.Description)
+                        ? request.Description.Trim()
+                        : costProfile.Description; // don't clobber an existing meaningful description with boilerplate
                     costProfile.ItemUnit = request.ItemUnit.Trim();
                     costProfile.SupplierCode = request.SupplierCode.Trim();
 
@@ -313,7 +369,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         TypeCode = request.TypeCode,
                         StyleCode = request.StyleCode.Trim(),
                         ItemCode = compositeItemCode,
-                        Description = $"{request.StockCode}/{request.ItemCode} Created Entry",
+                        Description = !string.IsNullOrWhiteSpace(request.Description)
+                            ? request.Description.Trim()
+                            : $"{request.StockCode}/{request.ItemCode} {request.Feature1} {request.Feature2} {request.Feature3}".Trim(),
                         ItemUnit = request.ItemUnit.Trim(),
                         Currency = request.Currency.Trim(),
                         UnitPrice = request.UnitPrice,
@@ -600,36 +658,60 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 .AsNoTracking()
                 .ToDictionaryAsync(s => s.SupplierCode, s => s.Name);
 
-            return ledgerRows.Select(l => new StyleMaterialConsumptionLedgerRowServiceModel
+            // Bulk-fetch cost-profile pricing (UnitPrice/Currency) for this style, keyed by the
+            // same composite ItemCode a ledger row's material resolves to, so the edit form can
+            // recall the previously-entered price instead of always showing 0.
+            var costProfilePriceLookup = await _apparelProDbContext.StyleMaterialCostProfiles
+                .AsNoTracking()
+                .Where(p => p.BuyerCode == buyerCode &&
+                            p.Order == order.Trim() &&
+                            p.TypeCode == typeCode &&
+                            p.StyleCode == styleCode.Trim())
+                .ToDictionaryAsync(p => p.ItemCode, p => new { p.UnitPrice, p.Currency, p.Description });
+
+            return ledgerRows.Select(l =>
             {
-                BuyerCode = l.BuyerCode,
-                Order = l.Order,
-                TypeCode = l.TypeCode,
-                StyleCode = l.StyleCode,
-                Color = l.Color,
-                Size = l.Size,
-                StockCode = l.StockCode,
-                ItemCode = l.ItemCode,
-                Description = descriptionLookup.TryGetValue((l.StockCode, l.ItemCode), out var desc)
-                    ? desc
-                    : $"{l.StockCode}/{l.ItemCode}",
-                Feature1 = l.Feature1,
-                Feature2 = l.Feature2,
-                Feature3 = l.Feature3,
-                Feature4 = l.Feature4,
-                StoreCode = l.StoreCode,
-                ConsumptionUnit = l.ConsumptionUnit,
-                ItemUnit = l.ItemUnit,
-                QuantityPerGarment = l.QuantityPerGarment,
-                SupplierCode = l.SupplierCode,
-                SupplierName = int.TryParse(l.SupplierCode?.Trim(), out var supplierCode) &&
-                    supplierNameLookup.TryGetValue(supplierCode, out var supplierName)
-                        ? supplierName
-                        : "-",
-                TotalConsumption = l.TotalConsumption,
-                PercentageAllowance = l.PercentageAllowance,
-                IsAdditionalCost = l.IsAdditionalCost,
-                CalculateConsumption = l.CalculateConsumption,
+                var costProfileKey = ComposeCostProfileItemCode(l.StockCode, l.ItemCode, l.Feature1, l.Feature2, l.Feature3, l.Feature4);
+                costProfilePriceLookup.TryGetValue(costProfileKey, out var priceInfo);
+
+                return new StyleMaterialConsumptionLedgerRowServiceModel
+                {
+                    BuyerCode = l.BuyerCode,
+                    Order = l.Order,
+                    TypeCode = l.TypeCode,
+                    StyleCode = l.StyleCode,
+                    Color = l.Color,
+                    Size = l.Size,
+                    StockCode = l.StockCode,
+                    ItemCode = l.ItemCode,
+                    // Prefer the per-entry description actually typed on this consumption line
+                    // (saved on the cost profile) over the generic catalog description, which is
+                    // the same boilerplate text for every variant of this Stock/Item.
+                    Description = !string.IsNullOrWhiteSpace(priceInfo?.Description)
+                        ? priceInfo.Description
+                        : (descriptionLookup.TryGetValue((l.StockCode, l.ItemCode), out var desc)
+                            ? desc
+                            : $"{l.StockCode}/{l.ItemCode}"),
+                    Feature1 = l.Feature1,
+                    Feature2 = l.Feature2,
+                    Feature3 = l.Feature3,
+                    Feature4 = l.Feature4,
+                    StoreCode = l.StoreCode,
+                    ConsumptionUnit = l.ConsumptionUnit,
+                    ItemUnit = l.ItemUnit,
+                    QuantityPerGarment = l.QuantityPerGarment,
+                    SupplierCode = l.SupplierCode,
+                    SupplierName = int.TryParse(l.SupplierCode?.Trim(), out var supplierCode) &&
+                        supplierNameLookup.TryGetValue(supplierCode, out var supplierName)
+                            ? supplierName
+                            : "-",
+                    TotalConsumption = l.TotalConsumption,
+                    PercentageAllowance = l.PercentageAllowance,
+                    IsAdditionalCost = l.IsAdditionalCost,
+                    CalculateConsumption = l.CalculateConsumption,
+                    UnitPrice = priceInfo?.UnitPrice ?? 0,
+                    Currency = priceInfo?.Currency ?? "",
+                };
             }).ToList();
         }
 
@@ -640,17 +722,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
             using var dbTransaction = await _apparelProDbContext.Database.BeginTransactionAsync();
             try
             {
-                // 1. GLOBAL PO LOCK GUARD: Verify if a contract has been locked down in the PurchaseOrders table
-                var isPoRaised = await _apparelProDbContext.PurchaseOrders
-                    .AnyAsync(po => po.BuyerCode == buyerCode && po.Order == order.Trim());
-
-                if (isPoRaised)
-                {
-                    // Aborts execution immediately and alerts the UI that changes are blocked
-                    return false;
-                }
-
-                // 2. Locate the specific targeted item inside your ledger spreadsheet matrix
+                // 1. Locate the specific targeted item inside your ledger spreadsheet matrix
                 var ledgerItem = await _apparelProDbContext.StyleMaterialConsumptionLedgers
                     .FirstOrDefaultAsync(l => l.BuyerCode == buyerCode &&
                                               l.Order == order.Trim() &&
@@ -665,12 +737,32 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
                 decimal totalConsumptionToDeduct = ledgerItem.TotalConsumption;
 
-                // 3. FINANCIAL ADJUSTMENT: Deduct quantities from the consolidated Cost Profile
-                // StyleMaterialCostProfiles now keys on the single 22-char composite ItemCode —
+                // 2. StyleMaterialCostProfiles now keys on the single 22-char composite ItemCode —
                 // compose it from the segments this ledger row already carries.
                 string compositeItemCode = ComposeCostProfileItemCode(
                     stockCode, itemCode, ledgerItem.Feature1, ledgerItem.Feature2, ledgerItem.Feature3, ledgerItem.Feature4);
 
+                // 2b. SUPPLIER PO LOCK GUARD: block the delete only if a supplier Purchase Order
+                // has actually been raised against THIS specific material line (PODetails) —
+                // NOT just because the buyer/order combination exists in PurchaseOrders (od_po),
+                // which is the garment Order Confirmation record and always exists by the time
+                // you're editing Material Consumption for it. The old check queried PurchaseOrders
+                // for BuyerCode+Order only, which is true for every style in every order, so it
+                // blocked every delete unconditionally regardless of whether a supplier PO existed.
+                var isPoRaised = await _apparelProDbContext.PODetails
+                    .AnyAsync(d => d.Buyer == buyerCode &&
+                                   d.Order == order.Trim() &&
+                                   d.Type == typeCode &&
+                                   d.Style == styleCode.Trim() &&
+                                   d.ItemCode == compositeItemCode);
+
+                if (isPoRaised)
+                {
+                    // Aborts execution immediately and alerts the UI that changes are blocked
+                    return false;
+                }
+
+                // 3. FINANCIAL ADJUSTMENT: Deduct quantities from the consolidated Cost Profile
                 var costProfile = await _apparelProDbContext.StyleMaterialCostProfiles
                     .FirstOrDefaultAsync(p => p.BuyerCode == buyerCode &&
                                               p.Order == order.Trim() &&
@@ -698,6 +790,157 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 await _apparelProDbContext.SaveChangesAsync();
                 await dbTransaction.CommitAsync();
                 return true;
+            }
+            catch (Exception)
+            {
+                await dbTransaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task<CopyMaterialsFromStyleResultServiceModel> CopyMaterialsFromStyleAsync(CopyMaterialsFromStyleRequestServiceModel request)
+        {
+            using var dbTransaction = await _apparelProDbContext.Database.BeginTransactionAsync();
+            try
+            {
+                var result = new CopyMaterialsFromStyleResultServiceModel();
+
+                // Pull every consumption line recorded against the SOURCE style. od_sacc1 (the
+                // unmapped aggregate purchasing-quantity table) is intentionally out of scope here.
+                var sourceLedgerRows = await _apparelProDbContext.StyleMaterialConsumptionLedgers
+                    .AsNoTracking()
+                    .Where(l => l.BuyerCode == request.SourceBuyerCode &&
+                                l.Order == request.SourceOrder.Trim() &&
+                                l.TypeCode == request.SourceTypeCode &&
+                                l.StyleCode == request.SourceStyleCode.Trim())
+                    .ToListAsync();
+
+                if (sourceLedgerRows.Count == 0)
+                {
+                    await dbTransaction.CommitAsync();
+                    return result; // Nothing to copy - 0/0, not an error.
+                }
+
+                // Bulk-fetch SOURCE cost profiles (keyed by composite ItemCode) once, so we can
+                // carry over the real Description/UnitPrice/Currency per legacy OD_TPDT1.PRG
+                // precedent (copies price/currency as real working values, not zeroed).
+                var sourceCostProfiles = await _apparelProDbContext.StyleMaterialCostProfiles
+                    .AsNoTracking()
+                    .Where(p => p.BuyerCode == request.SourceBuyerCode &&
+                                p.Order == request.SourceOrder.Trim() &&
+                                p.TypeCode == request.SourceTypeCode &&
+                                p.StyleCode == request.SourceStyleCode.Trim())
+                    .ToDictionaryAsync(p => p.ItemCode);
+
+                // Bulk-fetch the TARGET's existing ledger rows + cost profiles once (tracked, so
+                // we can update them in place), instead of one query per source row.
+                var targetLedgerRows = await _apparelProDbContext.StyleMaterialConsumptionLedgers
+                    .Where(l => l.BuyerCode == request.TargetBuyerCode &&
+                                l.Order == request.TargetOrder.Trim() &&
+                                l.TypeCode == request.TargetTypeCode &&
+                                l.StyleCode == request.TargetStyleCode.Trim())
+                    .ToListAsync();
+
+                var targetCostProfiles = await _apparelProDbContext.StyleMaterialCostProfiles
+                    .Where(p => p.BuyerCode == request.TargetBuyerCode &&
+                                p.Order == request.TargetOrder.Trim() &&
+                                p.TypeCode == request.TargetTypeCode &&
+                                p.StyleCode == request.TargetStyleCode.Trim())
+                    .ToDictionaryAsync(p => p.ItemCode);
+
+                foreach (var sourceRow in sourceLedgerRows)
+                {
+                    // Skip criterion (a "must" per the merchandiser's requirement): an item already
+                    // present in the target Style, matched the same way SaveMaterialConsumptionEntryAsync
+                    // matches an existing ledger line.
+                    bool alreadyExistsInTarget = targetLedgerRows.Any(l =>
+                        l.Color == sourceRow.Color &&
+                        l.Size == sourceRow.Size &&
+                        l.StockCode == sourceRow.StockCode &&
+                        l.ItemCode == sourceRow.ItemCode &&
+                        l.Feature1 == sourceRow.Feature1 &&
+                        l.Feature2 == sourceRow.Feature2 &&
+                        l.Feature3 == sourceRow.Feature3 &&
+                        l.Feature4 == sourceRow.Feature4);
+
+                    string compositeItemCode = ComposeCostProfileItemCode(
+                        sourceRow.StockCode, sourceRow.ItemCode, sourceRow.Feature1, sourceRow.Feature2, sourceRow.Feature3, sourceRow.Feature4);
+
+                    if (alreadyExistsInTarget)
+                    {
+                        result.SkippedCount++;
+                        sourceCostProfiles.TryGetValue(compositeItemCode, out var skippedProfile);
+                        result.SkippedItemDescriptions.Add(skippedProfile?.Description ?? $"{sourceRow.StockCode}/{sourceRow.ItemCode}");
+                        continue;
+                    }
+
+                    // Color/Size copied as-is, no validation against the target style's own valid
+                    // Color/Size set - matches legacy OD_TPDT1.PRG exactly (it trusts the merchandiser
+                    // to notice/fix a mismatch afterwards via the normal edit screen).
+                    var newLedgerRow = new StyleMaterialConsumptionLedger
+                    {
+                        BuyerCode = request.TargetBuyerCode,
+                        Order = request.TargetOrder.Trim(),
+                        TypeCode = request.TargetTypeCode,
+                        StyleCode = request.TargetStyleCode.Trim(),
+                        Color = sourceRow.Color,
+                        Size = sourceRow.Size,
+                        StockCode = sourceRow.StockCode,
+                        ItemCode = sourceRow.ItemCode,
+                        Feature1 = sourceRow.Feature1,
+                        Feature2 = sourceRow.Feature2,
+                        Feature3 = sourceRow.Feature3,
+                        Feature4 = sourceRow.Feature4,
+                        StoreCode = string.Empty,
+                        ConsumptionUnit = sourceRow.ConsumptionUnit,
+                        ItemUnit = sourceRow.ItemUnit,
+                        QuantityPerGarment = sourceRow.QuantityPerGarment,
+                        PercentageAllowance = sourceRow.PercentageAllowance,
+                        TotalConsumption = sourceRow.TotalConsumption,
+                        SupplierCode = sourceRow.SupplierCode,
+                        IsAdditionalCost = false, // Forced false on copy - matches legacy (add_cost with .f.)
+                        CalculateConsumption = sourceRow.CalculateConsumption,
+                    };
+
+                    await _apparelProDbContext.StyleMaterialConsumptionLedgers.AddAsync(newLedgerRow);
+                    targetLedgerRows.Add(newLedgerRow); // so a later source row in this same batch also sees it
+
+                    sourceCostProfiles.TryGetValue(compositeItemCode, out var sourceProfile);
+
+                    if (targetCostProfiles.TryGetValue(compositeItemCode, out var existingTargetProfile))
+                    {
+                        existingTargetProfile.BalanceQuantity += sourceRow.TotalConsumption;
+                        existingTargetProfile.TotalConsumption += sourceRow.TotalConsumption;
+                        _apparelProDbContext.StyleMaterialCostProfiles.Update(existingTargetProfile);
+                    }
+                    else
+                    {
+                        var newTargetProfile = new StyleMaterialCostProfile
+                        {
+                            BuyerCode = request.TargetBuyerCode,
+                            Order = request.TargetOrder.Trim(),
+                            TypeCode = request.TargetTypeCode,
+                            StyleCode = request.TargetStyleCode.Trim(),
+                            ItemCode = compositeItemCode,
+                            Description = sourceProfile?.Description ?? $"{sourceRow.StockCode}/{sourceRow.ItemCode}",
+                            ItemUnit = sourceProfile?.ItemUnit ?? sourceRow.ItemUnit,
+                            Currency = sourceProfile?.Currency ?? "",
+                            UnitPrice = sourceProfile?.UnitPrice ?? 0,
+                            BalanceQuantity = sourceRow.TotalConsumption,
+                            TotalConsumption = sourceRow.TotalConsumption,
+                            SupplierCode = sourceRow.SupplierCode,
+                        };
+
+                        await _apparelProDbContext.StyleMaterialCostProfiles.AddAsync(newTargetProfile);
+                        targetCostProfiles[compositeItemCode] = newTargetProfile;
+                    }
+
+                    result.CopiedCount++;
+                }
+
+                await _apparelProDbContext.SaveChangesAsync();
+                await dbTransaction.CommitAsync();
+                return result;
             }
             catch (Exception)
             {

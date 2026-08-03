@@ -13,8 +13,16 @@ namespace ApparelPro.WebApi.APIModels.OrderManagement
         public string Color { get; set; } = "";
         public string Size { get; set; } = "";
 
+        // Populated only when the merchandiser changed Color/Size while editing an EXISTING
+        // ledger line. When set and different from Color/Size above, the old ledger row under
+        // the ORIGINAL Color/Size is deleted (unless a supplier PO already draws against it) so a
+        // reselect never leaves a duplicate/orphaned row behind. Leave null for a normal add.
+        public string? OriginalColor { get; set; }
+        public string? OriginalSize { get; set; }
+
         [Required] public string StockCode { get; set; } = null!;
         [Required] public string ItemCode { get; set; } = null!;
+        [StringLength(100)] public string? Description { get; set; }
 
         // Feature properties mapping your dynamic interface inputs
         public string Feature1 { get; set; } = "";

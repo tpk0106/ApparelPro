@@ -1,4 +1,4 @@
-namespace ApparelPro.WebApi.APIModels.OrderManagement
+﻿namespace ApparelPro.WebApi.APIModels.OrderManagement
 {
     public class StyleMaterialConsumptionLedgerRowAPIModel
     {
@@ -27,5 +27,11 @@ namespace ApparelPro.WebApi.APIModels.OrderManagement
 
         public bool IsAdditionalCost { get; set; }
         public bool CalculateConsumption { get; set; }
+
+        // Joined from StyleMaterialCostProfiles by composite ItemCode (see
+        // GetLedgerEntriesByStyleAsync), so the edit form can recall the previously
+        // entered unit price/currency instead of always showing 0.
+        public decimal UnitPrice { get; set; }
+        public string Currency { get; set; } = null!;
     }
 }

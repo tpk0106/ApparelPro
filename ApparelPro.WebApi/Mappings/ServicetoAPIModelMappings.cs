@@ -540,6 +540,8 @@ namespace ApparelPro.WebApi.Mappings
             // material consumption
 
             CreateMap<CreateMaterialConsumptionEntryRequestAPIModel, CreateMaterialConsumptionEntryRequestServiceModel>().MaxDepth(2);
+            CreateMap<CopyMaterialsFromStyleRequestAPIModel, CopyMaterialsFromStyleRequestServiceModel>().MaxDepth(2);
+            CreateMap<CopyMaterialsFromStyleResultServiceModel, CopyMaterialsFromStyleResultAPIModel>().MaxDepth(2);
             CreateMap<MaterialCatalogItemServiceModel, MaterialCatalogItemAPIModel>().MaxDepth(2);
             CreateMap<MaterialCatalogGroupServiceModel, MaterialCatalogGroupAPIModel>().MaxDepth(2);
             CreateMap<StyleMaterialConsumptionLedgerRowServiceModel, StyleMaterialConsumptionLedgerRowAPIModel>().MaxDepth(2);

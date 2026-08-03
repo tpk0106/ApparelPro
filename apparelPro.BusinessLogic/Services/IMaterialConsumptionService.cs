@@ -26,6 +26,10 @@ namespace apparelPro.BusinessLogic.Services
         Task<List<StyleMaterialConsumptionLedgerRowServiceModel>> GetLedgerEntriesByStyleAsync(int buyerCode, string order, int typeCode, string styleCode);
         Task<bool> DeleteConsumptionEntryAsync(int buyerCode, string order, int typeCode, string styleCode, string stockCode, string itemCode, string color, string size);
 
+        // New: Bulk-copy every consumption/cost-profile line from another Buyer/Order/Type/Style
+        // into this one (skip-if-exists at the target - see MaterialConsumptionService for full rules).
+        Task<CopyMaterialsFromStyleResultServiceModel> CopyMaterialsFromStyleAsync(CopyMaterialsFromStyleRequestServiceModel request);
+
         Task<List<OrderItemServiceModel>> GetAvailableMaterialsLookupAsync(int buyerCode, string order, int typeCode, string styleCode);
 
         // Full Stock+Item catalog, grouped by StockCode, for the master-list catalog picker (not style-scoped)
