@@ -125,6 +125,34 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
         public Task UpdateCurrencyConversionAsync(UpdateCurrencyConversionServiceModel updateCurrencyConversionServiceModel)
         {
             throw new NotImplementedException();
-        }       
+        }
+
+        // NEW (2026-08-07) - see the interface comment. Trims/uppercases both currency codes
+        // so lookups are resilient to the same casing/whitespace inconsistencies the rest of
+        // this codebase already guards against (od_conv-style flat rate table: one row per
+        // From/To pair, Value is the multiplier - matches CurrencyConversion's shape exactly).
+        public async Task<decimal> ConvertAsync(decimal amount, string fromCurrency, string toCurrency)
+        {
+            var from = (fromCurrency ?? string.Empty).Trim().ToUpperInvariant();
+            var to = (toCurrency ?? string.Empty).Trim().ToUpperInvariant();
+
+            if (string.IsNullOrEmpty(from) || string.IsNullOrEmpty(to) || from == to)
+                return amount;
+
+            var rate = await _apparelProDbContext.CurrencyConversions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.FromCurrency.ToUpper() == from && c.ToCurrency.ToUpper() == to);
+
+            if (rate == null)
+            {
+                // Per explicit project decision (2026-08-07): block with a clear error rather
+                // than silently passing the amount through unconverted or guessing a rate -
+                // a wrong Trim Sheet total is worse than a report that fails to generate.
+                throw new InvalidOperationException(
+                    $"No currency conversion rate found from {from} to {to}. Add one on the Currency Conversion reference screen before generating this report.");
+            }
+
+            return amount * rate.Value;
+        }
     }
 }

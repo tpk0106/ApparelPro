@@ -1,4 +1,4 @@
-﻿using apparelPro.BusinessLogic.Services.Models.Registration.IPermissionService;
+using apparelPro.BusinessLogic.Services.Models.Registration.IPermissionService;
 using ApparelPro.Data;
 using ApparelPro.Data.Models.Registration;
 using AutoMapper;
@@ -228,6 +228,21 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
         private static readonly string[] AdministratorOnlyRoles = { "Administrator" };
         private static readonly string[] BuyersWidenedRoles = { "Inventory", "Merchandiser", "Merchandiser Manager", "Order Entry Operator", "Store Manager", "Administrator" };
         private static readonly string[] StyleApprovalOnlyRoles = { "Merchandiser Manager" };
+        // Trim Sheet Report (2026-08-07): base viewing roles. A superset of
+        // MerchandisingOnlyRoles so Merchandising Manager/Executive Director - who also need
+        // to see the profit-gated section below - aren't blocked from the report entirely.
+        // Administrator included per this file's established convention (every other role
+        // array above defaults Administrator in) - originally omitted, which silently denied
+        // Administrator accounts access to Trim Sheet Report even after this catalog entry was
+        // seeded (FIXED 2026-08-07).
+        private static readonly string[] TrimSheetReportRoles = { "Merchandiser", "Merchandiser Manager", "Merchandising Manager", "Executive Director", "Administrator" };
+        // Estimated Profit section only - NOT wired as a policy. Documented here for the
+        // catalog audit trail; TrimSheetReportController checks these same 3 roles inline via
+        // User.IsInRole(...), matching how MaterialConsumptionController's own higher-authority
+        // check is done (a hardcoded inline check, not a second [Authorize] policy) rather than
+        // referencing this private array across layers. Mirrors legacy's separate
+        // access('trimprof') gate on top of general Trim Sheet viewing. Per explicit project
+        // decision (2026-08-07): Merchandiser Manager, Merchandising Manager, Executive Director.
         private static readonly string[] ColorSizeBreakdownBulkSaveRoles = { "Merchandiser", "Merchandiser Manager", "Order Entry Operator" };
 
         // ---------------------------------------------------------------------------
@@ -305,6 +320,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
             new("item-feature-view", "Item Feature Master - View / Lookup", "Reference Data", "ItemFeatureController GET endpoints (list, list/{featureCode})", OrderwiseInventoryStandardRoles),
             new("item-feature-manage", "Item Feature Master - Add / Update / Delete", "Reference Data", "ItemFeatureController POST/PUT/DELETE endpoints", MerchandisingOnlyRoles),
             new("material-consumption", "Material Consumption", "Order Management", "MaterialConsumptionController - class-level [Authorize]", MerchandisingOnlyRoles),
+            new("trim-sheet-report", "Trim Sheet Report", "Reports", "TrimSheetReportController - class-level [Authorize]. The Estimated Profit section within it has its own narrower role check (TrimSheetProfitRoles) inline in the controller, not this policy.", TrimSheetReportRoles),
             new("port-destination-view", "Port / Destination Master - View / Lookup", "Reference Data", "PortDestinationController GET endpoints (list, list/{id}/{countryCode})", OrderwiseInventoryStandardRoles),
             new("port-destination-manage", "Port / Destination Master - Add / Update / Delete", "Reference Data", "PortDestinationController POST/PUT/DELETE endpoints", MerchandisingOnlyRoles),
             new("style-details", "Style Details", "Order Management", "StyleDetailsController.GetStyleDetailsAsync ('list')", OrderwiseInventoryStandardRoles),

@@ -1,8 +1,9 @@
-﻿using apparelPro.BusinessLogic.Services.Implementation.Shared;
+using apparelPro.BusinessLogic.Services.Implementation.Shared;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IColorSizeDetailsService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialConsumptionService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPurchaseOrderService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.ITrimSheetReportService;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBasisService;
@@ -17,6 +18,8 @@ using apparelPro.BusinessLogic.Services.Models.Reference.IPortDestinationService
 using apparelPro.BusinessLogic.Services.Models.Reference.ISupplierService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitConversionService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitService;
+using apparelPro.BusinessLogic.Services.Models.Registration.IGroupService;
+using apparelPro.BusinessLogic.Services.Models.Registration.IPermissionService;
 using apparelPro.BusinessLogic.Services.Models.Registration.IUserService;
 using apparelPro.BusinessLogic.Services.Models.SystemConfiguration.ISystemParameterService;
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
@@ -323,13 +326,15 @@ namespace ApparelPro.WebApi.Mappings
                  .ReverseMap()
                 .ForAllMembers(opt => opt.Ignore());
 
-            // ⚠️ Not restored: CreateFeatureAPIModel still uses Id (int), but
-            // CreateItemFeatureServiceModel now needs FeatureCode (string) — these are
-            // different fields (Feature.Id is the surrogate key, Feature.Code is the
-            // business code), not just a rename. Tell Claude how you want this bridged
-            // (e.g. add a FeatureCode property to CreateFeatureAPIModel?) before wiring
-            // this map up — guessing an Id-to-FeatureCode conversion here would be wrong.
-            // CreateMap<CreateFeatureAPIModel, CreateItemFeatureServiceModel>().MaxDepth(2);
+            // FIXED (2026-08-07): this warning's premise is stale - checked both classes
+            // directly (CreateItemFeatureAPIModel and CreateItemFeatureServiceModel, both under
+            // .../OrderManagement and .../Reference/IFeatureService respectively) and both
+            // already have identical FeatureCode(string)/Description(string?) shapes; whatever
+            // Id-vs-FeatureCode mismatch this note originally warned about no longer exists.
+            // Found unregistered (never wired up after the warning was left) via a full sweep
+            // of every controller's _mapper.Map<> call site - ItemFeatureController.AddFeatureAsync
+            // would throw AutoMapperMappingException on every POST /api/item-feature.
+            CreateMap<CreateItemFeatureAPIModel, CreateItemFeatureServiceModel>().MaxDepth(2);
 
             CreateMap<UpdateItemFeatureAPIModel, UpdateItemFeatureServiceModel>().MaxDepth(2)
                       .ForMember(src => src.FeatureCode, opt => opt.MapFrom(src => src.FeatureCode))
@@ -561,6 +566,14 @@ namespace ApparelPro.WebApi.Mappings
 
             CreateMap<StyleApprovalDetailsServiceModel, StyleApprovalDetailsAPIModel>().MaxDepth(2);
 
+            // Trim Sheet Report (2026-08-07)
+            CreateMap<TrimSheetReportServiceModel, TrimSheetReportAPIModel>().MaxDepth(2);
+            CreateMap<TrimSheetLineServiceModel, TrimSheetLineAPIModel>().MaxDepth(2);
+            CreateMap<TrimSheetStockGroupServiceModel, TrimSheetStockGroupAPIModel>().MaxDepth(2);
+            CreateMap<TrimSheetSupplierTotalServiceModel, TrimSheetSupplierTotalAPIModel>().MaxDepth(2);
+            CreateMap<TrimSheetProfitServiceModel, TrimSheetProfitAPIModel>().MaxDepth(2);
+            CreateMap<TrimSheetApprovalStampServiceModel, TrimSheetApprovalStampAPIModel>().MaxDepth(2);
+
             // orderwise inventory
             CreateMap<RequisitionHeaderAPIModel, RequisitionHeaderServiceModel>().MaxDepth(2);
             CreateMap<RequisitionLineItemAPIModel, RequisitionLineItemServiceModel>().MaxDepth(2);
@@ -592,6 +605,37 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<RtnLineItemAPIModel, RtnLineItemServiceModel>().MaxDepth(2);
             CreateMap<RtnReturnableStockRowServiceModel, RtnReturnableStockRowAPIModel>().MaxDepth(2);
 
+            // orderwise inventory - SAN (Stock Adjustment Note)
+            // FIXED (2026-08-07): all three were missing entirely - same class of bug as the
+            // Permissions maps noted below (confirmed by grepping this file and
+            // DatabaseToServiceMappings.cs for "San"/"StockAdjustment" and finding zero hits).
+            // SANController.GetAdjustableStock's Map<List<SanAdjustableStockRowAPIModel>>(...)
+            // was throwing AutoMapperMappingException on every call - reported by the user as
+            // "Failed to load adjustable stock: Error mapping types...". CommitStockAdjustment's
+            // two Header/Lines maps were equally unregistered but hadn't been hit yet.
+            CreateMap<SanAdjustableStockRowServiceModel, SanAdjustableStockRowAPIModel>().MaxDepth(2);
+            CreateMap<SanHeaderAPIModel, SanHeaderServiceModel>().MaxDepth(2);
+            CreateMap<SanLineItemAPIModel, SanLineItemServiceModel>().MaxDepth(2);
+
+            // orderwise inventory - DGN (Damaged Goods Note)
+            // FIXED (2026-08-07): found via a full sweep of every controller's _mapper.Map<>
+            // call site after the SAN bug above - same class of gap, never registered at all.
+            CreateMap<DgnDamageableStockRowServiceModel, DgnDamageableStockRowAPIModel>().MaxDepth(2);
+            CreateMap<DgnHeaderAPIModel, DgnHeaderServiceModel>().MaxDepth(2);
+            CreateMap<DgnLineItemAPIModel, DgnLineItemServiceModel>().MaxDepth(2);
+
+            // orderwise inventory - GTN (Goods Transfer Note)
+            // FIXED (2026-08-07): same sweep, same gap.
+            CreateMap<GtnTransferableStockRowServiceModel, GtnTransferableStockRowAPIModel>().MaxDepth(2);
+            CreateMap<GtnHeaderAPIModel, GtnHeaderServiceModel>().MaxDepth(2);
+            CreateMap<GtnLineItemAPIModel, GtnLineItemServiceModel>().MaxDepth(2);
+
+            // orderwise inventory - SRN (Supplier Return Note)
+            // FIXED (2026-08-07): same sweep, same gap.
+            CreateMap<SrnReturnableStockRowServiceModel, SrnReturnableStockRowAPIModel>().MaxDepth(2);
+            CreateMap<SrnHeaderAPIModel, SrnHeaderServiceModel>().MaxDepth(2);
+            CreateMap<SrnLineItemAPIModel, SrnLineItemServiceModel>().MaxDepth(2);
+
             // orderwise inventory - stock movement report
             CreateMap<StockMovementReportHeaderServiceModel, StockMovementReportHeaderAPIModel>().MaxDepth(2);
             CreateMap<StockMovementReportLineServiceModel, StockMovementReportLineAPIModel>().MaxDepth(2);
@@ -599,6 +643,19 @@ namespace ApparelPro.WebApi.Mappings
             // order confirmation - style totals / system configuration
             CreateMap<StyleTotalsServiceModel, StyleTotalsAPIModel>().MaxDepth(2);
             CreateMap<SystemParameterServiceModel, SystemParameterAPIModel>().MaxDepth(2);
+
+            // groups & user-group management (new, 2026-08-03)
+            CreateMap<GroupServiceModel, GroupAPIModel>().MaxDepth(2);
+            CreateMap<UserWithGroupsServiceModel, UserWithGroupsAPIModel>().MaxDepth(2);
+
+            // permissions - these three were missing entirely; PermissionsController would have
+            // thrown on first real use (AutoMapperMappingException - confirmed by grepping this
+            // file for any existing Permission-related CreateMap and finding none). Fixed
+            // alongside the Groups work since the Users & Groups screen's Permission Matrix
+            // panel depends on this controller actually working.
+            CreateMap<PermissionServiceModel, PermissionAPIModel>().MaxDepth(2);
+            CreateMap<RolePermissionMatrixRoleServiceModel, RolePermissionMatrixRoleAPIModel>().MaxDepth(2);
+            CreateMap<UpdateRolePermissionsAPIModel, UpdateRolePermissionsServiceModel>().MaxDepth(2);
         }
 
         public class PaginationResultToPaginationAPITypeConverter<sourceT, destT> : ITypeConverter<PaginationResult<sourceT>, PaginationAPIModel<destT>>

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace ApparelPro.WebApi.APIModels.OrderManagement
 {
@@ -30,9 +30,20 @@ namespace ApparelPro.WebApi.APIModels.OrderManagement
         public string Feature3 { get; set; } = "";
         public string Feature4 { get; set; } = "";
 
-        [Required] public string ConsumptionUnit { get; set; } = null!;
-        [Required] public decimal QuantityPerGarment { get; set; }
-        [Required] public decimal PercentageAllowance { get; set; }
+        // MANUAL CONSUMPTION ENTRY (2026-08-07): mirrors od_tpdt1.prg's "Calculate
+        // Consumptions...? Yes|No" dialog (gpap(), lines ~745-878). true = the normal
+        // calculated path (Color/Size/Consumption Unit/Qty per Garment/% Allowance drive
+        // Total Consumption via the same formula as CalculateConsumption below). false =
+        // legacy's manual path - Color/Size/Consumption Unit/Qty per Garment/% Allowance are
+        // not used and TotalConsumption below is taken as entered directly. See
+        // MaterialConsumptionService.SaveMaterialConsumptionEntryAsync for the validation and
+        // normalization this drives.
+        public bool CalculateConsumption { get; set; } = true;
+
+        // Not [Required] - legitimately blank when CalculateConsumption is false.
+        public string ConsumptionUnit { get; set; } = "";
+        public decimal QuantityPerGarment { get; set; }
+        public decimal PercentageAllowance { get; set; }
         [Required] public string ItemUnit { get; set; } = null!;
         [Required] public decimal TotalConsumption { get; set; }
         [Required] public string SupplierCode { get; set; } = null!;

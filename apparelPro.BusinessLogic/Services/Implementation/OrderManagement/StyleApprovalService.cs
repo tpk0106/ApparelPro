@@ -29,9 +29,16 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
             }
 
             // 2. THE CRITICAL RE-APPROVAL BLOCKER: Match Clipper's empty check to preserve data history trails
-            if (!string.IsNullOrEmpty(styleRow.EstimateApprovalUserName))
+            // FIXED (2026-08-07): this was checking EstimateApprovalUserName, which this method
+            // never writes (it writes Username/ApprovedDate - see the fix below and the matching
+            // comment there from 2026-08-03). EstimateApprovalUserName sits permanently empty, so
+            // this guard could never actually fire - re-approval (and silently overwriting the
+            // original approver/date) was possible indefinitely. Legacy od_aprvl.prg's own guard
+            // is "if !empty(userid) ... 'Trim Sheet already approved'" - Username is the correct
+            // field to check here, matching od_style->userid exactly.
+            if (!string.IsNullOrEmpty(styleRow.Username))
             {
-                throw new InvalidOperationException("The critical path manufacturing events for this style have already been officially locked and approved by management.");
+                throw new InvalidOperationException("Trim Sheet already approved for this style.");
             }
 
             // 3. APPLY METADATA FOOTPRINT KEYS ATOMICALY

@@ -24,9 +24,11 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
         private readonly IConfiguration _configuration;
         private readonly IPasswordHasher<ApparelProUser> _passwordHasher;
         private readonly UserManager<ApparelProUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         public UserService(ApparelProDbContext apparelProDbContext, IMapper mapper, ILookupConstants lookupConstants,
             ISecurityService securityService, UserIdentityDbContext userIdentityDbContext, IConfiguration configuration,
-            IPasswordHasher<ApparelProUser> passwordHasher, UserManager<ApparelProUser> userManager)
+            IPasswordHasher<ApparelProUser> passwordHasher, UserManager<ApparelProUser> userManager,
+            RoleManager<IdentityRole> roleManager)
         {
             if (apparelProDbContext == null)
             {
@@ -60,6 +62,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
             _configuration = configuration;
             _passwordHasher = passwordHasher;
             _userManager = userManager;
+            _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
         }
 
         public async Task<UserServiceModel> AddUserAsync(UserServiceModel userServiceModel)
@@ -662,6 +665,93 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
             throw new NotImplementedException();
         }
 
+        public async Task<List<UserWithGroupsServiceModel>> GetIdentityUsersWithGroupsAsync()
+        {
+            var users = await _userIdentityDbContext.Users
+                .AsNoTracking()
+                .OrderBy(u => u.Email)
+                .ToListAsync();
+
+            // Inner-join AspNetUserRoles -> AspNetRoles to resolve each membership row down to
+            // a (UserId, RoleName) pair, grouped by user below.
+            var userRoles = await _userIdentityDbContext.UserRoles
+                .Join(
+                    _userIdentityDbContext.Roles,
+                    userRole => userRole.RoleId,
+                    role => role.Id,
+                    (userRole, role) => new { userRole.UserId, RoleName = role.Name })
+                .ToListAsync();
+
+            var groupsByUserId = userRoles
+                .Where(ur => ur.RoleName != null)
+                .GroupBy(ur => ur.UserId)
+                .ToDictionary(g => g.Key, g => g.Select(ur => ur.RoleName!).OrderBy(n => n).ToList());
+
+            return users.Select(u => new UserWithGroupsServiceModel
+            {
+                Id = u.Id,
+                Email = u.Email ?? string.Empty,
+                UserName = u.UserName ?? string.Empty,
+                KnownAs = u.KnownAs,
+                PhoneNumber = u.PhoneNumber,
+                EmailConfirmed = u.EmailConfirmed,
+                Groups = groupsByUserId.TryGetValue(u.Id, out var groups) ? groups : new List<string>()
+            }).ToList();
+        }
+
+        public async Task AssignUserToGroupAsync(string userId, string groupId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                throw new InvalidOperationException("User not found.");
+            }
+
+            var role = await _roleManager.FindByIdAsync(groupId);
+            if (role == null || string.IsNullOrEmpty(role.Name))
+            {
+                throw new InvalidOperationException("Group not found.");
+            }
+
+            if (await _userManager.IsInRoleAsync(user, role.Name))
+            {
+                return; // already a member - idempotent
+            }
+
+            var result = await _userManager.AddToRoleAsync(user, role.Name);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Could not assign user to group: {errors}");
+            }
+        }
+
+        public async Task RemoveUserFromGroupAsync(string userId, string groupId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                throw new InvalidOperationException("User not found.");
+            }
+
+            var role = await _roleManager.FindByIdAsync(groupId);
+            if (role == null || string.IsNullOrEmpty(role.Name))
+            {
+                throw new InvalidOperationException("Group not found.");
+            }
+
+            if (!await _userManager.IsInRoleAsync(user, role.Name))
+            {
+                return; // already not a member - idempotent
+            }
+
+            var result = await _userManager.RemoveFromRoleAsync(user, role.Name);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Could not remove user from group: {errors}");
+            }
+        }
 
     }
 }

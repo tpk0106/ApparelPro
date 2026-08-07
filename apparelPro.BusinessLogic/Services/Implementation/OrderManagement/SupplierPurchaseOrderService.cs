@@ -242,12 +242,18 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     // duration of this transaction — same pattern already used by STRN/GIN/GRN — so
                     // two concurrent P/O saves against the same budget line can't both read a stale
                     // balance and both get accepted, driving it negative.
+                    // FIXED (2026-08-07): raw SQL via FromSqlInterpolated bypasses EF Core's
+                    // Fluent API HasColumnName translation entirely (only plain LINQ queries get
+                    // that), so this WHERE clause must use the actual physical column names
+                    // (Buyer/Type/Style per StyleMaterialCostProfileConfig.cs), not the C# entity
+                    // property names (BuyerCode/TypeCode/StyleCode) - was throwing "Invalid column
+                    // name 'BuyerCode'./'TypeCode'./'StyleCode'." on every Supplier P/O save.
                     var costProfile = await _apparelProDbContext.StyleMaterialCostProfiles
                         .FromSqlInterpolated($@"SELECT * FROM StyleMaterialCostProfiles WITH (UPDLOCK, HOLDLOCK)
-                            WHERE BuyerCode = {header.BuyerCode}
+                            WHERE Buyer = {header.BuyerCode}
                               AND [Order] = {header.OrderNumber.Trim()}
-                              AND TypeCode = {header.TypeCode}
-                              AND StyleCode = {header.StyleCode.Trim()}
+                              AND Type = {header.TypeCode}
+                              AND Style = {header.StyleCode.Trim()}
                               AND ItemCode = {line.ItemCode.Trim()}")
                         .FirstOrDefaultAsync();
 

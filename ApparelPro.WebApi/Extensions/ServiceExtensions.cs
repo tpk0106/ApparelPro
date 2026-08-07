@@ -81,6 +81,7 @@ namespace ApparelPro.WebApi.Extensions
             services.AddTransient(typeof(IUnitServiceT<UnitServiceModel>), typeof(UnitServiceT));
             services.AddTransient(typeof(IUnitService), typeof(UnitService));
             services.AddTransient(typeof(IUserService), typeof(UserService));
+            services.AddTransient(typeof(IGroupService), typeof(GroupService));
             services.AddTransient(typeof(IPermissionService), typeof(PermissionService));
             services.AddTransient(typeof(ISecurityService), typeof(SecurityService));
             services.AddTransient(typeof(ICurrencyExchangeService), typeof(CurrencyExchangeService));
@@ -95,6 +96,12 @@ namespace ApparelPro.WebApi.Extensions
             services.AddTransient(typeof(IUnitConversionService), typeof(UnitConversionService));
             services.AddTransient(typeof(IDepartmentService), typeof(DepartmentService));
             services.AddTransient(typeof(ISystemParameterService), typeof(SystemParameterService));
+            // FIXED (2026-08-07): ICurrencyConversionService was never registered here at all -
+            // CurrencyConversionController has injected it since it was written, so every one of
+            // its endpoints (the Currency Conversion reference-data screen) would have thrown a
+            // DI resolution failure at request time. Found while wiring ConvertAsync (new this
+            // session) into the Trim Sheet Report, which depends on this service actually working.
+            services.AddTransient<ICurrencyConversionService, CurrencyConversionService>();
 
             services.AddTransient(typeof(PaginationResultToPaginationAPITypeConverter<,>));
             //  services.AddTransient<IUnitServiceT<UnitServiceModel>>(x=> x.GetRequiredService<IUnitServiceT<UnitServiceModel>>());
@@ -121,6 +128,9 @@ namespace ApparelPro.WebApi.Extensions
             // events approval
             // Register the Critical Path Manager Validation Lock service interface mapping
             services.AddScoped<IStyleApprovalService, StyleApprovalService>();
+
+            // Trim Sheet Report (Reports -> Order Management -> Trim Sheet)
+            services.AddScoped<ITrimSheetReportService, TrimSheetReportService>();
 
             // orderwise inventory
             services.AddScoped<IStoresRequisitionService, StoresRequisitionService>();

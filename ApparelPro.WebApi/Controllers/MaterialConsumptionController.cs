@@ -1,4 +1,4 @@
-﻿using apparelPro.BusinessLogic.Services;
+using apparelPro.BusinessLogic.Services;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialConsumptionService;
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
 using ApparelPro.WebApi.APIModels.OrderManagement;
@@ -103,7 +103,11 @@ namespace ApparelPro.WebApi.Controllers
                 if (approvalDetails != null)
                 {
                     // 🚀 THE CLIPPER SECURITY GUARD ACCESS INTERCEPTOR:
-                    bool isHigherAuthority = User.IsInRole("Merchandising Manager") || User.IsInRole("Merchandiser Manager") || User.IsInRole("Executive Director");
+                    // FIXED (2026-08-07): this list omitted "Administrator", the same recurring
+                    // oversight already fixed twice elsewhere in this project (Trim Sheet Report's
+                    // TrimSheetReportRoles, and the still-open StyleApprovalOnlyRoles note) -
+                    // every other authority/role gate in this app defaults Administrator in.
+                    bool isHigherAuthority = User.IsInRole("Administrator") || User.IsInRole("Merchandising Manager") || User.IsInRole("Merchandiser Manager") || User.IsInRole("Executive Director");
 
                     if (!isHigherAuthority)
                     {
@@ -115,7 +119,14 @@ namespace ApparelPro.WebApi.Controllers
 
                         return StatusCode(403, new
                         {
-                            Error = $"🛑 ACCESS DENIED: This material sheet was officially approved and locked by [ {approvalDetails.EstimateApprovalUserName} ] on {formattedDate}. Alterations are restricted to higher management authority accounts only."
+                            // Leads with "Style already approved on {date}" per explicit user
+                            // request (2026-08-07) - the previous "ACCESS DENIED" paragraph was
+                            // being swallowed by two separate frontend bugs (axiosClient not
+                            // parsing the `error` field, and this screen's catch block showing a
+                            // hardcoded generic message), so once those were fixed the wording
+                            // itself also needed to lead with the actionable fact instead of a
+                            // dramatic banner.
+                            Error = $"Style already approved on {formattedDate} by {approvalDetails.EstimateApprovalUserName}. Only a Merchandising Manager, Merchandiser Manager, or Executive Director can edit it now."
                         });
                     }
                 }
@@ -123,6 +134,14 @@ namespace ApparelPro.WebApi.Controllers
                 var createMaterialConsumptionEntryRequestServiceModel = _mapper.Map<CreateMaterialConsumptionEntryRequestServiceModel>(request);
                 var result = await _materialConsumptionService.SaveMaterialConsumptionEntryAsync(createMaterialConsumptionEntryRequestServiceModel);
                 return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Manual/Calculate Consumption validation (2026-08-07) - e.g. "Total Consumption
+                // must be greater than zero when entered manually" - is the caller's data problem
+                // to fix, not a server fault, so it gets its own clean 400 rather than falling
+                // through to the generic 500 below (matching TrimSheetReportController's pattern).
+                return BadRequest(new { Error = ex.Message });
             }
             catch (Exception ex)
             {
@@ -227,7 +246,8 @@ namespace ApparelPro.WebApi.Controllers
 
                 if (approvalDetails != null)
                 {
-                    bool isHigherAuthority = User.IsInRole("Merchandising Manager") || User.IsInRole("Merchandiser Manager") || User.IsInRole("Executive Director");
+                    // FIXED (2026-08-07): same Administrator omission fix as SaveEntry above.
+                    bool isHigherAuthority = User.IsInRole("Administrator") || User.IsInRole("Merchandising Manager") || User.IsInRole("Merchandiser Manager") || User.IsInRole("Executive Director");
 
                     if (!isHigherAuthority)
                     {
@@ -237,7 +257,14 @@ namespace ApparelPro.WebApi.Controllers
 
                         return StatusCode(403, new
                         {
-                            Error = $"🛑 ACCESS DENIED: This material sheet was officially approved and locked by [ {approvalDetails.EstimateApprovalUserName} ] on {formattedDate}. Alterations are restricted to higher management authority accounts only."
+                            // Leads with "Style already approved on {date}" per explicit user
+                            // request (2026-08-07) - the previous "ACCESS DENIED" paragraph was
+                            // being swallowed by two separate frontend bugs (axiosClient not
+                            // parsing the `error` field, and this screen's catch block showing a
+                            // hardcoded generic message), so once those were fixed the wording
+                            // itself also needed to lead with the actionable fact instead of a
+                            // dramatic banner.
+                            Error = $"Style already approved on {formattedDate} by {approvalDetails.EstimateApprovalUserName}. Only a Merchandising Manager, Merchandiser Manager, or Executive Director can edit it now."
                         });
                     }
                 }

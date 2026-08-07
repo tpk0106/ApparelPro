@@ -52,8 +52,13 @@ namespace ApparelPro.Data.Configurations.OrderManagement
                 .HasColumnName("ItemCode")
                 .IsRequired();
 
+            // FIXED (2026-08-07): widened from varchar(10) to varchar(23), then to varchar(30)
+            // per the user's follow-up request - a real Supplier PO save had thrown "String or
+            // binary data would be truncated ... column 'RefNo'" for an operator-entered
+            // reference value longer than 10 chars. The frontend "Reference Number" field is
+            // now capped at 30 chars to match (see supplier-purchase-order-workspace.tsx).
             entity.Property(p => p.RefNo)
-                .HasColumnType("varchar(10)")
+                .HasColumnType("varchar(30)")
                 .HasColumnName("RefNo");
 
             entity.Property(p => p.OrderUnit)

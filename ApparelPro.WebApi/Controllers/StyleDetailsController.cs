@@ -1,4 +1,4 @@
-﻿using apparelPro.BusinessLogic.Services;
+using apparelPro.BusinessLogic.Services;
 using apparelPro.BusinessLogic.Services.Implementation.Reference;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
@@ -146,7 +146,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/{buyer}/{order}/{type}/{style}", Name = "GetStyleDetailsByBuyerOrderTypeStyleAsync")]
-        [ProducesResponseType(typeof(CountryAPIModel), HttpStatusCodes.OK)]
+        [ProducesResponseType(typeof(StyleAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         public async Task<IActionResult> GetStyleDetailsByBuyerOrderTypeStyleAsync(
             [FromRoute]  int buyer,
@@ -154,13 +154,23 @@ namespace ApparelPro.WebApi.Controllers
             [FromRoute] int type, 
             [FromRoute] string style)
         {
-            var Bank = await _styleDetailsService.GetStyleDetailsByBuyerOrderTypeStyleAsync(buyer,order,type,style);
-            if (Bank == null)
+            // FIXED (2026-08-07): this whole block was a Bank/Country-controller copy-paste
+            // artifact (variable named "Bank", error message "Bank is not available", mapped to
+            // CountryAPIModel) never updated for Style - found via a full _mapper.Map<> sweep,
+            // since it threw AutoMapperMappingException the moment this route was ever hit
+            // (no CreateMap<StyleDetailsServiceModel, CountryAPIModel> exists, nor should one).
+            // UpdateStyleDetailsAsync below already maps this exact same service call
+            // (GetStyleDetailsByBuyerOrderTypeStyleAsync) to StyleAPIModel - that's the
+            // established, already-registered pair (CreateMap<StyleDetailsServiceModel,
+            // StyleAPIModel> in ServicetoAPIModelMappings.cs), so it's what this route should
+            // have returned all along.
+            var styleDetails = await _styleDetailsService.GetStyleDetailsByBuyerOrderTypeStyleAsync(buyer,order,type,style);
+            if (styleDetails == null)
             {
-                return UnprocessableEntity("Bank is not available for code :" + buyer);
+                return UnprocessableEntity("Style is not available for Buyer/Order/Type/Style :" + buyer + "/" + order + "/" + type + "/" + style);
             }
-            var countryAPIModel = _mapper.Map<CountryAPIModel>(Bank);
-            return Ok(countryAPIModel);
+            var styleAPIModel = _mapper.Map<StyleAPIModel>(styleDetails);
+            return Ok(styleAPIModel);
         }
 
         [HttpGet("list/styles/{buyerCode}/{order}/{typeCode}", Name = "GetStyleDetailsByBuyerOrderTypeAsync")]

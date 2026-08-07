@@ -2,6 +2,7 @@
 using apparelPro.BusinessLogic.Services.Models.Registration.IUserService;
 using ApparelPro.Data.Models.Registration;
 using ApparelPro.WebApi.APIModels.Registration;
+using ApparelPro.WebApi.Authorization;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -39,7 +40,10 @@ namespace ApparelPro.WebApi.Controllers
         /// /// <response code="400">Invalid data</response>
         /// <response code="500">An error occurred</response>
         [HttpGet("list")]
-        [AllowAnonymous]
+        // SECURITY FIX (2026-08-03): was [AllowAnonymous] - any unauthenticated caller could
+        // list every user in the system. Locked to Administrator, consistent with every other
+        // admin-only surface in this app (see AccessPolicies.AdministratorOnly).
+        [Authorize(Roles = AccessPolicies.AdministratorOnly)]
         [ProducesResponseType(typeof(IEnumerable<UserAPIModel>),HttpStatusCodes.OK)]
         public async Task<IActionResult> GetUsersAsync()
         {
@@ -77,9 +81,15 @@ namespace ApparelPro.WebApi.Controllers
         //}
 
         [HttpPost("register")]
+        // SECURITY FIX (2026-08-03): was [AllowAnonymous] - any unauthenticated caller could
+        // self-register an account. Per explicit decision (see the "Users, Groups & Permissions"
+        // design doc, section 7): this is an internal ERP, not a public sign-up product - account
+        // creation is Administrator-only from here on. The frontend's public Sign-Up page will
+        // need its own follow-up removal/redirect (queued, not yet done) - this endpoint being
+        // gated is what actually closes the hole.
         [ProducesResponseType(typeof(RegisteredUserAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(BadRequestResult), HttpStatusCodes.BadRequest)]
-        [AllowAnonymous]
+        [Authorize(Roles = AccessPolicies.AdministratorOnly)]
         public async Task<ActionResult> Register(RegisterUserAPIModel registerUserAPIModel)
         {
             if (await UserExists(registerUserAPIModel.Email.ToLower()))
@@ -116,8 +126,14 @@ namespace ApparelPro.WebApi.Controllers
         }       
 
         [HttpPost]
+        // SECURITY FIX (2026-08-03): was [AllowAnonymous] - any unauthenticated caller could
+        // create arbitrary users. Locked to Administrator. NOTE: this action's underlying
+        // UserService.AddUserAsync currently writes to the legacy, non-Identity `User` table
+        // (ApparelPro.Data/Models/Registration/User.cs), NOT AspNetUsers - a user "created" this
+        // way cannot actually log in today. Flagged in the design doc (section 8); not fixed as
+        // part of this security pass since it needs its own review, not a drive-by change.
         [ProducesResponseType(typeof(void), HttpStatusCodes.Created)]
-        [AllowAnonymous]
+        [Authorize(Roles = AccessPolicies.AdministratorOnly)]
         public async Task<IActionResult> CreateUserAsync([FromBody] UserAPIModel userAPIModel)
         {
             var userServiceModel = _mapper.Map<UserServiceModel>(userAPIModel);
@@ -127,8 +143,10 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut()]
+        // SECURITY FIX (2026-08-03): was [AllowAnonymous] - any unauthenticated caller could
+        // update any user's record by email. Locked to Administrator.
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
-        [AllowAnonymous]
+        [Authorize(Roles = AccessPolicies.AdministratorOnly)]
         public async Task<IActionResult> UpdateUserAsync([FromQuery] string email, [FromBody] UpdateUserAPIModel updateUserAPIModel)
         {
             var userServiceModel = _mapper.Map<UpdateUserServiceModel>(updateUserAPIModel);
@@ -227,6 +245,54 @@ namespace ApparelPro.WebApi.Controllers
         //    var registeredUserAPIModel = _mapper.Map<RegisteredUserAPIModel>(registeredUserServiceModel);
         //    return Ok(registeredUserAPIModel);
         //}
+
+        // NEW (2026-08-03) - Users & Groups admin screen backing. Deliberately a new
+        // "list-with-groups" route rather than fixing the existing "list" route in place -
+        // that one's underlying service method reads a disconnected legacy table (see the
+        // design doc, section 8) and needs its own review, not a drive-by change here.
+        [HttpGet("list-with-groups")]
+        [Authorize(Roles = AccessPolicies.AdministratorOnly)]
+        [ProducesResponseType(typeof(List<UserWithGroupsAPIModel>), HttpStatusCodes.OK)]
+        public async Task<IActionResult> GetUsersWithGroupsAsync()
+        {
+            var serviceModels = await _userService.GetIdentityUsersWithGroupsAsync();
+            var apiModels = _mapper.Map<List<UserWithGroupsAPIModel>>(serviceModels);
+            return Ok(apiModels);
+        }
+
+        [HttpPost("{userId}/groups/{groupId}")]
+        [Authorize(Roles = AccessPolicies.AdministratorOnly)]
+        [ProducesResponseType(typeof(OkResult), HttpStatusCodes.OK)]
+        [ProducesResponseType(typeof(BadRequestResult), HttpStatusCodes.BadRequest)]
+        public async Task<IActionResult> AssignUserToGroupAsync(string userId, string groupId)
+        {
+            try
+            {
+                await _userService.AssignUserToGroupAsync(userId, groupId);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("{userId}/groups/{groupId}")]
+        [Authorize(Roles = AccessPolicies.AdministratorOnly)]
+        [ProducesResponseType(typeof(OkResult), HttpStatusCodes.OK)]
+        [ProducesResponseType(typeof(BadRequestResult), HttpStatusCodes.BadRequest)]
+        public async Task<IActionResult> RemoveUserFromGroupAsync(string userId, string groupId)
+        {
+            try
+            {
+                await _userService.RemoveUserFromGroupAsync(userId, groupId);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 
    public class Tokenizer

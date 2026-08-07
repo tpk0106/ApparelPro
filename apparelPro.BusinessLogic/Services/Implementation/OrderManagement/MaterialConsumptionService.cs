@@ -1,4 +1,4 @@
-﻿using apparelPro.BusinessLogic.Services.interfaces.ISharedService;
+using apparelPro.BusinessLogic.Services.interfaces.ISharedService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialConsumptionService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ISupplierService;
@@ -185,6 +185,47 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 string stockCodeClean = request.StockCode.Trim();
 
                 // ---------------------------------------------------------------------
+                // MANUAL CONSUMPTION ENTRY (2026-08-07): mirrors od_tpdt1.prg's gpap()
+                // "Calculate Consumptions...? Yes|No" branch exactly. Validate + normalize
+                // BEFORE any of the lookups/writes below, since Color/Size/ConsumptionUnit/
+                // QuantityPerGarment/PercentageAllowance are read straight off `request` at
+                // every usage site further down rather than through a canonicalized copy -
+                // mutating them here once is what makes every downstream read (composite-key
+                // lookups, the ledger row create/update) consistently see the normalized values.
+                // ---------------------------------------------------------------------
+                if (request.CalculateConsumption)
+                {
+                    // Calculated path (legacy m_cons = 1) - Qty per Garment and a Consumption
+                    // Unit are the inputs Total Consumption is derived from client-side via
+                    // CalculateMaterialConsumptionAsync, so both must actually be present.
+                    if (request.QuantityPerGarment <= 0)
+                    {
+                        throw new InvalidOperationException("Quantity per Garment must be greater than zero when Calculate Consumption is selected.");
+                    }
+                    if (string.IsNullOrWhiteSpace(request.ConsumptionUnit))
+                    {
+                        throw new InvalidOperationException("Consumption Unit is required when Calculate Consumption is selected.");
+                    }
+                }
+                else
+                {
+                    // Manual/direct-entry path (legacy m_cons = 2) - blanks Color/Size/
+                    // Consumption Unit/Qty per Garment/% Allowance (od_tpdt1.prg lines 819-825)
+                    // and instead requires Total Consumption to be typed directly and positive
+                    // (`valid m_tot_con > 0`, line 865).
+                    if (request.TotalConsumption <= 0)
+                    {
+                        throw new InvalidOperationException("Total Consumption must be greater than zero when entered manually.");
+                    }
+
+                    request.Color = string.Empty;
+                    request.Size = string.Empty;
+                    request.ConsumptionUnit = string.Empty;
+                    request.QuantityPerGarment = 0;
+                    request.PercentageAllowance = 0;
+                }
+
+                // ---------------------------------------------------------------------
                 // STEP 1: Update Global Reference Catalog (No StoreCode Needed!)
                 // ---------------------------------------------------------------------
                 var itemExistsInGlobalCatalog = await _apparelProDbContext.StockItems
@@ -290,6 +331,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     existingLedgerRow.SupplierCode = request.SupplierCode.Trim();
                     existingLedgerRow.ConsumptionUnit = request.ConsumptionUnit.Trim();
                     existingLedgerRow.ItemUnit = request.ItemUnit.Trim();
+                    existingLedgerRow.CalculateConsumption = request.CalculateConsumption;
 
                     _apparelProDbContext.StyleMaterialConsumptionLedgers.Update(existingLedgerRow);
                 }
@@ -318,7 +360,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         QuantityPerGarment = request.QuantityPerGarment,
                         PercentageAllowance = request.PercentageAllowance,
                         TotalConsumption = request.TotalConsumption,
-                        SupplierCode = request.SupplierCode.Trim()
+                        SupplierCode = request.SupplierCode.Trim(),
+                        CalculateConsumption = request.CalculateConsumption
                     };
 
                     await _apparelProDbContext.StyleMaterialConsumptionLedgers.AddAsync(newLedgerRow);

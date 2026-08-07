@@ -18,5 +18,12 @@ namespace apparelPro.BusinessLogic.Services
         string CreateRefreshToken(); 
      
    //     Task<RegisteredUserServiceModel> RefreshTokenUsingIpAddress(RegisteredUserServiceModel registeredUserServiceModel, string ipAddress);     
+
+        // NEW (2026-08-03) - reads AspNetUsers directly (the real, login-capable user set),
+        // NOT the legacy table GetUsersAsync/AddUserAsync above currently use (see design
+        // doc section 8). Backs the Users & Groups admin screen's Users panel.
+        Task<List<UserWithGroupsServiceModel>> GetIdentityUsersWithGroupsAsync();
+        Task AssignUserToGroupAsync(string userId, string groupId);
+        Task RemoveUserFromGroupAsync(string userId, string groupId);
     }
 }

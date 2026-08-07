@@ -1,15 +1,28 @@
-﻿using apparelPro.BusinessLogic.Services;
+using apparelPro.BusinessLogic.Services;
 using apparelPro.BusinessLogic.Services.Models.Registration.IPermissionService;
 using ApparelPro.Data;
 using ApparelPro.Data.Models.Registration;
 using ApparelPro.WebApi.APIModels.Registration;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using ApparelPro.WebApi.Authorization;
 
 namespace ApparelPro.WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    // SECURITY FIX (2026-08-03): this controller had NO [Authorize] at all - anyone could hit
+    // GET /api/ApparelProSeed and (re-)create the two hardcoded demo accounts below with their
+    // hardcoded plaintext passwords. Those two passwords should still be treated as burned
+    // (they're in git history) and rotated separately from this fix.
+    //
+    // Deliberately NOT a class-level [Authorize(Roles = "Administrator")]: LoadData is the
+    // bootstrap path that creates the very first Administrator account on a brand-new database
+    // (e.g. Production's Azure SQL database on first deploy), so it can't itself require an
+    // Administrator to already be signed in - see LoadData's own self-limiting check below.
+    // SeedPermissionsAsync has no such bootstrap need and carries its own method-level
+    // [Authorize] instead.
     public class ApparelProSeedController : ControllerBase
     {
         private readonly UserManager<ApparelProUser> _userManager;
@@ -18,20 +31,45 @@ namespace ApparelPro.WebApi.Controllers
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly IConfiguration _configuration;
         private readonly IPermissionService _permissionService;
+        private readonly IRolePermissionCache _rolePermissionCache;
 
-        public ApparelProSeedController(UserManager<ApparelProUser> userManager, RoleManager<IdentityRole> roleManager, ApparelProDbContext apparelProDbContext, IConfiguration configuration, IPermissionService permissionService)
+        public ApparelProSeedController(UserManager<ApparelProUser> userManager, RoleManager<IdentityRole> roleManager, ApparelProDbContext apparelProDbContext, IConfiguration configuration, IPermissionService permissionService, IRolePermissionCache rolePermissionCache)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _apparelProDbContext = apparelProDbContext;
             _configuration = configuration;
             _permissionService = permissionService;
+            _rolePermissionCache = rolePermissionCache;
         }
 
 
         [HttpGet]
+        // Self-limiting bootstrap endpoint (2026-08-03): reachable anonymously ONLY while zero
+        // users hold the Administrator role in this database yet - the very first run against a
+        // fresh database (e.g. right after `dotnet ef database update` on a new Azure SQL
+        // database, which starts with zero users/roles). Once an Administrator exists, every
+        // subsequent call requires the caller to already be an authenticated Administrator - this
+        // check runs on every call, so there's no separate "lock it down after first use" step
+        // and nothing to remember to flip back at deploy time.
         public async Task<ActionResult> LoadData()
         {
+            var administratorRoleName = "Administrator";
+            var administratorRoleAlreadyExists = await _roleManager.FindByNameAsync(administratorRoleName) != null;
+            if (administratorRoleAlreadyExists)
+            {
+                var existingAdministrators = await _userManager.GetUsersInRoleAsync(administratorRoleName);
+                if (existingAdministrators.Count > 0)
+                {
+                    var callerIsAuthenticatedAdministrator =
+                        User?.Identity?.IsAuthenticated == true && User.IsInRole(administratorRoleName);
+                    if (!callerIsAuthenticatedAdministrator)
+                    {
+                        return Forbid();
+                    }
+                }
+            }
+
             var merchandiser = "Merchandiser";
             var orderEntryOperator = "Order Entry Operator";
             var merchandiserManager = "Merchandiser Manager";
@@ -164,10 +202,21 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("seed-permissions")]
+        // No bootstrap need here (permission-catalog seeding only makes sense once roles/admins
+        // already exist) - always requires an authenticated Administrator.
+        [Authorize(Roles = AccessPolicies.AdministratorOnly)]
         public async Task<ActionResult> SeedPermissionsAsync()
         {
             await _permissionService.SeedDefaultCatalogAsync();
             await _permissionService.RemoveObsoleteCatalogEntriesAsync();
+
+            // FIXED (2026-08-07): this endpoint changes RolePermissions grants exactly like
+            // PermissionsController.UpdateRolePermissionsAsync does, but was never invalidating
+            // RolePermissionCache - a freshly-seeded permission (e.g. a brand-new policy like
+            // trim-sheet-report) would silently keep denying every role for up to the cache's
+            // 10-minute absolute expiration instead of taking effect immediately.
+            _rolePermissionCache.Invalidate();
+
             return Ok(new { Message = "Permission catalog and default role grants seeded (idempotent - existing grants were not touched); obsolete catalog keys removed." });
         }
     }

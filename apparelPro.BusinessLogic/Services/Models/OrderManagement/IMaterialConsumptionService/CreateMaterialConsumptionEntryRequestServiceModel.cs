@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace ApparelPro.WebApi.APIModels.OrderManagement
 {
@@ -30,9 +30,14 @@ namespace ApparelPro.WebApi.APIModels.OrderManagement
         public string Feature3 { get; set; } = "";
         public string Feature4 { get; set; } = "";
 
-        [Required] public string ConsumptionUnit { get; set; } = null!;
-        [Required] public decimal QuantityPerGarment { get; set; }
-        [Required] public decimal PercentageAllowance { get; set; }
+        // See the matching comment on CreateMaterialConsumptionEntryRequestAPIModel - mirrors
+        // od_tpdt1.prg's "Calculate Consumptions...? Yes|No" dialog.
+        public bool CalculateConsumption { get; set; } = true;
+
+        // Not [Required] - legitimately blank when CalculateConsumption is false.
+        public string ConsumptionUnit { get; set; } = "";
+        public decimal QuantityPerGarment { get; set; }
+        public decimal PercentageAllowance { get; set; }
         [Required] public string ItemUnit { get; set; } = null!;
         [Required] public decimal TotalConsumption { get; set; }
         [Required] public string SupplierCode { get; set; } = null!;
