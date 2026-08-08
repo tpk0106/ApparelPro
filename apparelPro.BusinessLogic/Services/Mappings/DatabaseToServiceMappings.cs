@@ -5,6 +5,7 @@ using apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialConsumpt
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPurchaseOrderService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsService;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
+using apparelPro.BusinessLogic.Services.Models.Reference.IAdditionalCostService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBasisService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBuyerService;
@@ -14,6 +15,7 @@ using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IDepartmentService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IFeatureService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IGarmentTypeService;
+using apparelPro.BusinessLogic.Services.Models.Reference.IOrderItemFeatureService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IPortDestinationService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ISupplierService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitConversionService;
@@ -195,6 +197,11 @@ namespace apparelPro.BusinessLogic.Services.Mappings
             CreateMap<Basis, BasisServiceModel>().MaxDepth(2);
             CreateMap<CreateBasisServiceModel,Basis>().MaxDepth(2);
             CreateMap<UpdateBasisServiceModel,Basis>().MaxDepth(2);
+
+            // additional cost
+            CreateMap<AdditionalCost, AdditionalCostServiceModel>().MaxDepth(2);
+            CreateMap<CreateAdditionalCostServiceModel, AdditionalCost>().MaxDepth(2);
+            CreateMap<UpdateAdditionalCostServiceModel, AdditionalCost>().MaxDepth(2);
 
 
             // PO
@@ -402,6 +409,7 @@ namespace apparelPro.BusinessLogic.Services.Mappings
                 .ForMember(src => src.Size, opt => opt.MapFrom(src => src.Size))
                 .ForMember(src => src.Quantity, opt => opt.MapFrom(src => src.Qty))
                 .ForMember(src => src.Ratio, opt => opt.MapFrom(src => src.Ratio))
+                .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description))
                 .ReverseMap().MaxDepth(2);
 
             CreateMap<CreateColorSizeBreakdownDetailsServiceModel, ColorSizeDetails>()
@@ -413,6 +421,7 @@ namespace apparelPro.BusinessLogic.Services.Mappings
                 .ForMember(src => src.Size, opt => opt.MapFrom(src => src.Size))
                 .ForMember(src => src.Qty, opt => opt.MapFrom(src => src.Quantity))
                 .ForMember(src => src.Ratio, opt => opt.MapFrom(src => src.Ratio))
+                .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description))
                 .MaxDepth(2);
 
             // material consumptions.
@@ -428,6 +437,8 @@ namespace apparelPro.BusinessLogic.Services.Mappings
                 .ForMember(src => src.CostPerUnit, opt => opt.MapFrom(src => src.CostPerUnit))
                 .MaxDepth(2);
 
+            CreateMap<OrderItemFeature, OrderItemFeatureMappingServiceModel>().MaxDepth(2);
+            CreateMap<CreateOrderItemFeatureMappingServiceModel, OrderItemFeature>().MaxDepth(2);
 
             // orderwise inventory
             //CreateMap<SRNServiceModel,SRN>().MaxDepth(2);

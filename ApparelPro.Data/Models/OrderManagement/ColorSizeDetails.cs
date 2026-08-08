@@ -12,5 +12,12 @@ namespace ApparelPro.Data.Models.OrderManagement
         public string Size { get; set; }
         public decimal Ratio { get; set; }
         public decimal Qty { get; set; }
+        // FIXED (2026-08-07): the Colour Target Allocation Setup screen lets the
+        // user enter a free-text description/shade name per colour, but this
+        // table previously had nowhere to persist it - the frontend silently
+        // dropped it on save, and re-hydrated a fabricated placeholder string
+        // on reload. Denormalized per-row (same as Color already is), matching
+        // this table's existing flat/legacy-style design.
+        public string? Description { get; set; }
     }
 }

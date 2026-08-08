@@ -47,6 +47,7 @@ namespace ApparelPro.Data
         public virtual DbSet<GarmentType> GarmentTypes { get; set; }
         public virtual DbSet<Style> Styles { get; set; }
         public virtual DbSet<Basis> Basis { get; set; }
+        public virtual DbSet<AdditionalCost> AdditionalCosts { get; set; }
         public virtual DbSet<Unit> Units { get; set; }
         public virtual DbSet<UnitConversion> UnitConversion { get; set; }
         public virtual DbSet<Stock> Stocks { get; set; }
@@ -67,6 +68,7 @@ namespace ApparelPro.Data
         public virtual DbSet<OrderItemFeature> OrderItemFeatures { get; set; }
         public virtual DbSet<StyleMaterialConsumptionLedger> StyleMaterialConsumptionLedgers { get; set; }
         public virtual DbSet<StyleMaterialCostProfile> StyleMaterialCostProfiles { get; set; }
+        public virtual DbSet<GarmentAdditionalCost> GarmentAdditionalCosts { get; set; }
         public virtual DbSet<ColorSizeDetails> ColorSizeDetails { get; set; }
 
         public virtual DbSet<PurchaseOrderHeader>  PurchaseOrderHeaders { get; set; }
@@ -102,6 +104,7 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new GarmentTypeConfig());
             modelBuilder.ApplyConfiguration(new StyleConfig());
             modelBuilder.ApplyConfiguration(new BasisConfig());
+            modelBuilder.ApplyConfiguration(new AdditionalCostConfig());
             modelBuilder.ApplyConfiguration(new UnitConfig());
             modelBuilder.ApplyConfiguration(new UnitConversionConfig());
             modelBuilder.ApplyConfiguration(new StockConfig());
@@ -123,6 +126,7 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new OrderItemFeatureConfig());
             modelBuilder.ApplyConfiguration(new StyleMaterialCostProfileConfig());
             modelBuilder.ApplyConfiguration(new StyleMaterialConsumptionLedgerConfig());
+            modelBuilder.ApplyConfiguration(new GarmentAdditionalCostConfig());
             modelBuilder.ApplyConfiguration(new PurchaseOrderHeaderConfig());
 
             // styelwise events

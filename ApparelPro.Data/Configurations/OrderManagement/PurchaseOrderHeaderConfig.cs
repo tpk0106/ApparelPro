@@ -17,6 +17,9 @@ namespace ApparelPro.Data.Configurations.OrderManagement
             entity.HasKey(e => e.PurchaseOrderNumber);
             entity.Property(e => e.PurchaseOrderNumber).HasColumnType("varchar(10)").HasColumnName("PurchaseOrderNumber").IsRequired();
 
+            entity.Property(e => e.CreatedDate).HasColumnType("date").HasColumnName("CreatedDate");
+            entity.Property(e => e.CreatedTime).HasColumnType("time").HasColumnName("CreatedTime");
+
             entity.Property(e => e.SupplierCode).HasColumnType("varchar(6)").HasColumnName("SupplierCode").IsRequired();
             entity.Property(e => e.StoreCode).HasColumnType("varchar(3)").HasColumnName("StoreCode").IsRequired();
             entity.Property(e => e.ProformaInvoiceNo).HasColumnType("varchar(20)").HasColumnName("ProformaInvoiceNo");

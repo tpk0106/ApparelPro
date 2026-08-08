@@ -8,6 +8,9 @@ using apparelPro.BusinessLogic.Services.Implementation.Shared;
 using apparelPro.BusinessLogic.Services.Implementation.SystemConfiguration;
 using apparelPro.BusinessLogic.Services.interfaces.ISharedService;
 using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
+using apparelPro.BusinessLogic.Services.interfaces.Reference;
+using apparelPro.BusinessLogic.Services.interfaces.Reports.OrderManagement;
+using apparelPro.BusinessLogic.Services.Implementation.Reports.OrderManagement;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitService;
 using apparelPro.BusinessLogic.Services.Reports.Interfaces;
 using ApparelPro.Data;
@@ -78,6 +81,7 @@ namespace ApparelPro.WebApi.Extensions
             services.AddTransient<ICurrencyService, CurrencyService>();
             services.AddTransient<ILookupConstants, LookupConstants>();
             services.AddTransient<ICountryService, CountryService>();
+            services.AddTransient<IAdditionalCostService, AdditionalCostService>();
             services.AddTransient(typeof(IUnitServiceT<UnitServiceModel>), typeof(UnitServiceT));
             services.AddTransient(typeof(IUnitService), typeof(UnitService));
             services.AddTransient(typeof(IUserService), typeof(UserService));
@@ -93,6 +97,7 @@ namespace ApparelPro.WebApi.Extensions
             services.AddTransient(typeof(ISupplierService), typeof(SupplierService));
             services.AddTransient(typeof(IPortDestinationService), typeof(PortDestinationService));
             services.AddTransient(typeof(IItemFeatureService), typeof(ItemFeatureService));
+            services.AddTransient(typeof(IOrderItemFeatureService), typeof(OrderItemFeatureService));
             services.AddTransient(typeof(IUnitConversionService), typeof(UnitConversionService));
             services.AddTransient(typeof(IDepartmentService), typeof(DepartmentService));
             services.AddTransient(typeof(ISystemParameterService), typeof(SystemParameterService));
@@ -116,6 +121,7 @@ namespace ApparelPro.WebApi.Extensions
 
             // material consumption
             services.AddTransient(typeof (IMaterialConsumptionService),typeof(MaterialConsumptionService));
+            services.AddTransient<IGarmentAdditionalCostService, GarmentAdditionalCostService>();
             services.AddTransient(typeof(ISupplierPurchaseOrderService), typeof(SupplierPurchaseOrderService));
 
             // Register the Style-wise critical path tracking service loop lifecycle handler
@@ -131,6 +137,18 @@ namespace ApparelPro.WebApi.Extensions
 
             // Trim Sheet Report (Reports -> Order Management -> Trim Sheet)
             services.AddScoped<ITrimSheetReportService, TrimSheetReportService>();
+
+            // Order Detail Report (Reports -> Order Management -> Order Detail)
+            services.AddScoped<IOrderDetailReportService, OrderDetailReportService>();
+
+            // Colour/Size Report (Reports -> Order Management -> Colour/Size)
+            services.AddScoped<IColorSizeReportService, ColorSizeReportService>();
+
+            // Purchase Order List Report (Reports -> Order Management -> List of P/O's)
+            services.AddScoped<IPurchaseOrderListReportService, PurchaseOrderListReportService>();
+
+            // Outstanding Purchase Order List Report (Reports -> Order Management -> List of Outstanding P/O's)
+            services.AddScoped<IOutstandingPurchaseOrderListReportService, OutstandingPurchaseOrderListReportService>();
 
             // orderwise inventory
             services.AddScoped<IStoresRequisitionService, StoresRequisitionService>();

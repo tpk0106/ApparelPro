@@ -54,6 +54,14 @@ namespace ApparelPro.Data.Configurations.OrderManagement
                 .IsRequired()
                 .HasColumnType("decimal(12,2)") // Larger scale capacity for piece totals
                 .HasColumnName("Quantity");
+
+            // FIXED (2026-08-07): free-text colour description/shade name,
+            // matching the frontend "Colour Description / Shade Name" field's
+            // maxLength of 30. Nullable - legacy/pre-existing rows have none.
+            entity.Property(e => e.Description)
+                .IsRequired(false)
+                .HasColumnType("varchar(30)")
+                .HasColumnName("Description");
         }
     }
 }

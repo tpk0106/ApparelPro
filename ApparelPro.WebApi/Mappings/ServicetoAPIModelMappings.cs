@@ -1,10 +1,16 @@
-using apparelPro.BusinessLogic.Services.Implementation.Shared;
+﻿using apparelPro.BusinessLogic.Services.Implementation.Shared;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IColorSizeDetailsService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialConsumptionService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPurchaseOrderService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IColorSizeReportService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IOrderDetailReportService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPurchaseOrderListReportService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IOutstandingPurchaseOrderListReportService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.ITrimSheetReportService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IGarmentAdditionalCostService;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
+using apparelPro.BusinessLogic.Services.Models.Reference.IAdditionalCostService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBasisService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBuyerService;
@@ -14,6 +20,7 @@ using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IDepartmentService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IFeatureService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IGarmentTypeService;
+using apparelPro.BusinessLogic.Services.Models.Reference.IOrderItemFeatureService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IPortDestinationService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ISupplierService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitConversionService;
@@ -194,6 +201,18 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<CreateBasisServiceModel, CreateBasisAPIModel>().MaxDepth(2).ReverseMap();
             CreateMap<BasisServiceModel, CreateBasisAPIModel>().MaxDepth(2).ReverseMap();
             CreateMap<UpdateBasisAPIModel, UpdateBasisServiceModel>().MaxDepth(2);
+
+            // additional cost
+            CreateMap<AdditionalCostServiceModel, AdditionalCostAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateAdditionalCostAPIModel, CreateAdditionalCostServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<UpdateAdditionalCostAPIModel, UpdateAdditionalCostServiceModel>().MaxDepth(2);
+
+            // garment additional cost
+            CreateMap<GarmentAdditionalCostServiceModel, GarmentAdditionalCostAPIModel>().MaxDepth(2);
+            CreateMap<SaveGarmentAdditionalCostAPIModel, SaveGarmentAdditionalCostServiceModel>().MaxDepth(2);
+            CreateMap<GarmentAdditionalCostReportServiceModel, GarmentAdditionalCostReportAPIModel>().MaxDepth(2);
+            CreateMap<GarmentAdditionalCostCategoryServiceModel, GarmentAdditionalCostCategoryAPIModel>().MaxDepth(2);
+            CreateMap<GarmentAdditionalCostLineServiceModel, GarmentAdditionalCostLineAPIModel>().MaxDepth(2);
 
             // destination
             CreateMap<PortDestinationAPIModel, PortDestinationServiceModel>().MaxDepth(2)
@@ -561,6 +580,10 @@ namespace ApparelPro.WebApi.Mappings
                 .ForMember(src => src.CostPerUnit, opt => opt.MapFrom(src => src.CostPerUnit))
                 .MaxDepth(2);
 
+            CreateMap<OrderItemFeatureMappingServiceModel, OrderItemFeatureMappingAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateOrderItemFeatureMappingAPIModel, CreateOrderItemFeatureMappingServiceModel>().MaxDepth(2);
+            CreateMap<UpdateOrderItemFeatureMappingAPIModel, UpdateOrderItemFeatureMappingServiceModel>().MaxDepth(2);
+
             CreateMap<StyleDimensionsLookupServiceModel,  StyleDimensionsLookupAPIModel>().MaxDepth(2);
             CreateMap<SupplierLookupServiceModel, SupplierLookupAPIModel>().MaxDepth(2);
 
@@ -573,6 +596,26 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<TrimSheetSupplierTotalServiceModel, TrimSheetSupplierTotalAPIModel>().MaxDepth(2);
             CreateMap<TrimSheetProfitServiceModel, TrimSheetProfitAPIModel>().MaxDepth(2);
             CreateMap<TrimSheetApprovalStampServiceModel, TrimSheetApprovalStampAPIModel>().MaxDepth(2);
+
+            // Order Detail Report (2026-08-07)
+            CreateMap<OrderDetailReportServiceModel, OrderDetailReportAPIModel>().MaxDepth(2);
+            CreateMap<OrderDetailStyleServiceModel, OrderDetailStyleAPIModel>().MaxDepth(2);
+            CreateMap<OrderDetailPartShipmentServiceModel, OrderDetailPartShipmentAPIModel>().MaxDepth(2);
+
+            // Colour/Size Report (2026-08-08)
+            CreateMap<ColorSizeReportServiceModel, ColorSizeReportAPIModel>().MaxDepth(2);
+            CreateMap<ColorSizeReportStyleServiceModel, ColorSizeReportStyleAPIModel>().MaxDepth(2);
+            CreateMap<ColorSizeReportColourServiceModel, ColorSizeReportColourAPIModel>().MaxDepth(2);
+
+            // Purchase Order List Report (2026-08-08)
+            CreateMap<PurchaseOrderListReportServiceModel, PurchaseOrderListReportAPIModel>().MaxDepth(2);
+            CreateMap<PurchaseOrderListLineServiceModel, PurchaseOrderListLineReportAPIModel>().MaxDepth(2);
+
+            // Outstanding Purchase Order List Report (2026-08-08)
+            CreateMap<OutstandingPurchaseOrderListReportServiceModel, OutstandingPurchaseOrderListReportAPIModel>().MaxDepth(4);
+            CreateMap<OutstandingPurchaseOrderBasisGroupServiceModel, OutstandingPurchaseOrderBasisGroupReportAPIModel>().MaxDepth(4);
+            CreateMap<OutstandingPurchaseOrderServiceModel, OutstandingPurchaseOrderReportAPIModel>().MaxDepth(4);
+            CreateMap<OutstandingPurchaseOrderGroupServiceModel, OutstandingPurchaseOrderGroupReportAPIModel>().MaxDepth(4);
 
             // orderwise inventory
             CreateMap<RequisitionHeaderAPIModel, RequisitionHeaderServiceModel>().MaxDepth(2);

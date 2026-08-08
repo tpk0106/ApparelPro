@@ -14,5 +14,6 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.IColorSizeDet
         public string Size { get; set; }
         public decimal Ratio { get; set; }
         public decimal Quantity { get; set; }
+        public string? Description { get; set; }
     }
 }

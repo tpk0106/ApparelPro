@@ -36,9 +36,14 @@ namespace apparelPro.BusinessLogic.Reports.OrderManagement.TrimSheet
 
                         column.Item().PaddingTop(6).Row(row =>
                         {
-                            row.RelativeItem().Text(t => { t.Span("Buyer: ").Bold(); t.Span(report.BuyerCode.ToString()); });
+                            // FIXED (2026-08-07): this printed only the raw Buyer/Type codes -
+                            // report.BuyerName/TypeName were already being resolved and sent by the
+                            // service layer (see TrimSheetReportServiceModel), the PDF engine just
+                            // never rendered them. Matches the Basis line's existing "code - description"
+                            // fallback pattern below (falls back to the code alone if the name is blank).
+                            row.RelativeItem().Text(t => { t.Span("Buyer: ").Bold(); t.Span(string.IsNullOrEmpty(report.BuyerName) ? report.BuyerCode.ToString() : report.BuyerName); });
                             row.RelativeItem().Text(t => { t.Span("Order: ").Bold(); t.Span(report.Order); });
-                            row.RelativeItem().Text(t => { t.Span("Type: ").Bold(); t.Span(report.TypeCode.ToString()); });
+                            row.RelativeItem().Text(t => { t.Span("Type: ").Bold(); t.Span(string.IsNullOrEmpty(report.TypeName) ? report.TypeCode.ToString() : report.TypeName); });
                             row.RelativeItem().Text(t => { t.Span("Style: ").Bold(); t.Span(report.StyleCode); });
                         });
                         column.Item().PaddingTop(3).Row(row =>

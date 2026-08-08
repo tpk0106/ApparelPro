@@ -162,7 +162,7 @@ namespace ApparelPro.WebApi.Controllers
             var Stores_Email = "thusith@gmail.com";
             var Stores_Phone = "0411111917";
             var stores_KnownAs = "Sampi";
-            var stores_Password = "fuckme1978*";
+            var stores_Password = "fcukme1978*";
             var userStores = new ApparelProUser();
             if (await _userManager.FindByNameAsync(Stores_Email) == null)
             {               

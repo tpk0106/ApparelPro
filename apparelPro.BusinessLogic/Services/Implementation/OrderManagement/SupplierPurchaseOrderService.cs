@@ -386,6 +386,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     var newHeader = new PurchaseOrderHeader
                     {
                         PurchaseOrderNumber = poNoSanitized,
+                        CreatedDate = DateOnly.FromDateTime(DateTime.Now),
+                        CreatedTime = TimeOnly.FromDateTime(DateTime.Now),
                         SupplierCode = header.SupplierCode.ToString(),
                         StoreCode = storeCode,
                         ProformaInvoiceNo = header.ProformaInvoiceNo.Trim(),

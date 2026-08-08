@@ -56,6 +56,10 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("decimal(10,2)")
                         .HasColumnName("Ratio");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("Description");
+
                     b.HasKey("BuyerCode", "Order", "TypeCode", "StyleCode", "Color", "Size");
 
                     b.ToTable("ColorSizeDetails");
@@ -286,6 +290,78 @@ namespace ApparelPro.Data.Migrations
                     b.ToTable("StyleMaterialCostProfiles", (string)null);
                 });
 
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.MaterialConsumption.GarmentAdditionalCost", b =>
+                {
+                    b.Property<int>("BuyerCode")
+                        .HasColumnType("int")
+                        .HasColumnName("Buyer");
+
+                    b.Property<string>("Order")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("Order");
+
+                    b.Property<int>("TypeCode")
+                        .HasColumnType("int")
+                        .HasColumnName("Type");
+
+                    b.Property<string>("StyleCode")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("Style");
+
+                    b.Property<string>("AdditionalCostCode")
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("AdditionalCostCode");
+
+                    b.Property<string>("ItemCode")
+                        .HasColumnType("varchar(22)")
+                        .HasColumnName("ItemCode");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("Color");
+
+                    b.Property<string>("Size")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("Size");
+
+                    b.Property<string>("StoreCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("StoreCode");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("Currency");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("Unit");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(8,3)")
+                        .HasColumnName("Quantity");
+
+                    b.Property<decimal>("Cost")
+                        .HasColumnType("decimal(12,4)")
+                        .HasColumnName("Cost");
+
+                    b.Property<bool>("IsCostPerGarment")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsCostPerGarment");
+
+                    b.Property<bool>("IsSemiFinishedGarment")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsSemiFinishedGarment");
+
+                    b.HasKey("BuyerCode", "Order", "TypeCode", "StyleCode", "AdditionalCostCode", "ItemCode");
+
+                    b.ToTable("GarmentAdditionalCosts", (string)null);
+                });
+
             modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.PODetails", b =>
                 {
                     b.Property<string>("PONumber")
@@ -409,6 +485,14 @@ namespace ApparelPro.Data.Migrations
                     b.Property<string>("PurchaseOrderNumber")
                         .HasColumnType("varchar(10)")
                         .HasColumnName("PurchaseOrderNumber");
+
+                    b.Property<DateOnly?>("CreatedDate")
+                        .HasColumnType("date")
+                        .HasColumnName("CreatedDate");
+
+                    b.Property<TimeOnly?>("CreatedTime")
+                        .HasColumnType("time")
+                        .HasColumnName("CreatedTime");
 
                     b.Property<string>("CurrencyCode")
                         .IsRequired()
@@ -987,6 +1071,22 @@ namespace ApparelPro.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Basis");
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.References.AdditionalCost", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("Code");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("varchar(40)")
+                        .HasColumnName("Description");
+
+                    b.HasKey("Code");
+
+                    b.ToTable("AdditionalCosts", (string)null);
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Buyer", b =>
