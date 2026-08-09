@@ -362,6 +362,55 @@ namespace ApparelPro.Data.Migrations
                     b.ToTable("GarmentAdditionalCosts", (string)null);
                 });
 
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.SubContracting.SubContract", b =>
+                {
+                    b.Property<int>("BuyerCode")
+                        .HasColumnType("int")
+                        .HasColumnName("Buyer");
+
+                    b.Property<string>("Order")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("Order");
+
+                    b.Property<int>("TypeCode")
+                        .HasColumnType("int")
+                        .HasColumnName("Type");
+
+                    b.Property<string>("StyleCode")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("Style");
+
+                    b.Property<string>("SubContractorCode")
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("SubContractorCode");
+
+                    b.Property<decimal>("SubQuantity")
+                        .HasColumnType("decimal(9,0)")
+                        .HasColumnName("SubQuantity");
+
+                    b.Property<decimal>("CostPerGarment")
+                        .HasColumnType("decimal(11,2)")
+                        .HasColumnName("CostPerGarment");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("Currency");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("Unit");
+
+                    b.Property<decimal>("ReceivedQuantity")
+                        .HasColumnType("decimal(9,0)")
+                        .HasColumnName("ReceivedQuantity");
+
+                    b.HasKey("BuyerCode", "Order", "TypeCode", "StyleCode", "SubContractorCode");
+
+                    b.ToTable("SubContracts", (string)null);
+                });
+
             modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.PODetails", b =>
                 {
                     b.Property<string>("PONumber")
@@ -793,6 +842,12 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("varchar(3)")
                         .HasColumnName("Currency");
 
+                    b.Property<decimal>("AdditionalIssuedQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("AdditionalIssuedQuantity");
+
                     b.Property<decimal>("DamagedQuantity")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("decimal(12,2)")
@@ -875,6 +930,9 @@ namespace ApparelPro.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AdditionalProcessCode")
+                        .HasColumnType("varchar(3)");
+
                     b.Property<decimal>("BalanceToReceive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("decimal(12,2)")
@@ -928,6 +986,9 @@ namespace ApparelPro.Data.Migrations
                     b.Property<string>("StoreCode")
                         .IsRequired()
                         .HasColumnType("varchar(3)");
+
+                    b.Property<string>("SubContractorCode")
+                        .HasColumnType("varchar(6)");
 
                     b.Property<int?>("SupplierCode")
                         .HasColumnType("int");
@@ -1087,6 +1148,22 @@ namespace ApparelPro.Data.Migrations
                     b.HasKey("Code");
 
                     b.ToTable("AdditionalCosts", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.References.SubContractor", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("Code");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("varchar(40)")
+                        .HasColumnName("Name");
+
+                    b.HasKey("Code");
+
+                    b.ToTable("SubContractors", (string)null);
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Buyer", b =>
@@ -1600,7 +1677,7 @@ namespace ApparelPro.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("ApparelPro.WebApi.APIModels.OrderManagement.GarmentTypeItems", b =>
+            modelBuilder.Entity("ApparelPro.Data.Models.References.GarmentTypeItems", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1731,7 +1808,7 @@ namespace ApparelPro.Data.Migrations
                     b.Navigation("Stock");
                 });
 
-            modelBuilder.Entity("ApparelPro.WebApi.APIModels.OrderManagement.GarmentTypeItems", b =>
+            modelBuilder.Entity("ApparelPro.Data.Models.References.GarmentTypeItems", b =>
                 {
                     b.HasOne("ApparelPro.Data.Models.References.GarmentType", "GarmentType")
                         .WithMany()

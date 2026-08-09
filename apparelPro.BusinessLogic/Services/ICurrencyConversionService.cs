@@ -1,20 +1,20 @@
-﻿using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyConversionService;
+using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyConversionService;
 using ApparelPro.Shared.Extensions;
 
 namespace apparelPro.BusinessLogic.Services
 {
     public interface ICurrencyConversionService
     {
-      //  Task<PaginationResult<CurrencyConversionServiceModel>> GetCurrencyConversionsAsync(int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery);
         Task<PaginationResult<CurrencyConversionServiceModel>> GetCurrencyConversionsAsync(int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery);
 
-       
-
-     //   Task<IEnumerable<CurrencyConversionServiceModel>> FilterCountriesByCodeAsync(string filter, int pageNumber, int pageSize);
-        Task<CurrencyConversionServiceModel> GetCurrencyConversionByCodeAsync(string code);
+        // Composite-key lookup (matches CurrencyConversion's actual key - FromCurrency +
+        // ToCurrency together, there's no single "code"). Mirrors
+        // ICurrencyExchangeService.GetCurrencyExchangeByBaseCurrencyAndQuoteCurrencyOnDateAsync,
+        // just without the date dimension Currency Exchange has.
+        Task<CurrencyConversionServiceModel?> GetCurrencyConversionByFromToAsync(string fromCurrency, string toCurrency);
         Task<CurrencyConversionServiceModel> AddCurrencyConversionAsync(CreateCurrencyConversionServiceModel createCurrencyConversionServiceModel);
         Task UpdateCurrencyConversionAsync(UpdateCurrencyConversionServiceModel updateCurrencyConversionServiceModel);
-        Task DeleteCurrencyConversionAsync(string code);
+        Task DeleteCurrencyConversionAsync(string fromCurrency, string toCurrency);
 
         // NEW (2026-08-07) - the actual "convert an amount between two currencies" utility
         // legacy's curconv() provided, which nothing in this service previously implemented

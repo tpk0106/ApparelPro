@@ -6,17 +6,21 @@ using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPurchaseOrderSer
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsService;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.Reference.IAdditionalCostService;
+using apparelPro.BusinessLogic.Services.Models.Reference.ISubContractorService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBasisService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBuyerService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICountryService;
+using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyConversionService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyExchangeService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IDepartmentService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IFeatureService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IGarmentTypeService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IOrderItemFeatureService;
+using apparelPro.BusinessLogic.Services.Models.Reference.IOrderItemCatalogService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IPortDestinationService;
+using apparelPro.BusinessLogic.Services.Models.Reference.IStockService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ISupplierService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitConversionService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitService;
@@ -203,6 +207,26 @@ namespace apparelPro.BusinessLogic.Services.Mappings
             CreateMap<CreateAdditionalCostServiceModel, AdditionalCost>().MaxDepth(2);
             CreateMap<UpdateAdditionalCostServiceModel, AdditionalCost>().MaxDepth(2);
 
+            // sub contractor (od_scref) - built 2026-08-09 as a prerequisite for AIN
+            // (Additional Issue Note), see SubContractor.cs for the full gap history.
+            CreateMap<SubContractor, SubContractorServiceModel>().MaxDepth(2);
+            CreateMap<CreateSubContractorServiceModel, SubContractor>().MaxDepth(2);
+            CreateMap<UpdateSubContractorServiceModel, SubContractor>().MaxDepth(2);
+
+            // stock reference
+            CreateMap<Stock, StockServiceModel>().MaxDepth(2);
+            CreateMap<CreateStockServiceModel, Stock>().MaxDepth(2);
+            CreateMap<UpdateStockServiceModel, Stock>().MaxDepth(2);
+
+            // order item catalog (od_itm - StockCode/ItemCode master). Maps onto the
+            // StockItem entity/StockItems table - the catalog Material Consumption's
+            // auto-add-on-save, GarmentAdditionalCostService, OrderItemFeatureService,
+            // and the GRN/DGN/GTN/SAN/SRN/Supplier Return note services all actually
+            // read from, NOT the separate OrderItems table.
+            CreateMap<StockItem, OrderItemCatalogServiceModel>().MaxDepth(2);
+            CreateMap<CreateOrderItemCatalogServiceModel, StockItem>().MaxDepth(2);
+            CreateMap<UpdateOrderItemCatalogServiceModel, StockItem>().MaxDepth(2);
+
 
             // PO
             CreateMap<PurchaseOrder, PurchaseOrderServiceModel>().MaxDepth(2)
@@ -376,6 +400,15 @@ namespace apparelPro.BusinessLogic.Services.Mappings
                 .ForMember(src => src.ExchangeDate, opt => opt.MapFrom(src => src.ExchangeDate))
                 .ForMember(src => src.Rate, opt => opt.MapFrom(src => src.Rate))
                 .ReverseMap();
+
+            // currency conversion (od_conv-style flat From/To rate table). ServiceModel's
+            // FromCurrencyName/ToCurrencyName are joined in from the Currency master by
+            // CurrencyConversionService, not by AutoMapper - CurrencyConversion has no such
+            // columns, so ReverseMap simply leaves them unmapped going the other way (same as
+            // OrderItemCatalogServiceModel.StockDescription vs StockItem below).
+            CreateMap<CurrencyConversion, CurrencyConversionServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateCurrencyConversionServiceModel, CurrencyConversion>().MaxDepth(2);
+            CreateMap<UpdateCurrencyConversionServiceModel, CurrencyConversion>().MaxDepth(2);
 
             // feature
             CreateMap<CreateItemFeatureServiceModel, ItemFeature>().MaxDepth(2)

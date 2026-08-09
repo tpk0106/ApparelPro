@@ -53,6 +53,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderwiseInventory
                             columns.RelativeColumn(2);  // Received
                             columns.RelativeColumn(2);  // Requested
                             columns.RelativeColumn(2);  // Issued
+                            columns.RelativeColumn(2);  // Add. Issued
                             columns.RelativeColumn(2);  // Returned
                             columns.RelativeColumn(2);  // Trans In
                             columns.RelativeColumn(2);  // Trans Out
@@ -67,7 +68,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderwiseInventory
                             foreach (var title in new[]
                             {
                                 "Item Code", "Description", "Unit", "Order Qty", "Received",
-                                "Requested", "Issued", "Returned", "Trans. In", "Trans. Out",
+                                "Requested", "Issued", "Add. Issued", "Returned", "Trans. In", "Trans. Out",
                                 "Damaged", "Ret.Supp.", "Last Adj.", "Qty in Hand"
                             })
                             {
@@ -84,6 +85,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderwiseInventory
                             QuantityCell(table, line.ReceivedQuantity, InboundColor);
                             table.Cell().Padding(3).AlignRight().Text($"{line.RequisitionedQuantity:N2}");
                             QuantityCell(table, line.IssuedQuantity, OutboundColor);
+                            QuantityCell(table, line.AdditionalIssuedQuantity, OutboundColor);
                             QuantityCell(table, line.ReturnedQuantity, InboundColor);
                             QuantityCell(table, line.TransferInQuantity, InboundColor);
                             QuantityCell(table, line.TransferOutQuantity, OutboundColor);

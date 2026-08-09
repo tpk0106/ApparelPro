@@ -41,6 +41,12 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderwiseInventory
         // Real data today, aggregated across stores from OrderwiseStock.DamagedQuantity.
         public decimal DamagedQuantity { get; set; }
 
+        // AIN traceability addition: real data, read directly off
+        // OrderwiseStockMaster.AdditionalIssuedQuantity - see that entity's comments. Feeds
+        // into BalanceQuantity below the same way IssuedQuantity does (both are "material
+        // that left stock against this order", just via two different note types).
+        public decimal AdditionalIssuedQuantity { get; set; }
+
         // Derived, never persisted — same convention already used for
         // OrderwiseStockMaster's Issued/Received running totals.
         public decimal BalanceQuantity { get; set; }

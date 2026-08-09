@@ -62,5 +62,15 @@ namespace ApparelPro.Data.Models.OrderwiseInventory
         // for 1:1 parity with legacy's in_stmst.damg_qty and quick per-item access
         // without a store join, same as every other note type's master total.
         public decimal DamagedQuantity { get; set; }
+
+        // AIN traceability addition: running total issued via Additional Issue Note
+        // (legacy in_stmst.issd_qty — shared with GIN in legacy, since legacy only ever
+        // had one issd_qty column). Per explicit product decision (2026-08-09), this
+        // system gives AIN its own dedicated monotonic column instead of commingling into
+        // IssuedQuantity, matching the same "one column per note type" convention already
+        // used for ReturnedQuantity/TransferIn/TransferOut/SupplierReturnQuantity/
+        // DamagedQuantity above. Net balance wherever it's computed (e.g. Stock Movement
+        // Report) subtracts this the same way IssuedQuantity is subtracted.
+        public decimal AdditionalIssuedQuantity { get; set; }
     }
 }

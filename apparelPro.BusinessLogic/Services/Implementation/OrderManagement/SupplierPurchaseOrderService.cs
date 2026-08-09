@@ -59,15 +59,17 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
             // "Main Material" needs the SPECIFIC material type (BUTTON/FABRIC/ZIP), not the
             // broad Stock category (e.g. "Raw material"/"Accessories" - confirmed too coarse by
-            // the user 2026-08-03). That specific granularity lives in the OrderItems catalog,
+            // the user 2026-08-03). That specific granularity lives in the StockItems catalog
+            // (not OrderItems - see MaterialConsumptionService.GetMaterialCatalogAsync for why
+            // StockItems, not OrderItems, is the live catalog every screen now standardizes on),
             // keyed by (StockCode, ItemCode) - the same table MaterialConsumptionService already
             // uses for this exact purpose (GetMaterialCatalogAsync/GetLedgerEntriesByStyleAsync's
             // descriptionLookup). Bulk-fetch once, not per-line.
-            var orderItemDescriptionLookup = await _apparelProDbContext.OrderItems
+            var orderItemDescriptionLookup = await _apparelProDbContext.StockItems
                 .AsNoTracking()
                 .ToDictionaryAsync(i => (i.StockCode, i.ItemCode), i => i.Description);
 
-            // Kept as a fallback only (when an item has no OrderItems catalog entry) - the broad
+            // Kept as a fallback only (when an item has no catalog entry) - the broad
             // Stock category is still better than showing nothing.
             var stockDescriptionLookup = await _apparelProDbContext.Stocks
                 .AsNoTracking()

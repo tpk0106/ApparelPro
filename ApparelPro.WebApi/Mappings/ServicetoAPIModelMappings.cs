@@ -9,19 +9,25 @@ using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPurchaseOrderLis
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IOutstandingPurchaseOrderListReportService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.ITrimSheetReportService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IGarmentAdditionalCostService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.ISubContractService;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.Reference.IAdditionalCostService;
+using apparelPro.BusinessLogic.Services.Models.Reference.ISubContractorService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBasisService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBuyerService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICountryService;
+using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyConversionService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyExchangeService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IDepartmentService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IFeatureService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IGarmentTypeService;
+using apparelPro.BusinessLogic.Services.Models.Reference.IGarmentTypeItemsService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IOrderItemFeatureService;
+using apparelPro.BusinessLogic.Services.Models.Reference.IOrderItemCatalogService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IPortDestinationService;
+using apparelPro.BusinessLogic.Services.Models.Reference.IStockService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ISupplierService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitConversionService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IUnitService;
@@ -207,12 +213,36 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<CreateAdditionalCostAPIModel, CreateAdditionalCostServiceModel>().MaxDepth(2).ReverseMap();
             CreateMap<UpdateAdditionalCostAPIModel, UpdateAdditionalCostServiceModel>().MaxDepth(2);
 
+            // sub contractor (od_scref) - built 2026-08-09 as a prerequisite for AIN.
+            CreateMap<SubContractorServiceModel, SubContractorAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateSubContractorAPIModel, CreateSubContractorServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<UpdateSubContractorAPIModel, UpdateSubContractorServiceModel>().MaxDepth(2);
+
+            // stock reference (RF_MENU.PRG > C. Inventory Control > A. Stock Reference)
+            CreateMap<StockServiceModel, StockAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateStockAPIModel, CreateStockServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<UpdateStockAPIModel, UpdateStockServiceModel>().MaxDepth(2);
+
+            // order item catalog (od_itm master list)
+            CreateMap<OrderItemCatalogServiceModel, OrderItemCatalogAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateOrderItemCatalogAPIModel, CreateOrderItemCatalogServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<UpdateOrderItemCatalogAPIModel, UpdateOrderItemCatalogServiceModel>().MaxDepth(2);
+
             // garment additional cost
             CreateMap<GarmentAdditionalCostServiceModel, GarmentAdditionalCostAPIModel>().MaxDepth(2);
             CreateMap<SaveGarmentAdditionalCostAPIModel, SaveGarmentAdditionalCostServiceModel>().MaxDepth(2);
             CreateMap<GarmentAdditionalCostReportServiceModel, GarmentAdditionalCostReportAPIModel>().MaxDepth(2);
             CreateMap<GarmentAdditionalCostCategoryServiceModel, GarmentAdditionalCostCategoryAPIModel>().MaxDepth(2);
             CreateMap<GarmentAdditionalCostLineServiceModel, GarmentAdditionalCostLineAPIModel>().MaxDepth(2);
+
+            // sub contract (Order Management -> D. Sub Contracts, od_subc1.prg) - 2026-08-09
+            CreateMap<SubContractServiceModel, SubContractAPIModel>().MaxDepth(2);
+            CreateMap<SaveSubContractAPIModel, SaveSubContractServiceModel>().MaxDepth(2);
+            CreateMap<SaveSubContractResultServiceModel, SaveSubContractResultAPIModel>().MaxDepth(2);
+
+            // garment type wise item requirements (RF_MENU.PRG > B. Order Management > G. Type / Item)
+            CreateMap<GarmentTypeItemServiceModel, GarmentTypeItemAPIModel>().MaxDepth(2);
+            CreateMap<SaveGarmentTypeItemAPIModel, SaveGarmentTypeItemServiceModel>().MaxDepth(2);
 
             // destination
             CreateMap<PortDestinationAPIModel, PortDestinationServiceModel>().MaxDepth(2)
@@ -513,6 +543,11 @@ namespace ApparelPro.WebApi.Mappings
              .ForMember(src => src.Rate, opt => opt.MapFrom(src => src.Rate))
              .ReverseMap();
 
+            // currency conversion
+            CreateMap<CurrencyConversionServiceModel, CurrencyConversionAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateCurrencyConversionAPIModel, CreateCurrencyConversionServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<UpdateCurrencyConversionAPIModel, UpdateCurrencyConversionServiceModel>().MaxDepth(2).ReverseMap();
+
             //style
             CreateMap<StyleDetailsServiceModel, StyleAPIModel>().MaxDepth(2)
                 .ForMember(src => src.BuyerCode, opt => opt.MapFrom(src => src.BuyerCode))
@@ -659,6 +694,11 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<SanAdjustableStockRowServiceModel, SanAdjustableStockRowAPIModel>().MaxDepth(2);
             CreateMap<SanHeaderAPIModel, SanHeaderServiceModel>().MaxDepth(2);
             CreateMap<SanLineItemAPIModel, SanLineItemServiceModel>().MaxDepth(2);
+
+            // orderwise inventory - AIN (Additional Issue Note)
+            CreateMap<AinIssuableStockRowServiceModel, AinIssuableStockRowAPIModel>().MaxDepth(2);
+            CreateMap<AinHeaderAPIModel, AinHeaderServiceModel>().MaxDepth(2);
+            CreateMap<AinLineItemAPIModel, AinLineItemServiceModel>().MaxDepth(2);
 
             // orderwise inventory - DGN (Damaged Goods Note)
             // FIXED (2026-08-07): found via a full sweep of every controller's _mapper.Map<>

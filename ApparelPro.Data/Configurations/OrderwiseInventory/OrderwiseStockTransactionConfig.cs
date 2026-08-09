@@ -52,6 +52,12 @@ namespace ApparelPro.Data.Configurations.OrderwiseInventory
             // SRN traceability addition — the Supplier a Supplier Return Note ('7S') row
             // was returned to (legacy supp_cd).
             entity.Property(e => e.SupplierCode).HasColumnType("int").IsRequired(false);
+
+            // AIN traceability additions — Sub-Contractor code (varchar(6), matches
+            // SubContractor.Code) and Additional Process code (varchar(3), matches
+            // AdditionalCost.Code) for an Additional Issue Note ('4X') row.
+            entity.Property(e => e.SubContractorCode).HasColumnType("varchar(6)").IsRequired(false);
+            entity.Property(e => e.AdditionalProcessCode).HasColumnType("varchar(3)").IsRequired(false);
         }
     }
 }

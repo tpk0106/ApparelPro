@@ -454,9 +454,10 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
         public async Task<List<OrderItemServiceModel>> GetAvailableMaterialsLookupAsync()
         {
-            var orderItemDbModelList = await _apparelProDbContext.OrderItems
+            // Reads StockItems (not OrderItems) - see GetMaterialCatalogAsync below for why.
+            var orderItemDbModelList = await _apparelProDbContext.StockItems
                 .AsNoTracking()
-                .Select(item => new OrderItem
+                .Select(item => new StockItem
                 {
                     StockCode = item.StockCode,
                     ItemCode = item.ItemCode,
@@ -476,8 +477,14 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 .OrderBy(s => s.StockCode)
                 .ToListAsync();
 
-            // 2. Load the full item catalog and group in-memory by StockCode
-            var items = await _apparelProDbContext.OrderItems
+            // 2. Load the full item catalog and group in-memory by StockCode.
+            // Reads from StockItems (not OrderItems) - StockItems is the catalog
+            // this same method's "auto-add on save" write path above populates, and
+            // what GarmentAdditionalCostService/OrderItemFeatureService/the GRN/DGN/
+            // GTN/SAN/SRN/Supplier Return note services all validate/look descriptions
+            // up against, so the picker this method feeds now matches what every
+            // other live screen already treats as the real catalog.
+            var items = await _apparelProDbContext.StockItems
                 .AsNoTracking()
                 .OrderBy(i => i.ItemCode)
                 .ToListAsync();
@@ -490,7 +497,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
             {
                 StockCode = s.StockCode,
                 Description = s.Description,
-                Items = (itemsByStock.TryGetValue(s.StockCode, out var stockItems) ? stockItems : new List<OrderItem>())
+                Items = (itemsByStock.TryGetValue(s.StockCode, out var stockItems) ? stockItems : new List<StockItem>())
                     .Select(i => new MaterialCatalogItemServiceModel
                     {
                         ItemCode = i.ItemCode,
@@ -653,10 +660,11 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
             var resultList = new List<OrderItemServiceModel>();
 
-            // Cross-reference descriptions from your master material checklist entity
+            // Cross-reference descriptions from your master material checklist entity.
+            // Reads StockItems (not OrderItems) - see GetMaterialCatalogAsync below for why.
             foreach (var mat in assignedMaterials)
             {
-                var masterItem = await _apparelProDbContext.OrderItems
+                var masterItem = await _apparelProDbContext.StockItems
                     .AsNoTracking()
                     .FirstOrDefaultAsync(i => i.StockCode == mat.StockCode && i.ItemCode == mat.ItemCode);
 
@@ -688,8 +696,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
             // Bulk-fetch catalog descriptions once (small reference table), same
             // pattern used in GetMaterialCatalogAsync, instead of an N+1 lookup
-            // per ledger row.
-            var descriptionLookup = await _apparelProDbContext.OrderItems
+            // per ledger row. Reads StockItems (not OrderItems) - see
+            // GetMaterialCatalogAsync below for why.
+            var descriptionLookup = await _apparelProDbContext.StockItems
                 .AsNoTracking()
                 .ToDictionaryAsync(i => (i.StockCode, i.ItemCode), i => i.Description);
 

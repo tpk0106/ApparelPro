@@ -383,17 +383,25 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                     LastAdjustmentQuantity = transactions
                         .Where(t => t.BuyerCode == buyerCode && t.Order == order && t.ItemCode == master.ItemCode && t.TransactionType == AdjustmentTypeCode)
                         .Sum(t => (decimal?)t.Quantity) ?? 0m,
+                    // AIN traceability: read the maintained running total directly off
+                    // OrderwiseStockMaster.AdditionalIssuedQuantity, same convention as
+                    // TransferIn/TransferOut/Returned/SupplierReturn above -
+                    // AdditionalIssueNoteService already keeps this in sync on every commit.
+                    AdditionalIssuedQuantity = master.AdditionalIssuedQuantity,
                 });
 
             // Balance is derived, never persisted — same convention already used for
             // OrderwiseStockMaster's own Issued/Received running totals (see that model's
             // comments). Formula: Received - Issued + Returned + TransferIn - TransferOut
-            // - Damaged - SupplierReturn + LastAdjustment. ReturnedQuantity added so RTN
-            // (Goods Return Note) postings correctly free up balance again - see
+            // - Damaged - SupplierReturn + LastAdjustment - AdditionalIssued. ReturnedQuantity
+            // added so RTN (Goods Return Note) postings correctly free up balance again - see
             // OrderwiseStockMaster.ReturnedQuantity's own comments for why it's additive
             // here rather than decrementing IssuedQuantity in place. SupplierReturnQuantity
             // is now real data too (SRN, confirmed "7S") rather than the always-zero
-            // placeholder it used to be.
+            // placeholder it used to be. AdditionalIssuedQuantity (AIN, confirmed "4X") is
+            // subtracted the same way IssuedQuantity is - both represent material that left
+            // stock against this order, just via two different note types (see
+            // OrderwiseStockMaster.AdditionalIssuedQuantity's own comments).
             return joinedLambda.Select(l => new StockMovementReportLineServiceModel
             {
                 ItemCode = l.ItemCode,
@@ -409,9 +417,10 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 TransferOutQuantity = l.TransferOutQuantity,
                 SupplierReturnQuantity = l.SupplierReturnQuantity,
                 LastAdjustmentQuantity = l.LastAdjustmentQuantity,
+                AdditionalIssuedQuantity = l.AdditionalIssuedQuantity,
                 BalanceQuantity = l.ReceivedQuantity - l.IssuedQuantity + l.ReturnedQuantity + l.TransferInQuantity
                                    - l.TransferOutQuantity - l.DamagedQuantity - l.SupplierReturnQuantity
-                                   + l.LastAdjustmentQuantity,
+                                   + l.LastAdjustmentQuantity - l.AdditionalIssuedQuantity,
             });
         }
 

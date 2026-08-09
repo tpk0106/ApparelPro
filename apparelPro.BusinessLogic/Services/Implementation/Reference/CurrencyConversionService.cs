@@ -1,6 +1,4 @@
-﻿using apparelPro.BusinessLogic.Extensions;
 using apparelPro.BusinessLogic.Misc;
-using apparelPro.BusinessLogic.Services.Models.Reference.ICountryService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyConversionService;
 using ApparelPro.Data;
 using ApparelPro.Data.Models.References;
@@ -8,13 +6,7 @@ using ApparelPro.Shared.Extensions;
 using ApparelPro.Shared.LookupConstants;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Dynamic.Core;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace apparelPro.BusinessLogic.Services.Implementation.Reference
 {
@@ -23,27 +15,15 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
         private readonly IMapper _mapper;
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly ILookupConstants _lookupConstants;
-        private readonly Microsoft.Extensions.Caching.Distributed.IDistributedCache _distributedCache;
-        public CurrencyConversionService(IMapper mapper, ApparelProDbContext apparelProReferenceDbContext,
-            ILookupConstants lookupConstants, Microsoft.Extensions.Caching.Distributed.IDistributedCache distributedCache)
+
+        public CurrencyConversionService(IMapper mapper, ApparelProDbContext apparelProDbContext,
+            ILookupConstants lookupConstants)
         {
-            if (apparelProReferenceDbContext == null)
-            {
-                throw new ArgumentNullException(nameof(apparelProReferenceDbContext));
-            }
-            if (mapper == null)
-            {
-                throw new ArgumentNullException(nameof(mapper));
-            }
-            if (lookupConstants == null)
-            {
-                throw new ArgumentNullException(nameof(lookupConstants));
-            }
-            _mapper = mapper;
-            _apparelProDbContext = apparelProReferenceDbContext;
-            _lookupConstants = lookupConstants;
-            _distributedCache = distributedCache;
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _apparelProDbContext = apparelProDbContext ?? throw new ArgumentNullException(nameof(apparelProDbContext));
+            _lookupConstants = lookupConstants ?? throw new ArgumentNullException(nameof(lookupConstants));
         }
+
         public async Task<PaginationResult<CurrencyConversionServiceModel>> GetCurrencyConversionsAsync(
             int pageNumber, int pageSize, string? sortColumn, string? sortOrder, string? filterColumn, string? filterQuery)
         {
@@ -60,71 +40,122 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
                     .Where(string.Format(fr.searchPattern!, fr.FilterColumn), fr.FilterQuery);
             }
 
-            int counter = 0;
-            counter = await currencyConversionPagination.CountAsync();
+            int counter = await currencyConversionPagination.CountAsync();
 
             if (sortColumn != null)
             {
                 sortOrder = !string.IsNullOrEmpty(sortOrder) && sortOrder.ToUpper() == "ASC" ? "ASC" : "DESC";
                 currencyConversionPagination = currencyConversionPagination
-                    .OrderBy(string.Format("{0} {1}", sortColumn, sortOrder));                
+                    .OrderBy(string.Format("{0} {1}", sortColumn, sortOrder));
             }
 
-            List<CurrencyConversion>? result = null;
+            // NOTE: the previous version of this method cached the raw entity page in
+            // IDistributedCache under a "currency-conversion:..." key. That cache was never
+            // invalidated anywhere (Add/Update/Delete didn't exist yet to invalidate it), so
+            // once this screen goes live a stale page would keep being served for up to 30
+            // seconds after every save - acceptable for a low-traffic reference table, but not
+            // worth the added complexity for a table this small. Removed; every request reads
+            // straight from the database, same as Stock/Order Items Catalog/Basis do.
+            currencyConversionPagination = currencyConversionPagination
+                .Skip(pageSize * pageNumber)
+                .Take(pageSize);
 
-            //var cacheKey = $"{pageNumber}-{pageSize}-{sortColumn}-{sortOrder}-{filterColumn}-{filterQuery}";
-            // Add a unique "units:" namespace prefix to the string
-            var cacheKey = $"currency-conversion:{pageNumber}-{pageSize}-{sortColumn}-{sortOrder}-{filterColumn}-{filterQuery}";
+            var result = await currencyConversionPagination.ToListAsync();
+            var currencyConversionServiceModels = _mapper.Map<IList<CurrencyConversionServiceModel>>(result);
 
-            var _options = new DistributedCacheEntryOptions() { AbsoluteExpirationRelativeToNow = new TimeSpan(0, 0, 30) };
-
-            _distributedCache.TryGetValue<List<CurrencyConversion>>(cacheKey, out result);
-
-            if (await _distributedCache.GetAsync(cacheKey) == null)
-            {
-                currencyConversionPagination = currencyConversionPagination
-                    .Skip(pageSize * pageNumber)
-                    .Take(pageSize);
-
-                result = await currencyConversionPagination.ToListAsync();
-
-                _distributedCache.Set(cacheKey, result, _options);
-            }
-
-            var filteredDbCountries = result; 
-            var currencyConversionServiceModels = _mapper.Map<IList<CurrencyConversionServiceModel>>(filteredDbCountries);
+            await AttachCurrencyNamesAsync(currencyConversionServiceModels);
 
             return new PaginationResult<CurrencyConversionServiceModel>(pageSize, pageNumber, counter, currencyConversionServiceModels,
                 sortColumn, sortOrder, filterColumn, filterQuery);
         }
-        public Task<CurrencyConversionServiceModel> AddCurrencyConversionAsync(CreateCurrencyConversionServiceModel createCurrencyConversionServiceModel)
+
+        public async Task<CurrencyConversionServiceModel?> GetCurrencyConversionByFromToAsync(string fromCurrency, string toCurrency)
         {
-            throw new NotImplementedException();
+            var from = (fromCurrency ?? string.Empty).Trim().ToUpperInvariant();
+            var to = (toCurrency ?? string.Empty).Trim().ToUpperInvariant();
+
+            var currencyConversionDbModel = await _apparelProDbContext.CurrencyConversions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.FromCurrency.ToUpper() == from && c.ToCurrency.ToUpper() == to);
+
+            if (currencyConversionDbModel == null)
+                return null;
+
+            var currencyConversionServiceModel = _mapper.Map<CurrencyConversionServiceModel>(currencyConversionDbModel);
+            await AttachCurrencyNamesAsync(new List<CurrencyConversionServiceModel> { currencyConversionServiceModel });
+            return currencyConversionServiceModel;
         }
 
-        public Task DeleteCurrencyConversionAsync(string code)
+        public async Task<CurrencyConversionServiceModel> AddCurrencyConversionAsync(CreateCurrencyConversionServiceModel createCurrencyConversionServiceModel)
         {
-            throw new NotImplementedException();
+            var from = (createCurrencyConversionServiceModel.FromCurrency ?? string.Empty).Trim().ToUpperInvariant();
+            var to = (createCurrencyConversionServiceModel.ToCurrency ?? string.Empty).Trim().ToUpperInvariant();
+
+            if (string.IsNullOrEmpty(from) || string.IsNullOrEmpty(to))
+                throw new InvalidOperationException("From Currency and To Currency are both required.");
+
+            if (from == to)
+                throw new InvalidOperationException("From Currency and To Currency must be different.");
+
+            // Both codes must exist in the Currency master - same guard Order Items Catalog
+            // applies against Stocks before inserting a StockItems row.
+            var fromExists = await _apparelProDbContext.Currencies.AsNoTracking().AnyAsync(c => c.Code == from);
+            if (!fromExists)
+                throw new InvalidOperationException($"From Currency '{from}' was not found in the Currency master. Add it on the Currency reference screen first.");
+
+            var toExists = await _apparelProDbContext.Currencies.AsNoTracking().AnyAsync(c => c.Code == to);
+            if (!toExists)
+                throw new InvalidOperationException($"To Currency '{to}' was not found in the Currency master. Add it on the Currency reference screen first.");
+
+            var alreadyExists = await _apparelProDbContext.CurrencyConversions
+                .AsNoTracking()
+                .AnyAsync(c => c.FromCurrency == from && c.ToCurrency == to);
+            if (alreadyExists)
+                throw new InvalidOperationException($"A conversion rate from {from} to {to} already exists.");
+
+            var currencyConversionDbModel = new CurrencyConversion
+            {
+                FromCurrency = from,
+                ToCurrency = to,
+                Value = createCurrencyConversionServiceModel.Value,
+            };
+
+            _apparelProDbContext.CurrencyConversions.Add(currencyConversionDbModel);
+            await _apparelProDbContext.SaveChangesAsync();
+
+            var currencyConversionServiceModel = _mapper.Map<CurrencyConversionServiceModel>(currencyConversionDbModel);
+            await AttachCurrencyNamesAsync(new List<CurrencyConversionServiceModel> { currencyConversionServiceModel });
+            return currencyConversionServiceModel;
         }
 
-        public Task<IEnumerable<CurrencyConversionServiceModel>> FilterCountriesByCodeAsync(string filter, int pageNumber, int pageSize)
+        public async Task UpdateCurrencyConversionAsync(UpdateCurrencyConversionServiceModel updateCurrencyConversionServiceModel)
         {
-            throw new NotImplementedException();
+            var from = (updateCurrencyConversionServiceModel.FromCurrency ?? string.Empty).Trim().ToUpperInvariant();
+            var to = (updateCurrencyConversionServiceModel.ToCurrency ?? string.Empty).Trim().ToUpperInvariant();
+
+            var currencyConversionDbModel = await _apparelProDbContext.CurrencyConversions
+                .FirstOrDefaultAsync(c => c.FromCurrency == from && c.ToCurrency == to);
+
+            if (currencyConversionDbModel == null)
+                throw new InvalidOperationException($"No conversion rate found from {from} to {to}.");
+
+            currencyConversionDbModel.Value = updateCurrencyConversionServiceModel.Value;
+            await _apparelProDbContext.SaveChangesAsync();
         }
 
-        public Task<IEnumerable<CurrencyConversionServiceModel>> GetCountriesByPageNumberAsync(int pageNumber, int pageSize)
+        public async Task DeleteCurrencyConversionAsync(string fromCurrency, string toCurrency)
         {
-            throw new NotImplementedException();
-        }
+            var from = (fromCurrency ?? string.Empty).Trim().ToUpperInvariant();
+            var to = (toCurrency ?? string.Empty).Trim().ToUpperInvariant();
 
-        public Task<CurrencyConversionServiceModel> GetCurrencyConversionByCodeAsync(string code)
-        {
-            throw new NotImplementedException();
-        }      
+            var currencyConversionDbModel = await _apparelProDbContext.CurrencyConversions
+                .FirstOrDefaultAsync(c => c.FromCurrency == from && c.ToCurrency == to);
 
-        public Task UpdateCurrencyConversionAsync(UpdateCurrencyConversionServiceModel updateCurrencyConversionServiceModel)
-        {
-            throw new NotImplementedException();
+            if (currencyConversionDbModel == null)
+                return;
+
+            _apparelProDbContext.CurrencyConversions.Remove(currencyConversionDbModel);
+            await _apparelProDbContext.SaveChangesAsync();
         }
 
         // NEW (2026-08-07) - see the interface comment. Trims/uppercases both currency codes
@@ -153,6 +184,30 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             }
 
             return amount * rate.Value;
+        }
+
+        // Bulk-looks-up FromCurrency/ToCurrency display names from the Currency master in a
+        // single query, same pattern OrderItemCatalogService uses for Stock descriptions -
+        // avoids one Currencies round-trip per row.
+        private async Task AttachCurrencyNamesAsync(IList<CurrencyConversionServiceModel> currencyConversions)
+        {
+            if (currencyConversions.Count == 0) return;
+
+            var codes = currencyConversions
+                .SelectMany(c => new[] { c.FromCurrency, c.ToCurrency })
+                .Distinct()
+                .ToList();
+
+            var nameLookup = await _apparelProDbContext.Currencies
+                .AsNoTracking()
+                .Where(c => codes.Contains(c.Code))
+                .ToDictionaryAsync(c => c.Code, c => c.Name);
+
+            foreach (var conversion in currencyConversions)
+            {
+                conversion.FromCurrencyName = nameLookup.TryGetValue(conversion.FromCurrency, out var fromName) ? fromName : null;
+                conversion.ToCurrencyName = nameLookup.TryGetValue(conversion.ToCurrency, out var toName) ? toName : null;
+            }
         }
     }
 }

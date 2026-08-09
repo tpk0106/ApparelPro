@@ -44,5 +44,16 @@ namespace ApparelPro.Data.Models.OrderwiseInventory
         // rows only — mirrors legacy IN_SRN1.PRG's supp_cd field, recording which
         // supplier the returned stock went back to.
         public int? SupplierCode { get; set; } // supp_cd
+
+        // AIN traceability additions (see AddAdditionalIssueNoteSupport migration). AIN
+        // ('4X') rows only — legacy IN_AIN1.PRG/IN_AIN3.PRG overload the shared t_buyer/
+        // t_order columns to carry the Sub-Contractor code and Additional Process code
+        // instead of a counterparty Buyer/Order (that's what CounterpartyBuyerCode/
+        // CounterpartyOrder above are for, GTN's own use of the same two legacy columns) —
+        // different domain, different type (Sub-Contractor's code is a 6-char string, not
+        // an int Buyer code), so AIN gets its own two dedicated columns rather than reusing
+        // those.
+        public string? SubContractorCode { get; set; } // t_buyer (AIN's own meaning, not GTN's)
+        public string? AdditionalProcessCode { get; set; } // t_order (AIN's own meaning, not GTN's)
     }
 }

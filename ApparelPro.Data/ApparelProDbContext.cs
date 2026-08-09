@@ -3,6 +3,7 @@ using ApparelPro.Data.Configurations.OrderManagement;
 using ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Configurations.OrderManagement.Shipment;
 using ApparelPro.Data.Configurations.OrderManagement.Stylewise_events;
+using ApparelPro.Data.Configurations.OrderManagement.SubContracting;
 using ApparelPro.Data.Configurations.OrderwiseInventory;
 using ApparelPro.Data.Configurations.References;
 using ApparelPro.Data.Configurations.Registration;
@@ -10,11 +11,11 @@ using ApparelPro.Data.Configurations.SystemConfiguration;
 using ApparelPro.Data.Models.OrderManagement;
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Models.OrderManagement.Shipments;
+using ApparelPro.Data.Models.OrderManagement.SubContracting;
 using ApparelPro.Data.Models.OrderwiseInventory;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Data.Models.Registration;
 using ApparelPro.Data.Models.SystemConfiguration;
-using ApparelPro.WebApi.APIModels.OrderManagement;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApparelPro.Data
@@ -60,6 +61,7 @@ namespace ApparelPro.Data
         public virtual DbSet<CurrencyConversion> CurrencyConversions { get; set; }
 
         public virtual DbSet<Supplier> Suppliers { get; set; }
+        public virtual DbSet<SubContractor> SubContractors { get; set; }
 
         // Order Management
         public virtual DbSet<ItemFeature> ItemFeatures { get; set; }
@@ -69,6 +71,7 @@ namespace ApparelPro.Data
         public virtual DbSet<StyleMaterialConsumptionLedger> StyleMaterialConsumptionLedgers { get; set; }
         public virtual DbSet<StyleMaterialCostProfile> StyleMaterialCostProfiles { get; set; }
         public virtual DbSet<GarmentAdditionalCost> GarmentAdditionalCosts { get; set; }
+        public virtual DbSet<SubContract> SubContracts { get; set; }
         public virtual DbSet<ColorSizeDetails> ColorSizeDetails { get; set; }
 
         public virtual DbSet<PurchaseOrderHeader>  PurchaseOrderHeaders { get; set; }
@@ -114,6 +117,7 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new UserConfig());
             modelBuilder.ApplyConfiguration(new SupplierConfig());
             modelBuilder.ApplyConfiguration(new CurrencyConversionConfig());
+            modelBuilder.ApplyConfiguration(new SubContractorConfig());
 
             // order management
             modelBuilder.ApplyConfiguration(new PurchaseOrderConfig());
@@ -127,6 +131,7 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new StyleMaterialCostProfileConfig());
             modelBuilder.ApplyConfiguration(new StyleMaterialConsumptionLedgerConfig());
             modelBuilder.ApplyConfiguration(new GarmentAdditionalCostConfig());
+            modelBuilder.ApplyConfiguration(new SubContractConfig());
             modelBuilder.ApplyConfiguration(new PurchaseOrderHeaderConfig());
 
             // styelwise events

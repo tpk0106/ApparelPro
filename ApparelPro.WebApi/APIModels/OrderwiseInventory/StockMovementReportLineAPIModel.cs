@@ -15,6 +15,7 @@ namespace ApparelPro.WebApi.APIModels.OrderwiseInventory
         public decimal SupplierReturnQuantity { get; set; }
         public decimal LastAdjustmentQuantity { get; set; }
         public decimal DamagedQuantity { get; set; }
+        public decimal AdditionalIssuedQuantity { get; set; }
         public decimal BalanceQuantity { get; set; }
     }
 }

@@ -82,6 +82,9 @@ namespace ApparelPro.WebApi.Extensions
             services.AddTransient<ILookupConstants, LookupConstants>();
             services.AddTransient<ICountryService, CountryService>();
             services.AddTransient<IAdditionalCostService, AdditionalCostService>();
+            services.AddTransient<ISubContractorService, SubContractorService>();
+            services.AddTransient<IStockService, StockService>();
+            services.AddTransient<IOrderItemCatalogService, OrderItemCatalogService>();
             services.AddTransient(typeof(IUnitServiceT<UnitServiceModel>), typeof(UnitServiceT));
             services.AddTransient(typeof(IUnitService), typeof(UnitService));
             services.AddTransient(typeof(IUserService), typeof(UserService));
@@ -90,6 +93,7 @@ namespace ApparelPro.WebApi.Extensions
             services.AddTransient(typeof(ISecurityService), typeof(SecurityService));
             services.AddTransient(typeof(ICurrencyExchangeService), typeof(CurrencyExchangeService));
             services.AddTransient(typeof(IGarmentTypeService), typeof(GarmentTypeService));
+            services.AddTransient<IGarmentTypeItemsService, GarmentTypeItemsService>();
             services.AddTransient(typeof(IBuyerService), typeof(BuyerService));
             services.AddTransient(typeof(IBasisService), typeof(BasisService));
             services.AddTransient(typeof(IBankService), typeof(BankService));
@@ -122,6 +126,7 @@ namespace ApparelPro.WebApi.Extensions
             // material consumption
             services.AddTransient(typeof (IMaterialConsumptionService),typeof(MaterialConsumptionService));
             services.AddTransient<IGarmentAdditionalCostService, GarmentAdditionalCostService>();
+            services.AddTransient<ISubContractService, SubContractService>();
             services.AddTransient(typeof(ISupplierPurchaseOrderService), typeof(SupplierPurchaseOrderService));
 
             // Register the Style-wise critical path tracking service loop lifecycle handler
@@ -159,6 +164,7 @@ namespace ApparelPro.WebApi.Extensions
             services.AddScoped<ISupplierReturnNoteService, SupplierReturnNoteService>();
             services.AddScoped<IDamagedGoodsNoteService, DamagedGoodsNoteService>();
             services.AddScoped<IStockAdjustmentNoteService, StockAdjustmentNoteService>();
+            services.AddScoped<IAdditionalIssueNoteService, AdditionalIssueNoteService>();
             services.AddScoped<IStockMovementReportService, StockMovementReportService>();
 
             // shared service
