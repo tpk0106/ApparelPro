@@ -1,5 +1,6 @@
 ﻿
 using ApparelPro.Data.Models.OrderwiseInventory;
+using ApparelPro.Data.Models.References;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -35,7 +36,7 @@ namespace ApparelPro.Data.Configurations.OrderwiseInventory
             entity.Property(e => e.ItemCode).HasColumnType("varchar(22)").IsRequired();
             entity.Property(e => e.Unit).HasColumnType("varchar(3)").IsRequired();
             entity.Property(e => e.Quantity).HasColumnType("decimal(12,2)").IsRequired();
-            entity.Property(e => e.CreatedByUsername).HasColumnType("varchar(20)").IsRequired();
+            entity.Property(e => e.CreatedByUsername).HasColumnType("varchar(50)").IsRequired();
             entity.Property(e => e.TransactionDate).HasColumnType("date").IsRequired();
 
             // GIN traceability additions
@@ -58,6 +59,37 @@ namespace ApparelPro.Data.Configurations.OrderwiseInventory
             // AdditionalCost.Code) for an Additional Issue Note ('4X') row.
             entity.Property(e => e.SubContractorCode).HasColumnType("varchar(6)").IsRequired(false);
             entity.Property(e => e.AdditionalProcessCode).HasColumnType("varchar(3)").IsRequired(false);
+
+            // Tier 1 relationships audit (2026-08-16): these 5 columns were previously enforced
+            // only by matching values, with no real database constraint. DepartmentCode ->
+            // Departments.DepartmentCode is deliberately EXCLUDED here - 17 existing rows have
+            // a DepartmentCode with no matching Department row, so that one needs a data-cleanup
+            // decision before it can be added.
+            entity.HasOne<Stock>()
+                .WithMany()
+                .HasForeignKey(e => e.StockCode)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Supplier>()
+                .WithMany()
+                .HasForeignKey(e => e.SupplierCode)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<SubContractor>()
+                .WithMany()
+                .HasForeignKey(e => e.SubContractorCode)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Currency>()
+                .WithMany()
+                .HasForeignKey(e => e.Currency)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Unit>()
+                .WithMany()
+                .HasForeignKey(e => e.Unit)
+                .HasPrincipalKey(u => u.Code)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

@@ -23,8 +23,10 @@ namespace ApparelPro.Data.Configurations.References
                 .HasDefaultValue(false);
                //.HasColumnType("bit");
 
-
-
+            // Tier 1 relationships audit (2026-08-16): Basis's real PK is the surrogate Id, but
+            // other tables reference it by Code. Code needs its own unique constraint before
+            // anything can declare a real FOREIGN KEY against it.
+            entity.HasIndex(p => p.Code).IsUnique();
         }
     }
 }

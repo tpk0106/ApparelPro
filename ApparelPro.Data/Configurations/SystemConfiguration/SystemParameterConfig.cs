@@ -32,6 +32,107 @@ namespace ApparelPro.Data.Configurations.SystemConfiguration
                 Category = "Order Management",
                 DataType = "Boolean"
             });
+
+            // Production Control (PR_OPD2.PRG's FACTPARA.DBF - factory-wide line-balancing
+            // defaults). Seeded 1:1 from the legacy singleton row's actual values. EFF1 isn't
+            // read by the Style Operation Breakdown save routine (only EFF2/WorkHours/NoMcs
+            // are), but is seeded now since it's part of the same legacy record and later
+            // phases (Reports > Employee Efficiency) are expected to need it.
+            entity.HasData(
+                new SystemParameter
+                {
+                    ParameterKey = "ProductionWorkHoursPerDay",
+                    Value = "8",
+                    Description = "Standard shift length in hours, used to compute each operation's " +
+                        "Quota (pieces/day at 100% = (WorkHoursPerDay*60)/SAM) and the line's target " +
+                        "daily output in Style Operation Breakdown.",
+                    Category = "Production Control",
+                    DataType = "Number"
+                },
+                new SystemParameter
+                {
+                    ParameterKey = "ProductionEfficiency1Percent",
+                    Value = "80",
+                    Description = "Legacy FACTPARA.EFF1 - factory efficiency percentage. Not currently " +
+                        "consumed by any migrated screen; carried over for the Reports phase.",
+                    Category = "Production Control",
+                    DataType = "Number"
+                },
+                new SystemParameter
+                {
+                    ParameterKey = "ProductionEfficiency2Percent",
+                    Value = "65",
+                    Description = "Legacy FACTPARA.EFF2 - efficiency percentage applied to raw machine " +
+                        "throughput in the Style Operation Breakdown line-balancing calculation.",
+                    Category = "Production Control",
+                    DataType = "Number"
+                },
+                new SystemParameter
+                {
+                    ParameterKey = "ProductionDefaultMachineCountPerLine",
+                    Value = "50",
+                    Description = "Legacy FACTPARA.NO_MCS - default assumed machine count used to size " +
+                        "a style's target daily output before it's actually assigned to a specific " +
+                        "Production Line (see ProductionLines.NumberOfMachines for the per-line figure " +
+                        "used once a real line assignment exists).",
+                    Category = "Production Control",
+                    DataType = "Number"
+                },
+                new SystemParameter
+                {
+                    ParameterKey = "ProductionContractSectionCode",
+                    Value = "001",
+                    Description = "Legacy FACTPARA.CONTR_SECT - the Section (see Sections.Code) treated " +
+                        "as the contractual production ceiling. No other section's running to-date " +
+                        "quantity may exceed this section's running to-date quantity for the same " +
+                        "style/line when saving Actual Production Entry. Defaults to 001 (Cutting).",
+                    Category = "Production Control",
+                    DataType = "Text"
+                }
+            );
+
+            // Home dashboard - fallback style shown when the floor hasn't
+            // logged anything yet (no DailyProductionEntries or
+            // DailyProductionTimeTicketEntries rows exist at all). Blank by
+            // default; an Administrator pins a Buyer/Order/Type/Style once
+            // there's a style they want shown before the first entry of a
+            // new day/style comes in. Four separate keys rather than one
+            // delimited value, so each stays readable/editable on its own.
+            entity.HasData(
+                new SystemParameter
+                {
+                    ParameterKey = "DashboardPinnedBuyerCode",
+                    Value = "",
+                    Description = "Fallback dashboard style - Buyer code. Only used when no Actual " +
+                        "Production Entry or Daily Production Time Ticket rows exist yet.",
+                    Category = "Dashboard",
+                    DataType = "Text"
+                },
+                new SystemParameter
+                {
+                    ParameterKey = "DashboardPinnedOrder",
+                    Value = "",
+                    Description = "Fallback dashboard style - Order number.",
+                    Category = "Dashboard",
+                    DataType = "Text"
+                },
+                new SystemParameter
+                {
+                    ParameterKey = "DashboardPinnedTypeCode",
+                    Value = "",
+                    Description = "Fallback dashboard style - Garment type code.",
+                    Category = "Dashboard",
+                    DataType = "Text"
+                },
+                new SystemParameter
+                {
+                    ParameterKey = "DashboardPinnedStyleCode",
+                    Value = "",
+                    Description = "Fallback dashboard style - Style code.",
+                    Category = "Dashboard",
+                    DataType = "Text"
+                }
+            );
         }
     }
 }

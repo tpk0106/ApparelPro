@@ -1,4 +1,5 @@
 using ApparelPro.Data.Models.OrderManagement.SubContracting;
+using ApparelPro.Data.Models.References;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -29,6 +30,19 @@ namespace ApparelPro.Data.Configurations.OrderManagement.SubContracting
             entity.Property(e => e.Currency).HasColumnType("varchar(3)").HasColumnName("Currency");
             entity.Property(e => e.Unit).HasColumnType("varchar(3)").HasColumnName("Unit");
             entity.Property(e => e.ReceivedQuantity).HasColumnType("decimal(9,0)").HasColumnName("ReceivedQuantity");
+
+            // Tier 1 relationships audit (2026-08-16): these 2 columns were previously enforced
+            // only by matching values, with no real database constraint.
+            entity.HasOne<Currency>()
+                .WithMany()
+                .HasForeignKey(e => e.Currency)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Unit>()
+                .WithMany()
+                .HasForeignKey(e => e.Unit)
+                .HasPrincipalKey(u => u.Code)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

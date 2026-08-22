@@ -10,6 +10,11 @@ namespace ApparelPro.Data.Models.OrderManagement
         public int GarmentType { get; set; }
         [NotMapped]
         public string GarmentTypeName { get; set; }
+
+        // Legacy OD_PO.DESC - free-text order description entered at PO
+        // creation (e.g. "Mens winter jacket"). Never migrated onto this
+        // entity until now; existing rows will be null until re-saved.
+        public string? Description { get; set; }
         [NotMapped]
         public string? Buyer { get; set; }
         public string CountryCode { get; set; }

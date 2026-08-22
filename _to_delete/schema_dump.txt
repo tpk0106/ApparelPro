@@ -1,0 +1,3296 @@
+===== FILE: Models/OrderManagement/ColorSizeDetails.cs =====
+﻿
+namespace ApparelPro.Data.Models.OrderManagement
+{
+    public class ColorSizeDetails
+    {
+        // Composite Primary Key matches your legacy SQL Server table setup
+        public int BuyerCode { get; set; }
+        public string Order { get; set; }
+        public int TypeCode { get; set; }
+        public string StyleCode { get; set; }
+        public string Color { get; set; }
+        public string Size { get; set; }
+        public decimal Ratio { get; set; }
+        public decimal Qty { get; set; }
+        // FIXED (2026-08-07): the Colour Target Allocation Setup screen lets the
+        // user enter a free-text description/shade name per colour, but this
+        // table previously had nowhere to persist it - the frontend silently
+        // dropped it on save, and re-hydrated a fabricated placeholder string
+        // on reload. Denormalized per-row (same as Color already is), matching
+        // this table's existing flat/legacy-style design.
+        public string? Description { get; set; }
+    }
+}
+
+===== FILE: Models/OrderManagement/PODetails.cs =====
+﻿namespace ApparelPro.Data.Models.OrderManagement
+{
+    public class PODetails
+    {
+        public int Id { get; set; } // Maintain an internal database auto-increment identity
+
+        // FIXED: Switched from int to string to perfectly match Clipper's Character (C 6) type!
+        public string PONumber { get; set; } = null!;
+
+        public int Buyer { get; set; }
+        public string Order { get; set; } = null!;
+        public int Type { get; set; }
+        public string Style { get; set; } = null!;
+        public string ItemCode { get; set; } = null!; // Your 22-character compound key
+        public string? RefNo { get; set; }
+        public string OrderUnit { get; set; } = null!;
+        public decimal OrderQuantity { get; set; }
+        public decimal UnitPrice { get; set; }
+        public DateTime? ExportDate { get; set; }
+        public string? LCNo { get; set; }
+
+        // FIXED: Switched from int to decimal to handle fractional yardages/metres safely
+        public decimal Balance { get; set; }
+    }
+}
+
+===== FILE: Models/OrderManagement/PurchaseOrder.cs =====
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ApparelPro.Data.Models.OrderManagement
+{
+    public class PurchaseOrder
+    {
+        public int BuyerCode { get; set; }
+        public string Order { get; set; }
+        public DateTime OrderDate { get; set; }
+        public int GarmentType { get; set; }
+        [NotMapped]
+        public string GarmentTypeName { get; set; }
+        [NotMapped]
+        public string? Buyer { get; set; }
+        public string CountryCode { get; set; }
+        public string UnitCode { get; set; }
+        public decimal TotalQuantity { get; set; }
+        public string CurrencyCode { get; set; }
+        public string Season { get; set; }
+        public string BasisCode { get; set; }
+        public decimal BasisValue { get; set; }
+
+        // Audit trail for the 'AllowOrderQuantityOverride' system parameter: set only when a
+        // Style Details save is let through despite pushing the running style total past
+        // TotalQuantity, so it's always clear who authorized it and when. Null under normal
+        // (never-overridden) operation.
+        public string? QuantityOverriddenBy { get; set; }
+        public DateTime? QuantityOverriddenAt { get; set; }
+    }
+}
+
+===== FILE: Models/OrderManagement/PurchaseOrderHeader.cs =====
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Models.OrderManagement
+{
+    public class PurchaseOrderHeader
+    {
+        public int Id { get; set; }
+
+        public string PurchaseOrderNumber { get; set; } = null!; // po_no (e.g. "000004")
+        public DateOnly? CreatedDate { get; set; }           // date - added 2026-08-08, nullable: rows created before this column existed have no value
+        public TimeOnly? CreatedTime { get; set; }           // time - added 2026-08-08, same reasoning
+        public string SupplierCode { get; set; } = null!;   // supp_cd
+        public string StoreCode { get; set; } = null!;      // store_cd
+        public string? ProformaInvoiceNo { get; set; }      // pi_no
+        public DateOnly? ProformaInvoiceDate { get; set; }  // pi_date
+        public string CurrencyCode { get; set; } = null!;   // curr
+
+        // Multi-user concurrency editing lock flag
+        public bool IsPoUsed { get; set; }                 // po_used
+    }
+}
+
+===== FILE: Models/OrderwiseInventory/DocumentSequence.cs =====
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Models.OrderwiseInventory
+{
+    public class DocumentSequence
+    {
+        public string NoteType { get; set; } = null!; // "SRN", "GRN", "GIN", etc. (Primary Key)
+        public int LastAllocatedNumber { get; set; } // Tracks the running sequence count (e.g. 1, 2, 3)
+        public string Prefix { get; set; } = "";     // Optional string prefix tracking additions
+
+    }
+}
+
+===== FILE: Models/OrderwiseInventory/OrderwiseStock.cs =====
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Models.OrderwiseInventory
+{
+    // Replicates in_stock.dbf (Store-wise Raw Material Inventories)
+    public class OrderwiseStock
+    {
+        public int Id { get; set; }
+        public int BuyerCode { get; set; }
+        public string Order { get; set; } = null!;
+        public string StoreCode { get; set; } = null!;
+        public string ItemCode { get; set; } = null!;
+        public string Unit { get; set; } = null!;
+        public decimal OrderedQuantity { get; set; }
+
+        // 🚀 ADDED MISSING LEDGER COLUMNS FROM YOUR DATABASE SNAPSHOT:
+        public decimal QtyInHand { get; set; }      // QTY_IN_HD
+        public decimal ShadowBalance { get; set; }   // SHDW_BAL
+        public decimal DamagedQuantity { get; set; } // DAMG_QTY
+        public decimal ToDateIssued { get; set; }    // TO_DT_ISS
+        public decimal ToDateReceived { get; set; }  // TO_DT_REC
+        public DateTime? LastDateIssued { get; set; } // L_DT_ISS
+        public DateTime? LastDateReceived { get; set; } // L_DT_REC
+        public decimal StrnBalance { get; set; }      // SRN_BAL
+    }
+}
+
+===== FILE: Models/OrderwiseInventory/OrderwiseStockMaster.cs =====
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Models.OrderwiseInventory
+{
+    // Replicates in_stmst.dbf (Master Costing & Valuation Stocks Ledger)
+    public class OrderwiseStockMaster
+    {
+        public int Id { get; set; }
+        public int BuyerCode { get; set; }
+        public string Order { get; set; } = null!;
+        public string ItemCode { get; set; } = null!;
+        public string Unit { get; set; } = null!;
+        public string Currency { get; set; } = null!;
+        public decimal OrderedQuantity { get; set; }
+        public decimal Price { get; set; }
+        // 🚀 ADDED: Tracks cumulative reserved quantities (Maps to legacy req_qty)
+        public decimal RequisitionedQuantity { get; set; }
+
+        // GIN traceability addition: running total issued via GIN (legacy issd_qty).
+        // Balance-remaining is derived as OrderedQuantity - IssuedQuantity rather than
+        // persisted as a second mutable total (avoids the legacy issd_qty/bal_qty drift risk).
+        public decimal IssuedQuantity { get; set; }
+
+        // GRN traceability addition: running total received via GRN (legacy rcvd_qty).
+        public decimal ReceivedQuantity { get; set; }
+
+        // RTN traceability addition: running total returned via Goods Return Note
+        // (legacy retd_qty). Deliberately NOT decrementing IssuedQuantity the way
+        // legacy IN_RTN1.PRG mutates issd_qty in place — IssuedQuantity stays a
+        // monotonic "gross ever issued" audit total, same principle already applied
+        // to Balance being derived rather than a second mutable total. Net balance
+        // becomes OrderedQuantity - IssuedQuantity + ReturnedQuantity wherever it's
+        // computed (e.g. Stock Movement Report), so a return still correctly frees
+        // up balance without corrupting the gross-issued history.
+        public decimal ReturnedQuantity { get; set; }
+
+        // GTN traceability addition: running cumulative totals for Goods Transfer Note
+        // activity (legacy in_stmst.trou_qty / trin_qty). Kept as two separate monotonic
+        // "gross ever transferred" audit totals rather than folding straight into a single
+        // mutable BalanceQuantity, same principle already applied to IssuedQuantity/
+        // ReceivedQuantity/ReturnedQuantity above. Net balance wherever it's computed
+        // (e.g. Stock Movement Report) becomes:
+        //   OrderedQuantity - IssuedQuantity + ReturnedQuantity + TransferInQuantity - TransferOutQuantity
+        public decimal TransferInQuantity { get; set; }
+        public decimal TransferOutQuantity { get; set; }
+
+        // SRN traceability addition: running total returned to supplier via Supplier
+        // Return Note (legacy sret_qty). Same monotonic "gross ever returned" audit-total
+        // principle as ReturnedQuantity/TransferIn/TransferOut above — net balance wherever
+        // it's computed (e.g. Stock Movement Report) subtracts this the same way
+        // TransferOutQuantity is subtracted.
+        public decimal SupplierReturnQuantity { get; set; }
+
+        // DGN traceability addition: running total damaged via Damaged Goods Note
+        // (legacy damg_qty). Same monotonic "gross ever damaged" audit-total principle
+        // as SupplierReturnQuantity/TransferIn/TransferOut above. NOTE: the Stock
+        // Movement Report does NOT read this column — it already aggregates
+        // OrderwiseStock.DamagedQuantity live across stores (see that entity), which is
+        // the correct per-store source of truth. This master-level total exists purely
+        // for 1:1 parity with legacy's in_stmst.damg_qty and quick per-item access
+        // without a store join, same as every other note type's master total.
+        public decimal DamagedQuantity { get; set; }
+
+        // AIN traceability addition: running total issued via Additional Issue Note
+        // (legacy in_stmst.issd_qty — shared with GIN in legacy, since legacy only ever
+        // had one issd_qty column). Per explicit product decision (2026-08-09), this
+        // system gives AIN its own dedicated monotonic column instead of commingling into
+        // IssuedQuantity, matching the same "one column per note type" convention already
+        // used for ReturnedQuantity/TransferIn/TransferOut/SupplierReturnQuantity/
+        // DamagedQuantity above. Net balance wherever it's computed (e.g. Stock Movement
+        // Report) subtracts this the same way IssuedQuantity is subtracted.
+        public decimal AdditionalIssuedQuantity { get; set; }
+    }
+}
+
+===== FILE: Models/OrderwiseInventory/OrderwiseStockTransaction.cs =====
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Models.OrderwiseInventory
+{
+    public class OrderwiseStockTransaction
+    {
+        public int Id { get; set; } // Auto-increment Identity Seed Primary Key
+
+        public string DocumentNumber { get; set; } = null!; // xdocno (STRN / GIN / GRN number)
+        public string TransactionType { get; set; } = null!; // "0S" = Stores Requisition Note (STRN), "4I" = GIN, etc.
+        public DateTime TransactionDate { get; set; } // xdate
+
+        public int BuyerCode { get; set; } // xbuyer
+        public string Order { get; set; } = null!; // xorder
+        public string DepartmentCode { get; set; } = null!; // xdept
+
+        // Line-Item Material Tracking Parameters
+        public string StockCode { get; set; } = null!; // Splits from character positions
+        public string StoreCode { get; set; } = null!; // The "Basis" / Store the item was drawn from (matches OrderwiseStock.StoreCode)
+        public string ItemCode { get; set; } = null!;
+        public string Unit { get; set; } = null!;
+        public decimal Quantity { get; set; }
+
+        public string CreatedByUsername { get; set; } = null!;
+
+        // GIN traceability additions (see GinTraceabilityColumns migration)
+        public decimal BalanceToReceive { get; set; } // bal_to_rec — STRN ('0S') rows only. Remaining unissued qty for this line; decremented by each GIN raised against it.
+        public string? SourceDocumentNumber { get; set; } // GIN ('4I') rows only — the STRN doc number this issue was raised against.
+        public decimal? Price { get; set; } // GIN rows only — snapshotted from OrderwiseStockMaster at issue time.
+        public string? Currency { get; set; } // GIN rows only — snapshotted from OrderwiseStockMaster at issue time.
+
+        // GTN traceability additions (see GtnTraceabilityColumns migration). GTN ('6T'/'1T')
+        // rows only — mirrors legacy IN_GTN1.PRG's t_buyer/t_order fields written onto BOTH
+        // legs of a transfer so each leg can be printed/traced back to its counterpart without
+        // a self-join: a '6T' (Transfer-Out) row's Buyer/Order is the source, and
+        // CounterpartyBuyerCode/CounterpartyOrder is the destination; a '1T' (Transfer-In) row
+        // is the mirror image.
+        public int? CounterpartyBuyerCode { get; set; } // t_buyer
+        public string? CounterpartyOrder { get; set; } // t_order
+
+        // SRN traceability addition (see SrnTraceabilityColumns migration). SRN ('7S')
+        // rows only — mirrors legacy IN_SRN1.PRG's supp_cd field, recording which
+        // supplier the returned stock went back to.
+        public int? SupplierCode { get; set; } // supp_cd
+
+        // AIN traceability additions (see AddAdditionalIssueNoteSupport migration). AIN
+        // ('4X') rows only — legacy IN_AIN1.PRG/IN_AIN3.PRG overload the shared t_buyer/
+        // t_order columns to carry the Sub-Contractor code and Additional Process code
+        // instead of a counterparty Buyer/Order (that's what CounterpartyBuyerCode/
+        // CounterpartyOrder above are for, GTN's own use of the same two legacy columns) —
+        // different domain, different type (Sub-Contractor's code is a 6-char string, not
+        // an int Buyer code), so AIN gets its own two dedicated columns rather than reusing
+        // those.
+        public string? SubContractorCode { get; set; } // t_buyer (AIN's own meaning, not GTN's)
+        public string? AdditionalProcessCode { get; set; } // t_order (AIN's own meaning, not GTN's)
+    }
+}
+
+===== FILE: Models/Registration/ApparelProUser.cs =====
+﻿using ApparelPro.Data.Models.References;
+using Microsoft.AspNetCore.Identity;
+
+namespace ApparelPro.Data.Models.Registration
+{
+    public class ApparelProUser:IdentityUser
+    {
+        // this id is added as Id is coming from IdentityUser as a guid value
+        // so it is required to make Id as int
+      //  public int Id { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public string? KnownAs { get; set; }
+        public DateTime Created { get; set; } = DateTime.Now;
+        public DateTime? LastActive { get; set; } = DateTime.Now;
+        public Gender? Gender { get; set; } 
+        //public string? City { get; set; }
+        //public string? Country { get; set; }
+        public Guid? AddressId { get; set; }
+        // Navigation Property for easy EF Core joins
+        public virtual Address? Address { get; set; }
+        public byte[]? ProfilePhoto { get; set; }
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiry { get; set; }
+    }
+
+    public enum Gender
+    {
+        Male = 1,
+        Female = 2,
+        Transgender = 3
+    }    
+}
+
+===== FILE: Models/Registration/Permission.cs =====
+﻿namespace ApparelPro.Data.Models.Registration
+{
+    /// <summary>
+    /// One row per protected section (e.g. "gin", "san", "buyers") - the catalog that
+    /// RolePermission maps roles onto. This is what the future Access Rights admin
+    /// screen lists and lets an administrator grant/revoke per role, without any
+    /// code change or redeploy.
+    /// </summary>
+    public class Permission
+    {
+        public int Id { get; set; }
+
+        /// <summary>Stable machine key referenced by [Authorize(Policy = Key)] on
+        /// controllers - e.g. "san", "gin", "buyers". Never shown to end users.</summary>
+        public string Key { get; set; } = string.Empty;
+
+        /// <summary>Human-readable label for the admin screen, e.g. "Stock Adjustment
+        /// Note".</summary>
+        public string DisplayName { get; set; } = string.Empty;
+
+        /// <summary>Grouping for the admin screen's roles x permissions grid, e.g.
+        /// "Orderwise Inventory", "Reference Data".</summary>
+        public string Category { get; set; } = string.Empty;
+
+        public string? Description { get; set; }
+    }
+}
+
+===== FILE: Models/Registration/RolePermission.cs =====
+﻿namespace ApparelPro.Data.Models.Registration
+{
+    /// <summary>
+    /// The many-to-many bridge between ASP.NET Identity roles (AspNetRoles) and the
+    /// Permission catalog. Granting/revoking a role's access to a section is an
+    /// insert/delete of a row here - a data change, not a code change.
+    /// </summary>
+    public class RolePermission
+    {
+        public int Id { get; set; }
+
+        /// <summary>FK -> AspNetRoles.Id (IdentityRole's string key).</summary>
+        public string RoleId { get; set; } = string.Empty;
+
+        public int PermissionId { get; set; }
+
+        public Permission? Permission { get; set; }
+    }
+}
+
+===== FILE: Models/Registration/User.cs =====
+﻿namespace ApparelPro.Data.Models.Registration
+{
+    public class User
+    {
+        public int Id { get; set; }
+        public string Email { get; set; }
+        public string UserName { get; set; } = string.Empty;
+        public byte[] PasswordHash { get; set; }
+        public byte[] PasswordSalt { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public string? KnownAs { get; set; }
+        public DateTime Created { get; set; } = DateTime.Now;
+        public DateTime? LastActive { get; set; } = DateTime.Now;
+        public string? Gender { get; set; }
+        public string? City { get; set; }
+        public string? Bank { get; set; }
+        public byte[]? Photo { get; set; }
+    }
+}
+
+===== FILE: Models/SystemConfiguration/SystemParameter.cs =====
+namespace ApparelPro.Data.Models.SystemConfiguration
+{
+    public class SystemParameter
+    {
+        public string ParameterKey { get; set; } = null!;
+        public string Value { get; set; } = null!;
+        public string? Description { get; set; }
+
+        // Drives the Settings screen's UI: which category tab this parameter appears
+        // under, and which control renders for it (Boolean -> toggle, Color -> swatch
+        // picker, Number -> slider/numeric input, Text -> text field, Select -> dropdown).
+        public string Category { get; set; } = "General";
+        public string DataType { get; set; } = "Text";
+
+        // For DataType = "Select" only: comma-separated "label:value" pairs, e.g.
+        // "10 rows:10,25 rows:25,50 rows:50". Null/unused for every other DataType.
+        public string? Options { get; set; }
+    }
+}
+
+===== FILE: Models/OrderManagement/MaterialConsumption/GarmentAdditionalCost.cs =====
+namespace ApparelPro.Data.Models.OrderManagement.MaterialConsumption
+{
+    // Replicates od_aitm.dbf (Additional Costs per Garment)
+    public class GarmentAdditionalCost
+    {
+        public int BuyerCode { get; set; }
+        public string Order { get; set; } = null!;
+        public int TypeCode { get; set; }
+        public string StyleCode { get; set; } = null!;
+        public string AdditionalCostCode { get; set; } = null!; // add_cost - FK to AdditionalCost.Code
+
+        // 22-char composite: StockCode(2) + ItemCode(4) + Feature1-4(4 each) - same convention
+        // as StyleMaterialCostProfile.ItemCode / OrderwiseStockMaster / PODetails, not the split
+        // columns StyleMaterialConsumptionLedger uses (od_aitm's own legacy index treats item_cd
+        // as one opaque segment, matching the majority convention).
+        public string ItemCode { get; set; } = null!;
+
+        public string Color { get; set; } = string.Empty;   // blank = applies to whole style
+        public string Size { get; set; } = string.Empty;    // blank = applies to whole style/colour
+        public string StoreCode { get; set; } = null!;      // Basis code
+        public string Currency { get; set; } = null!;
+        public string Unit { get; set; } = null!;
+        public decimal Quantity { get; set; }                // qty per garment
+        public decimal Cost { get; set; }
+        public bool IsCostPerGarment { get; set; }            // cost_gar: true = Cost is per-garment; false = Cost is the order's total, per-unit price is derived
+        public bool IsSemiFinishedGarment { get; set; }       // semi_fin
+    }
+}
+
+===== FILE: Models/OrderManagement/MaterialConsumption/ItemFeature.cs =====
+﻿namespace ApparelPro.Data.Models.OrderManagement.MaterialConsumption
+{
+    public class ItemFeature
+    {        
+        public string FeatureCode { get; set; } = null!;
+        public string Description { get; set; } = null!;
+    }
+}
+
+===== FILE: Models/OrderManagement/MaterialConsumption/OrderItem.cs =====
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Models.OrderManagement.MaterialConsumption
+{
+    public class OrderItem
+    {
+        public string StockCode { get; set; } = null!;
+        public string ItemCode { get; set; } = null!;
+        public string Description { get; set; } = null!;
+    }
+}
+
+===== FILE: Models/OrderManagement/MaterialConsumption/OrderItemFeature.cs =====
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Models.OrderManagement.MaterialConsumption
+{
+    public class OrderItemFeature
+    {
+        public string StockCode { get; set; } = null!;
+        public string ItemCode { get; set; } = null!;
+        public string? Feature1Type { get; set; } // Points to FeatureCode (e.g. 'TY', 'CL')
+        public string? Feature2Type { get; set; }
+        public string? Feature3Type { get; set; }
+        public string? Feature4Type { get; set; }
+        public decimal? CostPerUnit { get; set; }
+    }
+}
+
+===== FILE: Models/OrderManagement/MaterialConsumption/StyleMaterialConsumptionLedger.cs =====
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Models.OrderManagement.MaterialConsumption
+{
+
+    // Replicates od_sacc3.dbf (The Unified Consumption Ledger Table)
+    public class StyleMaterialConsumptionLedger
+    {
+        public int BuyerCode { get; set; }
+        public string Order { get; set; } = null!;
+        public int TypeCode { get; set; }
+        public string StyleCode { get; set; } = null!;
+        public string Color { get; set; } = null!;
+        public string Size { get; set; } = null!;
+        public string StockCode { get; set; } = null!;
+        public string ItemCode { get; set; } = null!;
+        public string Feature1 { get; set; } = null!;
+        public string Feature2 { get; set; } = null!;
+        public string Feature3 { get; set; } = null!;
+        public string Feature4 { get; set; } = null!;
+
+        public string StoreCode { get; set; } = null!;
+        public string ConsumptionUnit { get; set; } = null!;
+        public string ItemUnit { get; set; } = null!;
+        public decimal QuantityPerGarment { get; set; }
+        public string SupplierCode { get; set; } = null!;
+        public decimal TotalConsumption { get; set; }
+        public decimal PercentageAllowance { get; set; }
+
+        public bool IsAdditionalCost { get; set; }
+        public bool CalculateConsumption { get; set; } // Map to logic mode flag 'cons_cal'
+
+    }
+}
+
+===== FILE: Models/OrderManagement/MaterialConsumption/StyleMaterialCostProfile.cs =====
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Models.OrderManagement.MaterialConsumption
+{
+    // Replicates od_sacc2.dbf (Material Cost Profiles)
+    public class StyleMaterialCostProfile
+    {
+        public int BuyerCode { get; set; }
+        public string Order { get; set; } = null!;
+        public int TypeCode { get; set; }
+        public string StyleCode { get; set; } = null!;
+
+        // Collapsed 2026-07-22: this used to be split into StockCode(2) + ItemCode(4) +
+        // Feature1-4(4 each) — a normalization the legacy od_sacc2.dbf never actually had
+        // (its ITEM_CD field is a single 22-char blob, confirmed by reading the DBF header
+        // directly: no StockCode/Feature columns exist there at all). Every other table that
+        // shares this same 22-char convention (OrderwiseStockMaster, OrderwiseStockTransaction,
+        // PODetails) already stores it as one field, so this entity now matches them — no more
+        // packing/unpacking seam at the PO budget lookup or STRN/Stock Movement report joins.
+        // ItemCode is the full 22-char composite: StockCode(2) + ItemCode(4) + Feature1-4(4 each).
+        public string ItemCode { get; set; } = null!;
+
+        public string Description { get; set; } = null!;
+        public string ItemUnit { get; set; } = null!;
+        public string Currency { get; set; } = null!;
+        public decimal UnitPrice { get; set; }
+        public decimal BalanceQuantity { get; set; }
+
+        // Legacy od_sacc2 fields that were missing from this replica:
+        // SUPP_CD - preferred supplier for this planned material line.
+        public string SupplierCode { get; set; } = "";
+        // TOT_CON - the original/cumulative planned total. BalanceQuantity
+        // (bal_qty) is a rolling figure that goes up when consumption entries
+        // are added/edited and down when POs are raised against it; this
+        // field only ever tracks the former, so the original planned amount
+        // survives even after POs have drawn the balance down to 0.
+        public decimal TotalConsumption { get; set; }
+    }
+}
+
+===== FILE: Models/OrderManagement/Shipments/PartShipment.cs =====
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Models.OrderManagement.Shipments
+{
+    public class PartShipment
+    {
+        public int Id { get; set; } // Internal database primary auto-increment identity seed
+
+        public int BuyerCode { get; set; }
+        public string Order { get; set; } = null!;
+        public int TypeCode { get; set; }
+        public string StyleCode { get; set; } = null!;
+
+        public string NewOrder { get; set; } = null!; // new_order (Split Shipping Order Ref)
+        public string DestinationCode { get; set; } = null!; // dest
+        public DateTime ShipDate { get; set; } // ship_date
+
+        public string SubContractFlag { get; set; } = "N"; // subcont ('Y'/'N')
+        public string Unit { get; set; } = null!;
+        public decimal Quantity { get; set; }
+        public string ShippingMode { get; set; } = null!; // shp_mode ('SEA'/'AIR')
+
+        // Quota Context Sub-Block Reference Variables
+        public string QuotaCountry { get; set; } = ""; // qta_cont
+        public string QuotaStatus { get; set; } = "N"; // qta_stat ('Q'/'N')
+        public string QuotaCategory { get; set; } = ""; // qta_cat
+        public string QuotaType { get; set; } = ""; // qta_type
+        public string FromYearMonth { get; set; } = ""; // f_yymm
+        public string ToYearMonth { get; set; } = ""; // t_yymm
+
+        public DateTime OrderDate { get; set; } // odate
+        public decimal Balance { get; set; } // balance (Open delivery balance remaining)
+
+    }
+}
+
+===== FILE: Models/OrderManagement/Shipments/QuotaTransaction.cs =====
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Models.OrderManagement.Shipments
+{
+    public class QuotaTransaction
+    {
+        public int Id { get; set; }
+        public string Action { get; set; } = "BKD"; // action ('BKD')
+
+        public int BuyerCode { get; set; }
+        public string Order { get; set; } = null!;
+        public int TypeCode { get; set; }
+        public string StyleCode { get; set; } = null!;
+        public string NewOrder { get; set; } = null!;
+
+        public string QuotaStatus { get; set; } = null!;
+        public string FromYearMonth { get; set; } = null!;
+        public string ToYearMonth { get; set; } = null!;
+        public string QuotaCountry { get; set; } = null!;
+        public string QuotaCategory { get; set; } = null!;
+        public string QuotaType { get; set; } = null!;
+
+        public string Unit { get; set; } = null!;
+        public decimal Quantity { get; set; }
+    }
+}
+
+===== FILE: Models/OrderManagement/Stylewise Events/EventMaster.cs =====
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.Stylewise_Events
+{
+    public class EventMaster
+    {
+        public int Id { get; set; } // Internal database auto-increment identity seed
+
+        public int BuyerCode { get; set; }
+        public string Order { get; set; } = null!;
+        public int TypeCode { get; set; }
+        public string StyleCode { get; set; } = null!;
+
+        // Links straight to your master milestones dictionary string code
+        public string EventCode { get; set; } = null!; // ev_code
+
+        public DateTime? ScheduledDate { get; set; } // exp_date
+        public DateTime? ActualDate { get; set; }    // rcv_date
+        public string? Remarks { get; set; }         // remarks
+
+        // Fluent navigation property linking back to your master milestones dictionary shape
+        [ForeignKey("EventCode")]
+        public virtual StylewiseEvent MilestoneEvent { get; set; } = null!;
+    }
+}
+
+===== FILE: Models/OrderManagement/Stylewise Events/StylewiseEvent.cs =====
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.Stylewise_Events
+{
+    public class StylewiseEvent
+    {// Padded Character String Code Key (e.g. "E00001", "LIPDIP")
+        public string EventCode { get; set; } = null!;
+        public string Description { get; set; } = null!; // desc
+    }
+}
+
+===== FILE: Models/OrderManagement/SubContracting/SubContract.cs =====
+namespace ApparelPro.Data.Models.OrderManagement.SubContracting
+{
+    // Replicates od_subc1.dbf ("Sub Contracts" - Order Management -> D. Sub Contracts in
+    // legacy OD_MENU.PRG, chk_pass('od_subc1')). Assigns a quantity of a given
+    // Buyer/Order/Type/Style to a Sub Contractor (see References.SubContractor) for outwork,
+    // at an agreed cost per garment, tracked against how much has physically been received
+    // back so far.
+    //
+    // NOTE: the actual od_subc1.prg source was not available in the legacy reference set
+    // (only referenced by name in OD_MENU.PRG, plus the OD_SUBC1.DBF structure itself) - per
+    // the Zero-Assumption Boundary Rule, the following were confirmed with the user rather
+    // than assumed (2026-08-09):
+    //   - ReceivedQuantity is a plain, manually-editable field on this same row - no separate
+    //     receipt-transaction table/program exists anywhere in the legacy source, so none was
+    //     invented here.
+    //   - Total SubQuantity across all Sub Contract rows for a style is soft-warned (never
+    //     blocked) against the style's ordered quantity (References.Style.Quantity) - see
+    //     SubContractService.GetQuantityWarningAsync.
+    public class SubContract
+    {
+        public int BuyerCode { get; set; }
+        public string Order { get; set; } = null!;
+        public int TypeCode { get; set; }
+        public string StyleCode { get; set; } = null!;
+        public string SubContractorCode { get; set; } = null!; // SUB_CODE - FK to SubContractor.Code
+
+        public decimal SubQuantity { get; set; }      // SUB_QTY - quantity assigned to this sub-contractor
+        public decimal CostPerGarment { get; set; }    // COST_P_GAR
+        public string Currency { get; set; } = null!;
+        public string Unit { get; set; } = null!;
+        public decimal ReceivedQuantity { get; set; }  // RECVD_QTY - manually maintained (see class comment)
+    }
+}
+
+===== FILE: Models/References/AdditionalCost.cs =====
+namespace ApparelPro.Data.Models.References
+{
+    public class AdditionalCost
+    {
+        public string Code { get; set; } = null!;
+        public string Description { get; set; } = null!;
+    }
+}
+
+===== FILE: Models/References/Address.cs =====
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ApparelPro.Data.Models.References
+{
+    public class Address
+    {
+        public int Id { get; set; }
+        public Guid AddressId { get; set; }        
+        public AddressType? AddressType { get; set; }
+        public string? StreetAddress { get; set; }
+        public string? City { get; set; } 
+        public int? PostCode { get; set; }
+        public string? State { get; set; }
+        public string? CountryCode { get; set; }
+        [NotMapped]
+        public string? Country { get; set; }
+        public bool? Default { get; set; }
+        public string? BankCode { get; set; }        
+        public int? BuyerCode { get; set; }
+    }
+
+    public enum AddressType
+    {
+        Residential = 1,
+        Postal = 2,
+        Corporate = 3,
+        Billing = 4,
+        Delivery = 5,        
+    }
+}
+
+===== FILE: Models/References/Bank.cs =====
+﻿namespace ApparelPro.Data.Models.References
+{
+    public class Bank
+    {
+        public int Id { get; set; }
+        public string BankCode { get; set; }
+        public string? Name { get; set; }
+        public string? TelephoneNos { get; set; }
+        public string? SwiftCode { get; set; }        
+        public ICollection<Address> Addresses { get; set; } = new List<Address>();        
+        public decimal LoanLimit { get; set; }
+        public string? CurrencyCode { get; set; }
+    }
+}
+
+===== FILE: Models/References/Basis.cs =====
+﻿namespace ApparelPro.Data.Models.References
+{
+    public class Basis
+    {
+        public int Id { get; set; }
+        public string Code { get; set; }
+        public string Description { get; set; }
+        public bool ValueAdd { get; set; }
+    }
+}
+
+===== FILE: Models/References/Buyer.cs =====
+﻿namespace ApparelPro.Data.Models.References
+{
+    public class Buyer
+    {
+        public int BuyerCode { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;        
+        public string? TelephoneNos { get; set; }
+        public string? MobileNos { get; set; }
+        public string? Fax{ get; set; }
+        public string? CUSDEC { get; set; }        
+        public ICollection<Address> Addresses { get; set; } = new List<Address>();
+    }
+}
+
+===== FILE: Models/References/Country.cs =====
+﻿namespace ApparelPro.Data.Models.References
+{
+    public class Country
+    {
+        public int Id { get; set; }
+        public string Code { get; set; }
+        public string Name { get; set; }
+        public byte[]? Flag { get; set; }
+    }
+}
+
+===== FILE: Models/References/Currency.cs =====
+﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ApparelPro.Data.Models.References
+{
+    public class Currency
+    {
+        public int Id { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;      
+        public string? CountryCode { get; set; }
+        public string? Minor { get; set; }
+
+        [NotMapped]
+        public string? CurrencyDetails
+        {
+            get { return Code + " : " + Name; }
+        }      
+    }
+}
+
+===== FILE: Models/References/CurrencyConversion.cs =====
+﻿namespace ApparelPro.Data.Models.References
+{
+    public class CurrencyConversion
+    {
+        public int Id { get; set; }
+        public string FromCurrency { get; set; }
+        public string ToCurrency { get; set; }
+        public decimal Value { get; set; }
+    }
+}
+
+===== FILE: Models/References/CurrencyExchange.cs =====
+﻿namespace ApparelPro.Data.Models.References
+{
+    public class CurrencyExchange
+    {
+        public int Id { get; set; }
+        public string? BaseCurrency { get; set; }
+        public string? QuoteCurrency { get; set; }
+        public decimal? Rate { get; set; }
+        public DateTime ExchangeDate { get; set; }
+    }
+}
+
+===== FILE: Models/References/Department.cs =====
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Models.References
+{
+    public class Department
+    {
+        public string DepartmentCode { get; set; } = null!; // xdept (e.g., "CUT", "SEW", "STR")
+        public string Name { get; set; } = null!;
+    }
+}
+
+===== FILE: Models/References/Destination.cs =====
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ApparelPro.Data.Models.References
+{
+    public class Destination
+    {
+        public int Id { get; set; }
+        public string CountryCode { get; set; } = string.Empty;
+        public string DestinationName { get; set; } = string.Empty;      
+      
+        [NotMapped]
+        public string? CountryName { get; set; }        
+    }
+}
+
+===== FILE: Models/References/Feature.cs =====
+﻿namespace ApparelPro.Data.Models.References
+{
+    public class Feature
+    {
+        public int Id { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string Description { get; set; }= string.Empty;
+    }
+}
+
+===== FILE: Models/References/GarmentType.cs =====
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ApparelPro.Data.Models.References
+{
+    public class GarmentType
+    {
+        public int Id { get; set; }
+        public string TypeName { get; set; }
+    }
+}
+
+===== FILE: Models/References/GarmentTypeItems.cs =====
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ApparelPro.Data.Models.References
+{
+    // Replicates od_tpdtr.dbf - "Type/Accessory Breakdown" / "Garment Type wise Item
+    // Requirements" - Reference Files > B. Order Management > G. Type / Item in legacy
+    // (RF_MENU.PRG, OD_ITM1.PRG/OD_ITM2.PRG). For each Garment Type, a default list of
+    // items/accessories (Stock Code + Item Code) with a default Unit + Quantity.
+    public class GarmentTypeItems
+    {
+        public int Id { get; set; }
+
+        public int GarmentTypeId { get; set; }
+
+        public string StockCode { get; set; } = null!;
+        public string ItemCode { get; set; } = null!;
+        public string Unit { get; set; } = null!;
+        public decimal Quantity { get; set; }
+
+        [ForeignKey("GarmentTypeId")]
+        public virtual GarmentType GarmentType { get; set; } = null!;
+    }
+}
+
+===== FILE: Models/References/Money.cs =====
+﻿namespace ApparelPro.Data.Models.References
+{
+    public class Money
+    {
+        private readonly Currency _currency;
+        public Money(decimal amount, Currency? currency)
+        {
+            if (currency == null)
+            {
+                throw new ArgumentNullException("Currency");
+            }
+            Amount = amount;
+            _currency = currency;
+        }
+
+        public decimal Amount { get; set; }
+        public Currency? Currency { get { return _currency; } }
+
+        // public string QuoteCurrency { get; set; } = new Currency().Code!;
+        public Currency? QuoteCurrency { get; set; }
+    }
+}
+
+===== FILE: Models/References/Stock.cs =====
+﻿namespace ApparelPro.Data.Models.References
+{
+    public class Stock
+    {
+        // FIXED: Switched from int identity to a clean explicit string primary key 
+        // to preserve padded leading zero values (e.g. "01", "02") safely!
+        public string StockCode { get; set; } = null!;
+
+        public string Description { get; set; } = string.Empty;
+    }
+}
+
+===== FILE: Models/References/StockItem.cs =====
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ApparelPro.Data.Models.References
+{
+    public class StockItem
+    {
+        public StockItem()
+        {
+            StockCode = "";
+            ItemCode = "";
+            Description = "";
+        }
+
+        // FIXED: Switched from int to string to maintain leading zero structures (e.g. "01")
+        public string StockCode { get; set; } = null!;
+
+        // FIXED: Switched from int to string to safely hold codes (e.g. "01FB", "02BT")
+        public string ItemCode { get; set; } = null!;
+
+        public string Description { get; set; } = string.Empty;
+
+        // Fluent API Navigation Property pointing back to the updated master Stock table
+        [ForeignKey("StockCode")]
+        public virtual Stock Stock { get; set; } = null!;
+    }
+}
+
+===== FILE: Models/References/Style.cs =====
+﻿
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ApparelPro.Data.Models.References
+{
+    public class Style
+    {
+        [NotMapped]
+        public int Id { get; set; }
+        public int BuyerCode { get; set; }
+        [NotMapped]
+        public string Buyer { get; set; }
+        public string Order { get; set; }
+
+        // Keeps track of when the order was placed (non-nullable if always known)
+        public DateOnly OrderDate { get; set; }
+
+
+        public int TypeCode { get; set; }
+        [NotMapped]
+        public string? Type { get; set; }
+        public string StyleCode { get; set; }
+        public string? Unit { get; set; }
+        public decimal? Quantity { get; set; }
+        public decimal? UnitPrice { get; set; }
+        public string? ColorRatio {  get; set; } = null;
+        public string? SizeRatio { get; set; } = null; 
+        public decimal? ExportBalance { get; set; }
+        public bool? SupplierReturn { get; set; }
+        public bool? CustomerReturn { get; set; }
+        public string? Username { get; set; }
+
+        // Made these nullable DateOnly because they are filled out later
+        public DateOnly? ApprovedDate { get; set; }
+        public DateOnly? ProductionEndDate { get; set; }
+        public DateOnly? EstimateApprovalDate { get; set; }
+
+
+        public string? EstimateApprovalUserName { get; set; }
+        public bool? Exported { get; set; }
+    }
+}
+
+===== FILE: Models/References/SubContractor.cs =====
+namespace ApparelPro.Data.Models.References
+{
+    // Replicates od_scref.dbf (Sub Contractor Reference). Built as a prerequisite for
+    // Additional Issue Note (AIN) - legacy IN_AIN1.PRG validates its Sub Contractor's
+    // Code field against this exact table ("seek m_subcnt" on od_scref) before allowing
+    // an AIN to be saved. No entity/service/screen existed for this anywhere in the app
+    // before now (previously flagged as an unbuilt gap while building the Trim Sheet
+    // Report's Sub Contract costing section) - kept intentionally minimal (Code + Name),
+    // matching the AdditionalCost/Basis/Unit simple reference-domain template, per
+    // explicit user decision (2026-08-09) rather than building out full Sub Contract
+    // costing (od_subc) at the same time.
+    public class SubContractor
+    {
+        public string Code { get; set; } = null!;
+        public string Name { get; set; } = null!;
+    }
+}
+
+===== FILE: Models/References/Supplier.cs =====
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ApparelPro.Data.Models.References
+{
+    public class Supplier
+    {
+        public int SupplierCode { get; set; }
+        public Guid? AddressId { get; set; } = default;
+        public string Name { get; set; } = string.Empty;
+        public string? TelephoneNos { get; set; }
+        public string? MobileNos { get; set; }
+        public string? Fax { get; set; }        
+
+        // supplier has many addresses
+        [NotMapped]
+        public ICollection<Address> Addresses { get; set; } = [];
+    }
+}
+
+===== FILE: Models/References/Unit.cs =====
+﻿namespace ApparelPro.Data.Models.References
+{
+    public class Unit
+    {
+        public int Id { get; set; }
+        public string Code { get; set; }
+        public string Description { get; set; } = string.Empty;
+    }
+}
+
+===== FILE: Models/References/UnitConversion.cs =====
+﻿
+namespace ApparelPro.Data.Models.References
+{
+    public class UnitConversion
+    {        
+        public string FromUnit { get; set; }
+        public string ToUnit { get; set; }
+        public decimal ? Measure { get; set; }
+    }
+}
+
+===== FILE: Configurations/OrderManagement/ColorSizeDetailsConfig.cs =====
+﻿using ApparelPro.Data.Models.OrderManagement;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Configurations.OrderManagement
+{
+    public class ColorSizeDetailsConfig:IEntityTypeConfiguration<ColorSizeDetails>    
+    {
+        public void Configure(EntityTypeBuilder<ColorSizeDetails> entity)
+        {
+            // Define the 6-column Composite Primary Key
+            entity.HasKey(e => new { e.BuyerCode, e.Order, e.TypeCode, e.StyleCode, e.Color, e.Size });
+
+            // 3. Configure Properties with explicit column types, lengths, and precision
+            entity.Property(e => e.BuyerCode)
+                .IsRequired()
+                .HasColumnType("int")
+                .HasColumnName("Buyer");
+
+            entity.Property(e => e.Order)
+                .IsRequired()
+                .HasColumnType("varchar(12)") // Standard order length constraint
+                .HasColumnName("Order");
+
+            entity.Property(e => e.TypeCode)
+                .IsRequired()
+                .HasColumnType("int")
+                .HasColumnName("Type");
+
+            entity.Property(e => e.StyleCode)
+                .IsRequired()
+                .HasColumnType("varchar(12)") // Matches your StyleCode type length
+                .HasColumnName("Style");
+
+            entity.Property(e => e.Color)
+                .IsRequired()
+                .HasColumnType("varchar(12)")  // Replicates Clipper's 6-character length
+                .HasColumnName("Color");
+
+            entity.Property(e => e.Size)
+                .IsRequired()
+                .HasColumnType("varchar(12)") // Standard sizing length string threshold (Fixed typo here)
+                .HasColumnName("Size");
+
+            entity.Property(e => e.Ratio)
+                .IsRequired()
+                .HasColumnType("decimal(10,2)") // Added explicit decimal precision limits
+                .HasColumnName("Ratio");
+
+            entity.Property(e => e.Qty)
+                .IsRequired()
+                .HasColumnType("decimal(12,2)") // Larger scale capacity for piece totals
+                .HasColumnName("Quantity");
+
+            // FIXED (2026-08-07): free-text colour description/shade name,
+            // matching the frontend "Colour Description / Shade Name" field's
+            // maxLength of 30. Nullable - legacy/pre-existing rows have none.
+            entity.Property(e => e.Description)
+                .IsRequired(false)
+                .HasColumnType("varchar(30)")
+                .HasColumnName("Description");
+        }
+    }
+}
+
+
+===== FILE: Configurations/OrderManagement/PODetailsConfig.cs =====
+﻿using ApparelPro.Data.Models.OrderManagement;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.OrderManagement
+{
+    public class PODetailsConfig : IEntityTypeConfiguration<PODetails>
+    {
+        public void Configure(EntityTypeBuilder<PODetails> entity)
+        {
+            entity.ToTable("PODetails");
+
+            // 1. FIXED PRIMARY KEY: Composite key includes PONo and ItemCode 
+            // This safely allows multiple different material line items to exist under one PO!
+            entity.HasKey(k => new { k.PONumber, k.Buyer, k.Order, k.Type, k.Style, k.ItemCode });
+
+            // 2. CRITICAL FIX: Explicitly ignore the Id property so EF never tries to query or save it!
+            entity.Ignore(e => e.Id);
+
+
+            // 2. THE PERMANENT MAP FIX: Links your C# class property "PONumber" 
+            // straight to your physical SQL Server database column "PONo" safely!
+            entity.Property(e => e.PONumber)
+                .HasColumnType("varchar(10)")
+                .HasColumnName("PONumber") // Maps directly to your physical DB column name!
+                .IsRequired();
+
+            entity.Property(p => p.Buyer)
+                .HasColumnType("int")
+                .HasColumnName("Buyer")
+                .IsRequired();
+
+            entity.Property(p => p.Order)
+                .HasColumnType("varchar(12)") // FIXED: Clean varchar with fixed width bounds
+                .HasColumnName("Order")
+                .IsRequired();
+
+            entity.Property(p => p.Type)
+                .HasColumnType("int")
+                .HasColumnName("Type")
+                .IsRequired();
+
+            entity.Property(p => p.Style)
+                .HasColumnType("varchar(12)")
+                .HasColumnName("Style")
+                .IsRequired();
+
+            // 3. SECURED ITEM STRING EXTENSION: Increased to varchar(40) 
+            // This safely accommodates your long 22+ character dynamic item configurations
+            entity.Property(p => p.ItemCode)
+                .HasColumnType("varchar(40)")
+                .HasColumnName("ItemCode")
+                .IsRequired();
+
+            // FIXED (2026-08-07): widened from varchar(10) to varchar(23), then to varchar(30)
+            // per the user's follow-up request - a real Supplier PO save had thrown "String or
+            // binary data would be truncated ... column 'RefNo'" for an operator-entered
+            // reference value longer than 10 chars. The frontend "Reference Number" field is
+            // now capped at 30 chars to match (see supplier-purchase-order-workspace.tsx).
+            entity.Property(p => p.RefNo)
+                .HasColumnType("varchar(30)")
+                .HasColumnName("RefNo");
+
+            entity.Property(p => p.OrderUnit)
+                .HasColumnType("varchar(3)")
+                .HasColumnName("OrderUnit")
+                .IsRequired();
+
+            entity.Property(p => p.OrderQuantity)
+                .HasColumnType("decimal(12,2)")
+                .HasColumnName("OrderQuantity")
+                .IsRequired();
+
+            // 4. FIXED FINANCIAL PRECISION: Scaled to 4 decimal places matching legacy data (e.g. 1.5900)
+            entity.Property(p => p.UnitPrice)
+                .HasColumnType("decimal(10,4)")
+                .HasColumnName("UnitPrice")
+                .IsRequired();
+
+            entity.Property(p => p.ExportDate)
+                .HasColumnType("datetime")
+                .HasColumnName("ExportDate");
+
+            entity.Property(p => p.LCNo)
+                .HasColumnType("varchar(23)")
+                .HasColumnName("LCNo");
+
+            entity.Property(e => e.Balance)
+                .HasColumnType("decimal(12,2)")
+                .HasColumnName("Balance")
+                .IsRequired();
+        }
+    }
+}
+
+===== FILE: Configurations/OrderManagement/PurchaseOrderConfig.cs =====
+using ApparelPro.Data.Models.OrderManagement;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.OrderManagement
+{
+    public class PurchaseOrderConfig : IEntityTypeConfiguration<PurchaseOrder>
+    {
+        public void Configure(EntityTypeBuilder<PurchaseOrder> entity)
+        {
+            entity.HasKey(k => new { k.BuyerCode, k.Order });
+
+            entity.Property(p => p.BuyerCode)
+               .ValueGeneratedNever()
+               .IsRequired()
+               .HasColumnType("int");
+
+            entity.Property(p => p.Order)
+              .ValueGeneratedNever()
+              .HasMaxLength(12)
+              .IsRequired()
+              .HasColumnType("nvarchar");
+
+            entity.Property(p => p.OrderDate)
+              .HasColumnType("datetime");
+
+            entity.Property(p => p.GarmentType)
+              .HasColumnType("int");
+              //.HasMaxLength(20);
+
+            entity.Property(p => p.CurrencyCode)
+              .HasMaxLength(3)
+              .HasColumnType("nvarchar");
+
+            entity.Property(p => p.UnitCode)
+              .HasMaxLength(3)
+              .HasColumnType("nvarchar");
+
+            entity.Property(p => p.TotalQuantity)
+              .HasColumnType("decimal(10,2)");
+
+            entity.Property(p => p.CountryCode)
+              .HasMaxLength(3)
+              .HasColumnType("nvarchar");
+
+            entity.Property(p => p.Season)
+              .HasMaxLength(10)
+              .HasColumnType("nvarchar");
+
+            entity.Property(p => p.BasisCode)
+              .HasMaxLength(3)
+              .HasColumnType("nvarchar");
+
+            entity.Property(p => p.BasisValue)
+              .HasColumnType("decimal(10,2)");
+
+            // Audit trail: who (email, from the JWT ClaimTypes.Name claim) and when overrode the
+            // Total Quantity limit via the 'AllowOrderQuantityOverride' system parameter. Both
+            // remain null unless an override has actually occurred for this order.
+            entity.Property(p => p.QuantityOverriddenBy)
+              .HasMaxLength(256)
+              .HasColumnType("nvarchar")
+              .IsRequired(false);
+
+            entity.Property(p => p.QuantityOverriddenAt)
+              .HasColumnType("datetime")
+              .IsRequired(false);
+        }
+    }
+}
+
+===== FILE: Configurations/OrderManagement/PurchaseOrderHeaderConfig.cs =====
+﻿using ApparelPro.Data.Models.OrderManagement;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Configurations.OrderManagement
+{
+    public class PurchaseOrderHeaderConfig : IEntityTypeConfiguration<PurchaseOrderHeader>
+    {
+        public void Configure(EntityTypeBuilder<PurchaseOrderHeader> entity)
+        {
+            entity.ToTable("PurchaseOrderHeaders");
+
+            // Set up string primary key based on your Purchase Order number format
+            entity.HasKey(e => e.PurchaseOrderNumber);
+            entity.Property(e => e.PurchaseOrderNumber).HasColumnType("varchar(10)").HasColumnName("PurchaseOrderNumber").IsRequired();
+
+            entity.Property(e => e.CreatedDate).HasColumnType("date").HasColumnName("CreatedDate");
+            entity.Property(e => e.CreatedTime).HasColumnType("time").HasColumnName("CreatedTime");
+
+            entity.Property(e => e.SupplierCode).HasColumnType("varchar(6)").HasColumnName("SupplierCode").IsRequired();
+            entity.Property(e => e.StoreCode).HasColumnType("varchar(3)").HasColumnName("StoreCode").IsRequired();
+            entity.Property(e => e.ProformaInvoiceNo).HasColumnType("varchar(20)").HasColumnName("ProformaInvoiceNo");
+            entity.Property(e => e.ProformaInvoiceDate).HasColumnType("date").HasColumnName("ProformaInvoiceDate");
+            entity.Property(e => e.CurrencyCode).HasColumnType("varchar(3)").HasColumnName("CurrencyCode").IsRequired();
+
+            // Concurrency tracking bit column
+            entity.Property(e => e.IsPoUsed).HasColumnType("bit").HasColumnName("IsPoUsed").IsRequired();
+        }
+    }
+}
+
+===== FILE: Configurations/OrderManagement/StyleConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.OrderManagement
+{
+    public class StyleConfig : IEntityTypeConfiguration<Style>
+    {
+        public void Configure(EntityTypeBuilder<Style> entity)
+        {
+            entity.Property(p => p.Id)
+                .UseIdentityColumn()
+                .IsRequired().HasColumnType("int");
+
+            entity.HasKey(p => p.Id);
+
+            entity.HasIndex(p => new { p.BuyerCode, p.Order, p.TypeCode, p.StyleCode })
+                .IsUnique();
+
+            entity.Property(p => p.BuyerCode)
+                .HasMaxLength(6)
+                .HasColumnName("Buyer")
+                .IsRequired()
+                .HasColumnType("int");
+
+            entity.Property(p => p.Order)
+                .HasMaxLength(12)
+                .IsRequired(); // Maps automatically to nvarchar(12)
+
+            entity.Property(p => p.TypeCode)
+                .IsRequired()
+                .HasColumnName("Type")
+                .HasColumnType("int");
+
+            entity.Property(p => p.StyleCode)
+                .IsRequired()
+                .HasMaxLength(12)
+                .HasColumnName("Style");  // Maps automatically to nvarchar(12)              
+
+            entity.Property(p => p.ColorRatio)
+                .HasMaxLength(1)
+                .IsRequired(false)
+                .HasColumnName("ColorRatio");  // Maps automatically to nvarchar(1)              
+
+            entity.Property(p => p.SizeRatio)
+                .HasMaxLength(1)
+                .IsRequired(false)
+                .HasColumnName("SizeRatio");
+
+            // OrderDate remains required (assumes it is filled on creation)
+            entity.Property(p => p.OrderDate)
+                .HasColumnType("date")
+                .IsRequired();
+
+            entity.Property(p => p.Unit)
+                .HasMaxLength(3) // Maps automatically to nvarchar(3)
+                .IsRequired(false);                
+
+            entity.Property(p => p.Quantity)
+                .IsRequired(false)
+                .HasColumnType("decimal(10,2)");
+
+            entity.Property(p => p.UnitPrice)
+                .IsRequired(false)
+                .HasColumnType("decimal(10,2)");
+
+            entity.Property(p => p.ExportBalance)
+                .IsRequired(false)
+                .HasColumnType("decimal(10,2)");
+
+            entity.Property(p => p.CustomerReturn)
+                .IsRequired(false)
+                .HasDefaultValue(false)
+                .HasColumnType("bit");
+
+            entity.Property(p => p.SupplierReturn)
+                .IsRequired(false)
+                .HasDefaultValue(false)
+                .HasColumnType("bit");
+
+            entity.Property(p => p.Username)
+                .IsRequired(false)
+                .HasMaxLength(30);  // Maps automatically to nvarchar(6)
+
+            // These three are now explicitly configured as optional (nullable)
+            entity.Property(p => p.ApprovedDate)
+                .HasColumnType("date")
+                .IsRequired(false); // Allows NULL in database until production phase
+
+            entity.Property(p => p.ProductionEndDate)
+                .HasColumnType("date")
+                .IsRequired(false);
+
+            entity.Property(p => p.EstimateApprovalDate)
+                .HasColumnType("date")
+                .IsRequired(false);
+
+            entity.Property(p => p.EstimateApprovalUserName)
+                .IsRequired(false)
+                .HasMaxLength(30); // Maps automatically to nvarchar(6)
+
+            entity.Property(p => p.Exported)
+                .IsRequired(false)
+                .HasDefaultValue(false)
+                .HasColumnType("bit");
+        }
+    }
+}
+
+===== FILE: Configurations/OrderwiseInventory/DocumentSequenceConfig.cs =====
+﻿using ApparelPro.Data.Models.OrderwiseInventory;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Configurations.OrderwiseInventory
+{
+    public class DocumentSequenceConfig:IEntityTypeConfiguration<DocumentSequence>
+    {
+        public void Configure(EntityTypeBuilder<DocumentSequence> entity)
+        {
+            entity.ToTable("DocumentSequences");
+            entity.HasKey(e => e.NoteType);
+            entity.Property(e => e.NoteType).HasColumnType("varchar(5)").IsRequired();
+            entity.Property(e => e.Prefix).HasColumnType("varchar(3)").HasDefaultValue("");
+            entity.Property(e => e.LastAllocatedNumber).IsRequired();
+        }
+
+    }
+}
+
+===== FILE: Configurations/OrderwiseInventory/OrderwiseStockConfig.cs =====
+﻿using ApparelPro.Data.Models.OrderwiseInventory;
+using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.OrderwiseInventory
+{
+    public class OrderwiseStockConfig : IEntityTypeConfiguration<OrderwiseStock>
+    {
+        public void Configure(EntityTypeBuilder<OrderwiseStock> entity)
+        {
+            entity.ToTable("OrderwiseStocks");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+
+            // Enforces the uniqueness the service layer already assumes when it does FirstOrDefaultAsync on this
+            // combination. Without this, duplicate rows could silently make the STRN deficit check unreliable.
+            entity.HasIndex(e => new { e.BuyerCode, e.Order, e.StoreCode, e.ItemCode }).IsUnique();
+
+            entity.Property(e => e.BuyerCode).HasColumnName("BuyerCode").IsRequired();
+            // Order is always 12 chars (verified against IN_STOCK.DBF: ORDER C(12), and IN_STRN1.PRG's @!12 GET picture)
+            entity.Property(e => e.Order).HasColumnType("varchar(12)").HasColumnName("Order").IsRequired();
+            entity.Property(e => e.StoreCode).HasColumnType("varchar(3)").HasColumnName("StoreCode").IsRequired();
+            // ItemCode is the full 22-char composite key: StockCode(2)+ItemCode(4)+Feature1-4(4 each) = 22
+            // (verified against IN_STOCK.DBF: ITEM_CD C(22), and IN_STRN1.PRG's @!22 GET picture)
+            entity.Property(e => e.ItemCode).HasColumnType("varchar(22)").HasColumnName("ItemCode").IsRequired();
+            entity.Property(e => e.Unit).HasColumnType("varchar(3)").HasColumnName("Unit").IsRequired();
+
+            // Precision configurations for numeric inventory values
+            entity.Property(e => e.OrderedQuantity).HasColumnType("decimal(12,2)").HasColumnName("OrderedQuantity").IsRequired();
+            entity.Property(e => e.QtyInHand).HasColumnName("QtyInHand").HasColumnType("decimal(12,2)");
+            entity.Property(e => e.ShadowBalance).HasColumnName("ShadowBalance").HasColumnType("decimal(12,2)");
+            entity.Property(e => e.DamagedQuantity).HasColumnName("DamagedQuantity").HasColumnType("decimal(12,2)");
+            entity.Property(e => e.ToDateIssued).HasColumnName("ToDateIssued").HasColumnType("decimal(12,2)");
+            entity.Property(e => e.ToDateReceived).HasColumnName("ToDateReceived").HasColumnType("decimal(12,2)");
+            entity.Property(e => e.StrnBalance).HasColumnName("StrnBalance").HasColumnType("decimal(12,2)");
+
+            entity.Property(e => e.LastDateIssued).HasColumnName("LastDateIssued").HasColumnType("date");
+            entity.Property(e => e.LastDateReceived).HasColumnName("LastDateReceived").HasColumnType("date");
+
+        }
+    }
+}
+
+===== FILE: Configurations/OrderwiseInventory/OrderwiseStockMasterConfig.cs =====
+﻿using ApparelPro.Data.Models.OrderwiseInventory;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Configurations.OrderwiseInventory
+{
+    public class OrderwiseStockMasterConfig : IEntityTypeConfiguration<OrderwiseStockMaster>
+    {
+        public void Configure(EntityTypeBuilder<OrderwiseStockMaster> entity)
+        {
+            entity.ToTable("OrderwiseStockMasters");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+
+            entity.Property(e => e.BuyerCode).HasColumnName("BuyerCode").IsRequired();
+            // Order is always 12 chars (verified against IN_STMST.DBF: ORDER C(12))
+            entity.Property(e => e.Order).HasColumnType("varchar(12)").HasColumnName("Order").IsRequired();
+            // ItemCode is the full 22-char composite key: StockCode(2)+ItemCode(4)+Feature1-4(4 each) = 22
+            // (verified against IN_STMST.DBF: ITEM_CD C(22))
+            entity.Property(e => e.ItemCode).HasColumnType("varchar(22)").HasColumnName("ItemCode").IsRequired();
+            entity.Property(e => e.Unit).HasColumnType("varchar(3)").HasColumnName("Unit").IsRequired();
+            entity.Property(e => e.Currency).HasColumnType("varchar(3)").HasColumnName("Currency").IsRequired();
+            entity.Property(e => e.OrderedQuantity).HasColumnType("decimal(12,2)").HasColumnName("OrderedQuantity").IsRequired();
+            entity.Property(e => e.Price).HasColumnType("decimal(10,4)").HasColumnName("Price").IsRequired();
+            entity.Property(e => e.RequisitionedQuantity).HasColumnName("RequisitionedQuantity").HasColumnType("decimal(12,2)");
+            entity.Property(e => e.IssuedQuantity).HasColumnType("decimal(12,2)").HasColumnName("IssuedQuantity").IsRequired().HasDefaultValue(0m);
+            entity.Property(e => e.ReceivedQuantity).HasColumnType("decimal(12,2)").HasColumnName("ReceivedQuantity").IsRequired().HasDefaultValue(0m);
+            entity.Property(e => e.ReturnedQuantity).HasColumnType("decimal(12,2)").HasColumnName("ReturnedQuantity").IsRequired().HasDefaultValue(0m);
+            entity.Property(e => e.TransferInQuantity).HasColumnType("decimal(12,2)").HasColumnName("TransferInQuantity").IsRequired().HasDefaultValue(0m);
+            entity.Property(e => e.TransferOutQuantity).HasColumnType("decimal(12,2)").HasColumnName("TransferOutQuantity").IsRequired().HasDefaultValue(0m);
+            entity.Property(e => e.SupplierReturnQuantity).HasColumnType("decimal(12,2)").HasColumnName("SupplierReturnQuantity").IsRequired().HasDefaultValue(0m);
+            entity.Property(e => e.DamagedQuantity).HasColumnType("decimal(12,2)").HasColumnName("DamagedQuantity").IsRequired().HasDefaultValue(0m);
+            entity.Property(e => e.AdditionalIssuedQuantity).HasColumnType("decimal(12,2)").HasColumnName("AdditionalIssuedQuantity").IsRequired().HasDefaultValue(0m);
+        }
+    }
+}
+
+===== FILE: Configurations/OrderwiseInventory/OrderwiseStockTransactionConfig.cs =====
+﻿
+using ApparelPro.Data.Models.OrderwiseInventory;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Configurations.OrderwiseInventory
+{
+    public class OrderwiseStockTransactionConfig:IEntityTypeConfiguration<OrderwiseStockTransaction>
+    {
+        public void Configure(EntityTypeBuilder<OrderwiseStockTransaction> entity)
+        {
+            entity.ToTable("OrderwiseStockTransactions");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+
+            // Unique index compound constraint to track exact transaction lines cleanly.
+            // Uses StoreCode (not StockCode) to match legacy IN_STTR's per-line uniqueness key
+            // (buyer+order+item_cd+store_cd, confirmed against IN_GIN3.PRG's seek pattern) — StockCode
+            // is already embedded as the first 2 chars of the 22-char ItemCode, so including it here
+            // instead of StoreCode was a latent bug: two lines with the same item pulled from two
+            // different stores/bases within one document would incorrectly collide on this constraint.
+            entity.HasIndex(e => new { e.DocumentNumber, e.TransactionType, e.StoreCode, e.ItemCode }).IsUnique();
+
+            entity.Property(e => e.DocumentNumber).HasColumnType("varchar(10)").IsRequired();
+            entity.Property(e => e.TransactionType).HasColumnType("varchar(2)").IsRequired();
+            // Order confirmed at 12 chars against IN_STTR.DBF (ORDER C(12)) — already correct.
+            entity.Property(e => e.Order).HasColumnType("varchar(12)").IsRequired();
+            entity.Property(e => e.DepartmentCode).HasColumnType("varchar(3)").IsRequired();
+            entity.Property(e => e.StockCode).HasColumnType("varchar(2)").IsRequired();
+            entity.Property(e => e.StoreCode).HasColumnType("varchar(3)").IsRequired();
+            // WIDENED from varchar(6): ItemCode is the full 22-char composite key (verified against IN_STTR.DBF: ITEM_CD C(22))
+            entity.Property(e => e.ItemCode).HasColumnType("varchar(22)").IsRequired();
+            entity.Property(e => e.Unit).HasColumnType("varchar(3)").IsRequired();
+            entity.Property(e => e.Quantity).HasColumnType("decimal(12,2)").IsRequired();
+            entity.Property(e => e.CreatedByUsername).HasColumnType("varchar(50)").IsRequired();
+            entity.Property(e => e.TransactionDate).HasColumnType("date").IsRequired();
+
+            // GIN traceability additions
+            entity.Property(e => e.BalanceToReceive).HasColumnType("decimal(12,2)").IsRequired().HasDefaultValue(0m);
+            entity.Property(e => e.SourceDocumentNumber).HasColumnType("varchar(10)").IsRequired(false);
+            entity.Property(e => e.Price).HasColumnType("decimal(10,4)").IsRequired(false);
+            entity.Property(e => e.Currency).HasColumnType("varchar(3)").IsRequired(false);
+
+            // GTN traceability additions — counterpart Buyer/Order for a Transfer-Out ('6T')
+            // or Transfer-In ('1T') row (legacy t_buyer/t_order).
+            entity.Property(e => e.CounterpartyBuyerCode).HasColumnType("int").IsRequired(false);
+            entity.Property(e => e.CounterpartyOrder).HasColumnType("varchar(12)").IsRequired(false);
+
+            // SRN traceability addition — the Supplier a Supplier Return Note ('7S') row
+            // was returned to (legacy supp_cd).
+            entity.Property(e => e.SupplierCode).HasColumnType("int").IsRequired(false);
+
+            // AIN traceability additions — Sub-Contractor code (varchar(6), matches
+            // SubContractor.Code) and Additional Process code (varchar(3), matches
+            // AdditionalCost.Code) for an Additional Issue Note ('4X') row.
+            entity.Property(e => e.SubContractorCode).HasColumnType("varchar(6)").IsRequired(false);
+            entity.Property(e => e.AdditionalProcessCode).HasColumnType("varchar(3)").IsRequired(false);
+        }
+    }
+}
+
+===== FILE: Configurations/Registration/ApparelProUserConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using ApparelPro.Data.Models.Registration;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Reflection.Emit;
+
+namespace ApparelPro.Data.Configurations.Registration
+{
+    public class ApparelProUserConfig:IEntityTypeConfiguration<ApparelProUser>
+    {
+        public void Configure(EntityTypeBuilder<ApparelProUser> entity)
+        {
+            entity.HasOne(user => user.Address)
+                .WithMany()  // Leaves it open if other entities also map to addresses
+                .HasForeignKey(user => user.AddressId)
+                .HasPrincipalKey(user => user.AddressId) // Binds specifically to your Guid property
+                .OnDelete(DeleteBehavior.Cascade);          
+
+            entity.Property(c => c.DateOfBirth)
+                .HasColumnType("date")
+                .HasColumnName("DateOfBirth");
+
+            entity.Property(c => c.Gender)
+                    .HasColumnType("int");                    
+
+            //entity.Property(c => c.City)
+            //        .HasColumnType("nvarchar")
+            //        .HasMaxLength(50);
+
+            //entity.Property(c => c.Country)
+            //      .HasColumnType("nvarchar")
+            //      .HasMaxLength(100);
+
+            //entity.Property(c => c.AddressId)
+            //     .HasColumnType("int");                 
+
+            entity.Property(c => c.KnownAs)
+                    .HasColumnType("nvarchar")
+                    .HasMaxLength(100);
+
+            entity.Property(c => c.ProfilePhoto)
+                    .HasColumnType("varbinary(MAX)");
+
+            entity.Property(c => c.Created)
+                  .HasColumnType("datetime")
+                  .HasColumnName("CreatedDate");
+
+            entity.Property(c => c.LastActive)
+                .HasColumnType("datetime");
+
+            entity.Property(c => c.RefreshToken)                
+                .HasColumnType("nvarchar(MAX)");
+
+            entity.Property(c => c.RefreshTokenExpiry)
+                .HasColumnType("datetime")
+                .HasColumnName("RefreshTokenExpiryDate");
+        }
+    }
+}
+
+===== FILE: Configurations/Registration/PermissionConfig.cs =====
+﻿using ApparelPro.Data.Models.Registration;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.Registration
+{
+    public class PermissionConfig : IEntityTypeConfiguration<Permission>
+    {
+        public void Configure(EntityTypeBuilder<Permission> entity)
+        {
+            entity.ToTable("Permissions");
+
+            entity.Property(p => p.Key)
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasColumnType("nvarchar(100)");
+
+            entity.Property(p => p.DisplayName)
+                .IsRequired()
+                .HasMaxLength(200)
+                .HasColumnType("nvarchar(200)");
+
+            entity.Property(p => p.Category)
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasColumnType("nvarchar(100)");
+
+            entity.Property(p => p.Description)
+                .HasMaxLength(500)
+                .HasColumnType("nvarchar(500)");
+
+            entity.HasIndex(p => p.Key)
+                .IsUnique();
+        }
+    }
+}
+
+===== FILE: Configurations/Registration/RolePermissionConfig.cs =====
+﻿using ApparelPro.Data.Models.Registration;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.Registration
+{
+    public class RolePermissionConfig : IEntityTypeConfiguration<RolePermission>
+    {
+        public void Configure(EntityTypeBuilder<RolePermission> entity)
+        {
+            entity.ToTable("RolePermissions");
+
+            entity.Property(rp => rp.RoleId)
+                .IsRequired()
+                .HasColumnType("nvarchar(450)");
+
+            entity.HasOne(rp => rp.Permission)
+                .WithMany()
+                .HasForeignKey(rp => rp.PermissionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<IdentityRole>()
+                .WithMany()
+                .HasForeignKey(rp => rp.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // One grant per role/permission pair - the admin screen replaces the
+            // whole set for a role rather than allowing duplicate grants to pile up.
+            entity.HasIndex(rp => new { rp.RoleId, rp.PermissionId })
+                .IsUnique();
+        }
+    }
+}
+
+===== FILE: Configurations/Registration/UserConfig.cs =====
+﻿using ApparelPro.Data.Models.Registration;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.Registration
+{
+    public class UserConfig : IEntityTypeConfiguration<User>
+    {
+        public void Configure(EntityTypeBuilder<User> entity)
+        {
+            entity.HasKey(k => k.Email);
+            entity.Property(p => p.Email)
+                .ValueGeneratedNever()
+                .HasColumnType("nvarchar")
+                .HasMaxLength(100);
+
+            entity.Property(p => p.Id).UseIdentityColumn();
+
+            entity.Property(p => p.UserName)
+                .HasMaxLength(30)
+                .IsRequired()
+                .HasColumnType("nvarchar");
+
+            entity.Property(c => c.PasswordSalt)
+                   .IsRequired(true)
+                   .HasColumnType("varbinary(MAX)");
+
+            entity.Property(c => c.PasswordHash)
+                .IsRequired(true)
+                .HasColumnType("varbinary(MAX)");
+
+            entity.Property(c => c.DateOfBirth)
+                .HasColumnType("date")
+                .HasColumnName("DateOfBirth");
+
+            entity.Property(c => c.Gender)
+                .HasColumnType("nvarchar")
+                .HasMaxLength(6);
+
+            entity.Property(c => c.City)
+                .HasColumnType("nvarchar")
+                .HasMaxLength(50);
+
+            entity.Property(c => c.Bank)
+              .HasColumnType("nvarchar")
+              .HasMaxLength(100);
+
+            entity.Property(c => c.KnownAs)
+                .HasColumnType("nvarchar")
+                .HasMaxLength(100);
+
+            entity.Property(c => c.Photo)
+                .HasColumnType("varbinary(MAX)");
+
+            entity.Property(c => c.Created)
+              .HasColumnType("datetime")
+              .HasColumnName("CreatedDate");
+
+            entity.Property(c => c.LastActive)
+            .HasColumnType("datetime");
+        }
+    }
+}
+
+===== FILE: Configurations/SystemConfiguration/SystemParameterConfig.cs =====
+using ApparelPro.Data.Models.SystemConfiguration;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.SystemConfiguration
+{
+    public class SystemParameterConfig : IEntityTypeConfiguration<SystemParameter>
+    {
+        public void Configure(EntityTypeBuilder<SystemParameter> entity)
+        {
+            entity.ToTable("SystemParameters");
+            entity.HasKey(e => e.ParameterKey);
+            entity.Property(e => e.ParameterKey).HasColumnType("varchar(50)").IsRequired();
+            entity.Property(e => e.Value).HasColumnType("varchar(200)").IsRequired();
+            entity.Property(e => e.Description).HasColumnType("varchar(1000)");
+            entity.Property(e => e.Category).HasColumnType("varchar(50)").IsRequired().HasDefaultValue("General");
+            entity.Property(e => e.DataType).HasColumnType("varchar(20)").IsRequired().HasDefaultValue("Text");
+            entity.Property(e => e.Options).HasColumnType("varchar(1000)");
+
+            // Seed the one parameter this feature needs. Default OFF (strict enforcement):
+            // when an apparel buyer confirms an order quantity, that figure is the contractual
+            // source of truth, so style-level entries must reconcile to it unless an admin
+            // explicitly opts an order into being overridden.
+            entity.HasData(new SystemParameter
+            {
+                ParameterKey = "AllowOrderQuantityOverride",
+                Value = "false",
+                Description = "When false (default), the sum of a purchase order's style quantities " +
+                    "(converted into the order's own unit) cannot exceed the order's Total Quantity - " +
+                    "Add/Update Style Details is rejected if it would. When true, the save is allowed " +
+                    "even if it exceeds Total Quantity (the Styles grid still visually flags the overage).",
+                Category = "Order Management",
+                DataType = "Boolean"
+            });
+        }
+    }
+}
+
+===== FILE: Configurations/OrderManagement/MaterialConsumption/GarmentAdditionalCostConfig.cs =====
+using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption
+{
+    public class GarmentAdditionalCostConfig : IEntityTypeConfiguration<GarmentAdditionalCost>
+    {
+        public void Configure(EntityTypeBuilder<GarmentAdditionalCost> entity)
+        {
+            entity.ToTable("GarmentAdditionalCosts");
+
+            entity.HasKey(e => new {
+                e.BuyerCode,
+                e.Order,
+                e.TypeCode,
+                e.StyleCode,
+                e.AdditionalCostCode,
+                e.ItemCode
+            });
+
+            entity.Property(e => e.BuyerCode).HasColumnType("int").HasColumnName("Buyer");
+            entity.Property(e => e.Order).HasColumnType("varchar(20)").HasColumnName("Order");
+            entity.Property(e => e.TypeCode).HasColumnType("int").HasColumnName("Type");
+            entity.Property(e => e.StyleCode).HasColumnType("varchar(20)").HasColumnName("Style");
+            entity.Property(e => e.AdditionalCostCode).HasColumnType("varchar(3)").HasColumnName("AdditionalCostCode");
+            entity.Property(e => e.ItemCode).HasColumnType("varchar(22)").HasColumnName("ItemCode");
+
+            entity.Property(e => e.Color).HasColumnType("varchar(6)").HasColumnName("Color");
+            entity.Property(e => e.Size).HasColumnType("varchar(10)").HasColumnName("Size");
+            entity.Property(e => e.StoreCode).HasColumnType("varchar(3)").HasColumnName("StoreCode");
+            entity.Property(e => e.Currency).HasColumnType("varchar(3)").HasColumnName("Currency");
+            entity.Property(e => e.Unit).HasColumnType("varchar(3)").HasColumnName("Unit");
+            entity.Property(e => e.Quantity).HasColumnType("decimal(8,3)").HasColumnName("Quantity");
+            entity.Property(e => e.Cost).HasColumnType("decimal(12,4)").HasColumnName("Cost");
+            entity.Property(e => e.IsCostPerGarment).HasColumnType("bit").HasColumnName("IsCostPerGarment");
+            entity.Property(e => e.IsSemiFinishedGarment).HasColumnType("bit").HasColumnName("IsSemiFinishedGarment");
+        }
+    }
+}
+
+===== FILE: Configurations/OrderManagement/MaterialConsumption/ItemFeatureConfig.cs =====
+﻿using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption
+{
+    public class ItemFeatureConfig : IEntityTypeConfiguration<ItemFeature>
+    {
+        public void Configure(EntityTypeBuilder<ItemFeature> entity)
+        {
+            entity.ToTable("ItemFeatures");
+            entity.HasKey(e => e.FeatureCode);
+
+            // Aligned to your clean, corporate naming style
+            entity.Property(e => e.FeatureCode).HasColumnType("varchar(4)").HasColumnName("FeatureCode");
+            entity.Property(e => e.Description).HasColumnType("varchar(30)").HasColumnName("Description");
+
+        }
+    }
+}
+
+===== FILE: Configurations/OrderManagement/MaterialConsumption/OrderItemConfig.cs =====
+﻿using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption
+{
+    public class OrderItemConfig:IEntityTypeConfiguration<OrderItem>
+    {
+        public void Configure(EntityTypeBuilder<OrderItem> entity)
+        {
+            entity.ToTable("OrderItems");
+            entity.HasKey(e => new { e.StockCode, e.ItemCode });
+
+            entity.Property(e => e.StockCode).HasColumnType("varchar(2)").HasColumnName("StockCode");
+            entity.Property(e => e.ItemCode).HasColumnType("varchar(6)").HasColumnName("ItemCode");
+            entity.Property(e => e.Description).HasColumnType("varchar(30)").HasColumnName("Description");
+        }
+    }
+}
+
+===== FILE: Configurations/OrderManagement/MaterialConsumption/OrderItemFeatureConfig.cs =====
+﻿using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption
+{
+    public class OrderItemFeatureConfig:IEntityTypeConfiguration<OrderItemFeature>
+    {
+        public void Configure(EntityTypeBuilder<OrderItemFeature> entity)
+        {
+            entity.ToTable("OrderItemFeatures");
+            entity.HasKey(e => new { e.StockCode, e.ItemCode });
+
+            entity.Property(e => e.StockCode).HasColumnType("varchar(2)").HasColumnName("StockCode");
+            entity.Property(e => e.ItemCode).HasColumnType("varchar(6)").HasColumnName("ItemCode");
+
+            entity.Property(e => e.Feature1Type).HasColumnType("varchar(4)").HasColumnName("Feature1");
+            entity.Property(e => e.Feature2Type).HasColumnType("varchar(4)").HasColumnName("Feature2");
+            entity.Property(e => e.Feature3Type).HasColumnType("varchar(4)").HasColumnName("Feature3");
+            entity.Property(e => e.Feature4Type).HasColumnType("varchar(4)").HasColumnName("Feature4");
+
+            entity.Property(e => e.CostPerUnit).HasColumnType("decimal(10,4)").HasColumnName("CostPerUnit");
+        }
+    }
+}
+
+===== FILE: Configurations/OrderManagement/MaterialConsumption/StyleMaterialConsumptionLedgerConfig.cs =====
+﻿using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption
+{
+    public class StyleMaterialConsumptionLedgerConfig:IEntityTypeConfiguration<StyleMaterialConsumptionLedger>
+    {
+        public void Configure(EntityTypeBuilder<StyleMaterialConsumptionLedger> entity)
+        {
+            entity.ToTable("StyleMaterialConsumptionLedger");
+
+            entity.HasKey(e => new {
+                e.BuyerCode,
+                e.Order,
+                e.TypeCode,
+                e.StyleCode,
+                e.Color,
+                e.Size,
+                e.StockCode,
+                e.ItemCode,
+                e.Feature1,
+                e.Feature2,
+                e.Feature3,
+                e.Feature4
+            });
+
+            entity.Property(e => e.BuyerCode).HasColumnType("int").HasColumnName("Buyer");
+            entity.Property(e => e.Order).HasColumnType("varchar(20)").HasColumnName("Order");
+            entity.Property(e => e.TypeCode).HasColumnType("int").HasColumnName("Type");
+            entity.Property(e => e.StyleCode).HasColumnType("varchar(20)").HasColumnName("Style");
+            entity.Property(e => e.Color).HasColumnType("varchar(6)").HasColumnName("Color");
+            entity.Property(e => e.Size).HasColumnType("varchar(10)").HasColumnName("Size");
+            entity.Property(e => e.StockCode).HasColumnType("varchar(2)").HasColumnName("StockCode");
+            entity.Property(e => e.ItemCode).HasColumnType("varchar(6)").HasColumnName("ItemCode");
+            entity.Property(e => e.Feature1).HasColumnType("varchar(4)").HasColumnName("Feature1");
+            entity.Property(e => e.Feature2).HasColumnType("varchar(4)").HasColumnName("Feature2");
+            entity.Property(e => e.Feature3).HasColumnType("varchar(4)").HasColumnName("Feature3");
+            entity.Property(e => e.Feature4).HasColumnType("varchar(4)").HasColumnName("Feature4");
+
+            entity.Property(e => e.StoreCode).HasColumnType("varchar(3)").HasColumnName("StoreCode");
+            entity.Property(e => e.ConsumptionUnit).HasColumnType("varchar(3)").HasColumnName("ConsumptionUnit");
+            entity.Property(e => e.ItemUnit).HasColumnType("varchar(3)").HasColumnName("ItemUnit");
+            entity.Property(e => e.QuantityPerGarment).HasColumnType("decimal(8,3)").HasColumnName("QuantityPerGarment");
+            entity.Property(e => e.SupplierCode).HasColumnType("varchar(6)").HasColumnName("SupplierCode");
+            entity.Property(e => e.TotalConsumption).HasColumnType("decimal(12,2)").HasColumnName("TotalConsumption");
+            entity.Property(e => e.PercentageAllowance).HasColumnType("decimal(4,1)").HasColumnName("PercentageAllowance");
+
+            entity.Property(e => e.IsAdditionalCost).HasColumnType("bit").HasColumnName("IsAdditionalCost");
+            entity.Property(e => e.CalculateConsumption).HasColumnType("bit").HasColumnName("CalculateConsumption");
+        }
+    }
+}
+
+===== FILE: Configurations/OrderManagement/MaterialConsumption/StyleMaterialCostProfileConfig.cs =====
+﻿using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption
+{
+    public class StyleMaterialCostProfileConfig:IEntityTypeConfiguration<StyleMaterialCostProfile>
+    {
+        public void Configure(EntityTypeBuilder<StyleMaterialCostProfile> entity)
+        {
+            entity.ToTable("StyleMaterialCostProfiles");
+
+            entity.HasKey(e => new {
+                e.BuyerCode,
+                e.Order,
+                e.TypeCode,
+                e.StyleCode,
+                e.ItemCode
+            });
+
+            entity.Property(e => e.BuyerCode).HasColumnType("int").HasColumnName("Buyer");
+            entity.Property(e => e.Order).HasColumnType("varchar(20)").HasColumnName("Order");
+            entity.Property(e => e.TypeCode).HasColumnType("int").HasColumnName("Type");
+            entity.Property(e => e.StyleCode).HasColumnType("varchar(20)").HasColumnName("Style");
+
+            // Collapsed 2026-07-22 from separate StockCode(2)/ItemCode(4)/Feature1-4(4 each)
+            // columns into the single 22-char composite already used by OrderwiseStockMaster,
+            // OrderwiseStockTransaction and PODetails.ItemCode.
+            entity.Property(e => e.ItemCode).HasColumnType("varchar(22)").HasColumnName("ItemCode");
+
+            entity.Property(e => e.Description).HasColumnType("varchar(100)").HasColumnName("Description");
+            entity.Property(e => e.ItemUnit).HasColumnType("varchar(3)").HasColumnName("ItemUnit");
+            entity.Property(e => e.Currency).HasColumnType("varchar(3)").HasColumnName("CurrencyCode");
+            entity.Property(e => e.UnitPrice).HasColumnType("decimal(10,4)").HasColumnName("Price");
+            entity.Property(e => e.BalanceQuantity).HasColumnType("decimal(12,2)").HasColumnName("BalanceQuantity");
+
+            // Legacy od_sacc2 fields (SUPP_CD / TOT_CON) added alongside the
+            // entity properties. varchar(6) matches the same SupplierCode
+            // convention used on PurchaseOrderHeaderConfig / StyleMaterialConsumptionLedgerConfig;
+            // decimal(12,2) matches BalanceQuantity, since TotalConsumption tracks the
+            // same kind of rolling planned-quantity figure.
+            entity.Property(e => e.SupplierCode).HasColumnType("varchar(6)").HasColumnName("SupplierCode");
+            entity.Property(e => e.TotalConsumption).HasColumnType("decimal(12,2)").HasColumnName("TotalConsumption");
+        }
+    }
+}
+
+===== FILE: Configurations/OrderManagement/Shipment/PartShipmentConfigs.cs =====
+﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using ApparelPro.Data.Models.OrderManagement.Shipments;
+using Microsoft.EntityFrameworkCore;
+namespace ApparelPro.Data.Configurations.OrderManagement.Shipment
+{
+    public class PartShipmentConfig: IEntityTypeConfiguration<PartShipment>
+    {
+        public void Configure(EntityTypeBuilder<PartShipment> entity)
+        {
+            entity.ToTable("PartShipments");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+
+            // Setup a strict composite constraint index to enable high-speed historical tracking seeks
+            entity.HasIndex(e => new { e.BuyerCode, e.Order, e.TypeCode, e.StyleCode, e.NewOrder, e.DestinationCode, e.ShipDate }).IsUnique();
+
+            entity.Property(e => e.Order).HasColumnType("varchar(12)").IsRequired();
+            entity.Property(e => e.StyleCode).HasColumnType("varchar(12)").IsRequired();
+            entity.Property(e => e.NewOrder).HasColumnType("varchar(12)").IsRequired();
+            entity.Property(e => e.DestinationCode).HasColumnType("varchar(3)").IsRequired();
+            entity.Property(e => e.SubContractFlag).HasColumnType("varchar(1)").IsRequired();
+            entity.Property(e => e.Unit).HasColumnType("varchar(3)").IsRequired();
+            entity.Property(e => e.ShippingMode).HasColumnType("varchar(3)").IsRequired();
+
+            entity.Property(e => e.QuotaCountry).HasColumnType("varchar(10)");
+            entity.Property(e => e.QuotaStatus).HasColumnType("varchar(1)");
+            entity.Property(e => e.QuotaCategory).HasColumnType("varchar(6)");
+            entity.Property(e => e.QuotaType).HasColumnType("varchar(2)");
+            entity.Property(e => e.FromYearMonth).HasColumnType("varchar(5)");
+            entity.Property(e => e.ToYearMonth).HasColumnType("varchar(5)");
+
+            entity.Property(e => e.Quantity).HasColumnType("decimal(12,2)").IsRequired();
+            entity.Property(e => e.Balance).HasColumnType("decimal(12,2)").IsRequired();
+            entity.Property(e => e.ShipDate).HasColumnType("date").IsRequired();
+            entity.Property(e => e.OrderDate).HasColumnType("date").IsRequired();
+        }
+    }
+}
+
+===== FILE: Configurations/OrderManagement/Shipment/QuotaTransactionConfig.cs =====
+﻿using ApparelPro.Data.Models.OrderManagement.Shipments;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Configurations.OrderManagement.Shipment
+{
+    public class QuotaTransactionConfig : IEntityTypeConfiguration<QuotaTransaction>
+    {
+        public void Configure(EntityTypeBuilder<QuotaTransaction> entity)
+        {
+            entity.ToTable("QuotaTransactions");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+
+            entity.Property(e => e.Action).HasColumnType("varchar(3)").IsRequired();
+            entity.Property(e => e.Order).HasColumnType("varchar(12)").IsRequired();
+            entity.Property(e => e.StyleCode).HasColumnType("varchar(12)").IsRequired();
+            entity.Property(e => e.NewOrder).HasColumnType("varchar(12)").IsRequired();
+            entity.Property(e => e.QuotaStatus).HasColumnType("varchar(1)").IsRequired();
+            entity.Property(e => e.FromYearMonth).HasColumnType("varchar(5)").IsRequired();
+            entity.Property(e => e.ToYearMonth).HasColumnType("varchar(5)").IsRequired();
+            entity.Property(e => e.QuotaCountry).HasColumnType("varchar(10)").IsRequired();
+            entity.Property(e => e.QuotaCategory).HasColumnType("varchar(20)").IsRequired();
+            entity.Property(e => e.QuotaType).HasColumnType("varchar(2)").IsRequired();
+            entity.Property(e => e.Unit).HasColumnType("varchar(3)").IsRequired();
+
+            entity.Property(e => e.Quantity).HasColumnType("decimal(12,2)").IsRequired();
+        }
+    }
+}
+
+===== FILE: Configurations/OrderManagement/Stylewise events/EventMasterConfig.cs =====
+﻿using apparelPro.BusinessLogic.Services.Models.OrderManagement.Stylewise_Events;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Configurations.OrderManagement.Stylewise_events
+{
+    public class EventMasterConfig:IEntityTypeConfiguration<EventMaster>
+    {
+        public void Configure(EntityTypeBuilder<EventMaster> entity)
+        {
+            entity.ToTable("EventMasters");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+
+            // Establish unique composite constraint index tracking to prevent duplicate milestone injections under one style scope
+            entity.HasIndex(e => new { e.BuyerCode, e.Order, e.TypeCode, e.StyleCode, e.EventCode }).IsUnique();
+
+            entity.Property(e => e.BuyerCode).HasColumnName("BuyerCode").IsRequired();
+            entity.Property(e => e.Order).HasColumnType("varchar(12)").HasColumnName("Order").IsRequired();
+            entity.Property(e => e.TypeCode).HasColumnName("TypeCode").IsRequired();
+            entity.Property(e => e.StyleCode).HasColumnType("varchar(12)").HasColumnName("StyleCode").IsRequired();
+            entity.Property(e => e.EventCode).HasColumnType("varchar(10)").HasColumnName("EventCode").IsRequired();
+
+            entity.Property(e => e.ScheduledDate).HasColumnType("date").HasColumnName("ScheduledDate");
+            entity.Property(e => e.ActualDate).HasColumnType("date").HasColumnName("ActualDate");
+            entity.Property(e => e.Remarks).HasColumnType("varchar(100)").HasColumnName("Remarks");
+
+            // Enforce safe delete behavior constraints 
+            entity.HasOne(e => e.MilestoneEvent)
+                  .WithMany()
+                  .HasForeignKey(e => e.EventCode)
+                  .OnDelete(DeleteBehavior.Restrict);
+        }
+    }
+}
+
+===== FILE: Configurations/OrderManagement/Stylewise events/StylewiseEventConfig.cs =====
+﻿using apparelPro.BusinessLogic.Services.Models.OrderManagement.Stylewise_Events;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ApparelPro.Data.Configurations.OrderManagement.Stylewise_events
+{
+    public class StylewiseEventConfig:IEntityTypeConfiguration<StylewiseEvent>
+    {
+        public void Configure(EntityTypeBuilder<StylewiseEvent> entity)
+        {
+            entity.ToTable("StylewiseEvents");
+            entity.HasKey(e => e.EventCode); // Strict String Primary Key 
+
+            entity.Property(e => e.EventCode).HasColumnType("varchar(10)").HasColumnName("EventCode").IsRequired();
+            entity.Property(e => e.Description).HasColumnType("varchar(50)").HasColumnName("Description").IsRequired();
+        }
+    }
+}
+
+===== FILE: Configurations/OrderManagement/SubContracting/SubContractConfig.cs =====
+using ApparelPro.Data.Models.OrderManagement.SubContracting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.OrderManagement.SubContracting
+{
+    public class SubContractConfig : IEntityTypeConfiguration<SubContract>
+    {
+        public void Configure(EntityTypeBuilder<SubContract> entity)
+        {
+            entity.ToTable("SubContracts");
+
+            entity.HasKey(e => new {
+                e.BuyerCode,
+                e.Order,
+                e.TypeCode,
+                e.StyleCode,
+                e.SubContractorCode
+            });
+
+            entity.Property(e => e.BuyerCode).HasColumnType("int").HasColumnName("Buyer");
+            entity.Property(e => e.Order).HasColumnType("varchar(20)").HasColumnName("Order");
+            entity.Property(e => e.TypeCode).HasColumnType("int").HasColumnName("Type");
+            entity.Property(e => e.StyleCode).HasColumnType("varchar(20)").HasColumnName("Style");
+            entity.Property(e => e.SubContractorCode).HasColumnType("varchar(6)").HasColumnName("SubContractorCode");
+
+            entity.Property(e => e.SubQuantity).HasColumnType("decimal(9,0)").HasColumnName("SubQuantity");
+            entity.Property(e => e.CostPerGarment).HasColumnType("decimal(11,2)").HasColumnName("CostPerGarment");
+            entity.Property(e => e.Currency).HasColumnType("varchar(3)").HasColumnName("Currency");
+            entity.Property(e => e.Unit).HasColumnType("varchar(3)").HasColumnName("Unit");
+            entity.Property(e => e.ReceivedQuantity).HasColumnType("decimal(9,0)").HasColumnName("ReceivedQuantity");
+        }
+    }
+}
+
+===== FILE: Configurations/References/AdditionalCostConfig.cs =====
+using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class AdditionalCostConfig : IEntityTypeConfiguration<AdditionalCost>
+    {
+        public void Configure(EntityTypeBuilder<AdditionalCost> entity)
+        {
+            entity.ToTable("AdditionalCosts");
+            entity.HasKey(e => e.Code);
+
+            entity.Property(e => e.Code).HasColumnType("varchar(3)").HasColumnName("Code");
+            entity.Property(e => e.Description).HasColumnType("varchar(40)").HasColumnName("Description");
+        }
+    }
+}
+
+===== FILE: Configurations/References/AddressConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using ApparelPro.Data.ValueGenerators;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class AddressConfig : IEntityTypeConfiguration<Address>
+    {
+        public void Configure(EntityTypeBuilder<Address> entity)
+        {
+            // Force Entity Framework to bind strictly to the 'Addresses' plural table
+            entity.ToTable("Addresses");
+
+            entity.HasKey(k =>  k.Id);
+            //entity.HasKey(k => new { k.Id, k.AddressId});
+
+            entity.Property(p => p.Id)
+                .IsRequired()
+                .HasColumnType("int")
+                .UseIdentityColumn();
+
+            // https://stackoverflow.com/questions/60909477/ef-core-3-has-value-generator
+            entity.Property(p => p.AddressId)
+                .IsRequired(true)
+                .HasColumnType("uniqueidentifier");
+                //.ValueGeneratedOnAdd()
+                //.HasValueGenerator<ApparelProAddressIdValueGenerator>();
+             //  .HasDefaultValue(new Guid())
+
+            //entity.HasOne<Buyer>(p => p.AddressId).WithMany<Address>(p => p.AddressId);
+            //entity.HasOne<Buyer>().WithMany<Address>().HasForeignKey(p=>p.AddressId);
+
+            ////entity.Property(p => p.AddressType)
+            ////    .HasColumnType(typeof(Constants.AddressType).ToString());
+
+            //var converter = new ValueConverter<AddressType, string>(
+            //    v => v.ToString(),
+            //    v => (AddressType)Enum.Parse(typeof(AddressType), v));
+
+            //entity.Property(p => p.AddressType)
+            //    .HasConversion(converter);
+            ////   // .HasConversion(val => val, v => (Constants.AddressType)Convert.ChangeType(v, typeof(Constants.AddressType)));
+
+            //entity.Property(p => p.AddressType)
+            //    .HasColumnType("int")
+            //    .IsRequired(false);
+
+            entity.Property(p => p.AddressType)
+                .HasConversion<int>()
+               .IsRequired(false);
+
+            entity.Property(p => p.Default)
+                .HasColumnType("bit")
+                .IsRequired(false);              
+
+            entity.Property(p => p.StreetAddress)
+             .HasMaxLength(200)
+             .IsRequired(false)
+             .HasColumnType("nvarchar");
+
+            entity.Property(p => p.City)
+             .HasMaxLength(100)
+             .IsRequired(false)
+             .HasColumnType("nvarchar");            
+
+            entity.Property(p => p.CountryCode)
+             .HasMaxLength(3)
+             .IsRequired(false)
+             .HasColumnType("nvarchar");
+
+            entity.Property(p => p.State)
+            .HasMaxLength(5)
+            .IsRequired(false)
+            .HasColumnType("nvarchar");
+
+            entity.Property(p => p.PostCode)
+            .HasMaxLength(5)
+            .IsRequired(false)
+            .HasColumnType("nvarchar");
+
+            entity.Property(p => p.BankCode)
+                .HasMaxLength(3)
+                .IsRequired(false)
+                .HasColumnType("nvarchar");
+
+            entity.HasIndex(p => p.AddressId);
+        }
+    }
+}
+
+===== FILE: Configurations/References/BankConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class BankConfig : IEntityTypeConfiguration<Bank>
+    {
+        public void Configure(EntityTypeBuilder<Bank> entity)
+        {
+            entity.HasKey(x => x.BankCode);
+            entity.Property(p => p.BankCode).ValueGeneratedNever();
+            entity.Property(p => p.Id).UseIdentityColumn();
+
+            // 🚀 Configure the One-to-Many Relationship
+            entity.HasMany(b => b.Addresses)      // Bank has Many Addresses
+                  .WithOne()                       // Address points back to one implicit parent
+                  .HasForeignKey(a => a.BankCode)  // Enforces BankCode as the lookup key on the Address table
+                  .HasPrincipalKey(b => b.BankCode)
+                  .OnDelete(DeleteBehavior.Cascade); // If a bank is deleted, automatically delete its 3 addresses!
+
+            entity.Property(p => p.Name)
+                .HasMaxLength(100)
+                .IsRequired()
+                .HasColumnType("nvarchar");
+
+            entity.Property(p => p.BankCode)
+                .IsRequired()
+                .HasMaxLength(3)
+                .HasColumnType("nvarchar");      
+
+            entity.Property(p => p.CurrencyCode)
+               .IsRequired()
+               .HasMaxLength(3)
+               .HasColumnType("nvarchar");
+            entity.Property(p => p.LoanLimit)              
+               .HasColumnType("money");
+
+            entity.Property(p => p.SwiftCode)
+               .IsRequired()
+               .HasMaxLength(11)
+               .HasColumnType("nvarchar");
+
+            entity.Property(p => p.TelephoneNos)               
+               .HasMaxLength(50)
+               .HasColumnType("nvarchar");
+        }
+    }
+}
+
+===== FILE: Configurations/References/BasisConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class BasisConfig : IEntityTypeConfiguration<Basis>
+    {
+        public void Configure(EntityTypeBuilder<Basis> entity)
+        {
+            entity.HasKey(k => k.Id);
+            entity.Property(p => p.Code)
+               .HasMaxLength(3)
+               .IsRequired()
+               .HasColumnType("nvarchar");
+
+            entity.Property(p => p.Description)
+               .HasMaxLength(30)
+               // .IsRequired()
+               .HasColumnType("nvarchar");
+
+            entity.Property(p => p.ValueAdd)
+                .HasDefaultValue(false);
+               //.HasColumnType("bit");
+
+
+
+        }
+    }
+}
+
+===== FILE: Configurations/References/BuyerConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+//using ApparelPro.Data.ValueGenerators;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class BuyerConfig : IEntityTypeConfiguration<Buyer>
+    {
+        public void Configure(EntityTypeBuilder<Buyer> entity)
+        {
+            entity.HasKey(k => k.BuyerCode);
+
+            entity.Property(k => k.BuyerCode)
+                .IsRequired()
+                .HasColumnType("int")
+                .UseIdentityColumn();
+
+            // 🚀 Configure the One-to-Many Relationship
+            entity.HasMany(b => b.Addresses)      // Buyer has Many Addresses
+                  .WithOne()                       // Address points back to one implicit parent
+                  .HasForeignKey(a => a.BuyerCode)  // Enforces BuyerCode as the lookup key on the Address table
+                  .HasPrincipalKey(b => b.BuyerCode)
+                  .OnDelete(DeleteBehavior.Cascade); // If a buyer is deleted, automatically delete its 3 addresses!
+
+
+            //entity.Property(p => p.AddressId)
+            //     .IsRequired(false)
+            //     .HasColumnType("uniqueidentifier");
+
+            // .ValueGeneratedOnAdd()
+            // .HasValueGenerator<ApparelProAddressIdValueGenerator>()
+
+            //   entity.Property(p=>p.AddressId).UseIdentityColumn();
+            //.HasColumnType("char(36)")
+            //.HasColumnType("GUID")
+            //  .HasDefaultValue(new Guid("00000000-0000-0000-0000-000000000000"));
+
+
+            // if we dont add Buyer property in Address we can do like below
+            // entity.HasOne<Address>().WithMany().HasForeignKey(p => p.AddressId).HasPrincipalKey(p => p.AddressId);
+
+            // if we add Buyer property in Address we can do like below
+
+            //entity.HasMany(p=>p.Addresses).WithOne(p=>p.Buyer).HasForeignKey(p => p.AddressId).HasPrincipalKey(p=>p.AddressId);
+
+            // below is commented temprarily
+
+            //entity.HasMany(p => p.Addresses).WithOne(p => p.Buyer).HasPrincipalKey(p => p.AddressId);
+
+            // this changes done by thusith on 23 sep 2024 in order to remove buyer navigation property on the otherside (address)
+            // no meaning to have buyer at address side. 
+            //entity
+            //    .HasMany(p => p.Addresses)
+            //    .WithOne()
+            //    .HasForeignKey(b => b.AddressId)
+            //    .HasPrincipalKey(k => k.AddressId)
+            //    .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(p => p.Status)
+               .HasMaxLength(2)
+               .IsRequired()
+               .HasColumnType("nvarchar");            
+
+            entity.Property(p => p.Name)
+               .HasMaxLength(200)
+               .IsRequired()
+               .HasColumnType("nvarchar");            
+
+            entity.Property(p => p.TelephoneNos)
+               .HasMaxLength(100)
+               .IsRequired(false)
+               .HasColumnType("nvarchar");
+
+            entity.Property(p => p.MobileNos)
+             .HasMaxLength(100)
+             .IsRequired(false)
+             .HasColumnType("nvarchar");
+
+            entity.Property(p=>p.Fax)
+             .HasMaxLength(100)
+             .IsRequired(false)
+             .HasColumnType("nvarchar");
+
+            entity.Property(p => p.CUSDEC)
+             .HasMaxLength(11)
+             .IsRequired(false)
+             .HasColumnType("nvarchar");
+
+            entity.HasIndex(p => p.BuyerCode);
+        }
+    }
+}
+
+===== FILE: Configurations/References/CountryConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class CountryConfig : IEntityTypeConfiguration<Country>
+    {
+        public void Configure(EntityTypeBuilder<Country> entity)
+        {
+            entity.HasKey(e => e.Code);
+            entity.Property(e => e.Code)
+                .ValueGeneratedNever()
+                .IsRequired()
+                .HasMaxLength(3)
+                .HasColumnType("nvarchar");
+
+            entity.Property(e => e.Id)
+                .UseIdentityColumn();
+
+            entity.Property(p => p.Name)
+               .IsRequired()
+               .HasMaxLength(30)
+               .HasColumnType("nvarchar");
+
+            entity.Property(p => p.Flag)
+                .HasColumnType("varbinary(MAX)");
+        }
+    }
+}
+
+===== FILE: Configurations/References/CurrencyConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class CurrencyConfig : IEntityTypeConfiguration<Currency>
+    {
+        public CurrencyConfig() { }
+
+        public void Configure(EntityTypeBuilder<Currency> currency)
+        {
+            currency.HasKey(x => x.Code);
+            currency.Property(x => x.Code)
+                .ValueGeneratedNever()
+                .HasMaxLength(3)
+                .IsRequired()
+                .HasColumnType("nvarchar");
+
+            //currency.HasOne<Bank>()
+            //.WithOne()
+            //.IsRequired()
+            ////  .HasForeignKey<Currency>(c=>c.CountryCode);
+            //.HasForeignKey(typeof(Currency), @"CountryCode");
+
+
+            // beolow code also same as above but need to test whether its working.
+            // https://github.com/dotnet/EntityFramework.Docs/issues/3004
+            // currency.HasOne<Bank>()
+            //.WithOne()
+            //  .HasForeignKey<Currency>(c => c.CountryCode)
+            // .IsRequired(); // should come after HasForeignKey
+
+            //currency.HasOne<Bank>()
+            //   .WithOne()
+            //  // .HasPrincipalKey<Bank>(x=>x.Code)
+            //   .HasPrincipalKey<Currency>(x=>x.CountryCode)
+            //   // .IsRequired()              
+            //   .HasForeignKey<Bank>(c=>c.Code);
+
+            currency.Property(x => x.CountryCode)
+                .HasMaxLength(3)
+                .HasColumnType("nvarchar")
+                .IsRequired();
+
+            currency.Property(x => x.Id)
+             .UseIdentityColumn();
+
+            currency.Property(p => p.Name)
+                .HasMaxLength(30)
+                .HasColumnType("nvarchar");
+
+            //  entity.HasOne(c => c.Bank);            
+
+            currency.Property(p => p.Minor)
+              .HasMaxLength(3)
+              .HasColumnType("nvarchar");
+        }
+    }
+}
+
+===== FILE: Configurations/References/CurrencyConversionConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class CurrencyConversionConfig : IEntityTypeConfiguration<CurrencyConversion>
+    {
+        public void Configure(EntityTypeBuilder<CurrencyConversion> entity)
+        {
+            // NOTE (2026-08-09): HasKey must run BEFORE configuring Id's identity
+            // strategy. Id is a genuine SQL Server IDENTITY column but is not part
+            // of the primary key (the real PK is the FromCurrency/ToCurrency
+            // composite below) - calling UseIdentityColumn() first lets EF's
+            // implicit "Id" key-discovery convention treat Id as the tentative PK,
+            // and the later HasKey() call then resets its value-generation
+            // strategy back to "client-set" when it's demoted to a plain column.
+            // That's exactly what caused "Cannot insert explicit value for
+            // identity column ... IDENTITY_INSERT is set to OFF" on insert.
+            // CurrencyExchangeConfig (same Id-is-identity-but-not-PK shape) already
+            // does HasKey first, which is why only Conversion hit this.
+            entity.HasKey(k => new { k.FromCurrency, k.ToCurrency });
+
+            entity.Property(p => p.Id).UseIdentityColumn();
+
+            entity.Property(p=>p.FromCurrency)               
+                .IsRequired(true)
+                .HasColumnType("nvarchar(3)").HasMaxLength(3);
+            
+            entity.Property(p=>p.ToCurrency).IsRequired(true).HasColumnType("nvarchar(3)").HasMaxLength(3);
+            
+            entity.Property(p => p.Value).HasColumnType("decimal(8,3)").IsRequired(true);
+        }
+    }
+}
+
+===== FILE: Configurations/References/CurrencyExchangeConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class CurrencyExchangeConfig : IEntityTypeConfiguration<CurrencyExchange>
+    {
+        public void Configure(EntityTypeBuilder<CurrencyExchange> entity)
+        {
+            entity.HasKey(k => new { k.BaseCurrency, k.QuoteCurrency, k.ExchangeDate })
+                .HasName("PK_CurencyExchange");   
+
+            entity.Property(p=>p.Id).UseIdentityColumn();
+
+            entity.Property(p => p.BaseCurrency)
+                .IsRequired()
+                .HasColumnType("nvarchar")
+                .HasMaxLength(3);
+
+            entity.Property(p => p.QuoteCurrency)
+                .IsRequired()
+                .HasColumnType("nvarchar")
+                .HasMaxLength(3);
+
+            entity.Property(p => p.ExchangeDate)
+              .IsRequired()
+              .HasColumnType("date");
+
+            entity.Property(p => p.Rate)
+               .IsRequired()
+               .HasColumnType("decimal(12,3)");
+
+        }
+    }
+}
+
+===== FILE: Configurations/References/DepartmentConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class DepartmentConfig:IEntityTypeConfiguration<Department>
+    {
+        public void Configure(EntityTypeBuilder<Department> entity)
+        {
+            entity.ToTable("Departments");
+            entity.HasKey(e => e.DepartmentCode);
+            entity.Property(e => e.DepartmentCode).HasColumnType("varchar(3)").IsRequired();
+            entity.Property(e => e.Name).HasColumnType("varchar(30)").IsRequired();
+        }
+    }
+}
+
+===== FILE: Configurations/References/DestinationConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class DestinationConfig : IEntityTypeConfiguration<Destination>
+    {
+        public void Configure(EntityTypeBuilder<Destination> entity)
+        {
+            entity.Property(p=>p.Id)
+                .IsRequired()
+                .UseIdentityColumn();
+
+            entity.HasKey(x => new { x.Id, x.CountryCode });
+
+            entity.Property(p => p.CountryCode)
+                .ValueGeneratedNever()
+                .HasMaxLength(3)
+                .IsRequired()
+                .HasColumnType("nvarchar");
+
+            entity.Property(p => p.DestinationName)
+                .IsRequired()
+                .HasMaxLength(30)
+                .HasColumnType("nvarchar");
+        }
+    }
+}
+
+===== FILE: Configurations/References/FeatureConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class FeatureConfig : IEntityTypeConfiguration<Feature>
+    {
+        public void Configure(EntityTypeBuilder<Feature> entity)
+        {
+            entity.HasKey(k => k.Id);
+            entity.Property(p => p.Code)
+               .HasMaxLength(3)
+              // .IsRequired()
+               .HasColumnType("nvarchar");
+
+            entity.Property(p => p.Description)
+              .HasMaxLength(20)              
+              .HasColumnType("nvarchar");
+
+        }
+    }
+}
+
+===== FILE: Configurations/References/GarmentTypeConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class GarmentTypeConfig : IEntityTypeConfiguration<GarmentType>
+    {
+        public void Configure(EntityTypeBuilder<GarmentType> entity)
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TypeName)
+                .IsRequired()
+                .HasMaxLength(30)
+                .HasColumnType("nvarchar");
+        }
+    }
+}
+
+===== FILE: Configurations/References/GarmentTypeItemsConfig.cs =====
+using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class GarmentTypeItemsConfig : IEntityTypeConfiguration<GarmentTypeItems>
+    {
+        public void Configure(EntityTypeBuilder<GarmentTypeItems> entity)
+        {
+            entity.ToTable("GarmentTypeItems");
+
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+
+            entity.Property(e => e.GarmentTypeId).HasColumnName("GarmentTypeId").IsRequired();
+            entity.Property(e => e.StockCode).HasColumnType("varchar(2)").HasColumnName("StockCode").IsRequired();
+            entity.Property(e => e.ItemCode).HasColumnType("varchar(6)").HasColumnName("ItemCode").IsRequired();
+            entity.Property(e => e.Unit).HasColumnType("varchar(3)").HasColumnName("Unit").IsRequired();
+            entity.Property(e => e.Quantity).HasColumnType("decimal(8,3)").HasColumnName("Quantity").IsRequired();
+
+            entity.HasOne(e => e.GarmentType)
+                  .WithMany()
+                  .HasForeignKey(e => e.GarmentTypeId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        }
+    }
+}
+
+===== FILE: Configurations/References/IdentittyAddressConfig.cs =====
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ApparelPro.Data.Configurations.References
+{    
+    using global::ApparelPro.Data.Models.References;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+    namespace ApparelPro.Data.Configurations.Registration
+    {
+        public class IdentityAddressConfig : IEntityTypeConfiguration<Address>
+        {
+            public void Configure(EntityTypeBuilder<Address> entity)
+            {
+                // Explicitly tells the Identity context that Address maps to "Addresses".
+                // ExcludeFromMigrations() is the key part: Address is owned and evolved
+                // exclusively by ApparelProDbContext's own migrations (see AddMultipleAddressesToBank/
+                // AddMultipleAddressesToBuyer for BankCode/BuyerCode). Without this, UserIdentityDbContext
+                // independently tracks Address's full shape too, and any drift between the two contexts'
+                // migration histories gets bundled into whatever migration you generate here next -
+                // which is exactly what produced the stray BankCode/BuyerCode AddColumn statements today.
+                entity.ToTable("Addresses", t => t.ExcludeFromMigrations());
+            }
+        }
+    }
+
+}
+
+===== FILE: Configurations/References/StockConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class StockConfig : IEntityTypeConfiguration<Stock>
+    {
+        public void Configure(EntityTypeBuilder<Stock> entity)
+        {
+            entity.ToTable("Stocks");
+
+            // 1. FIXED PRIMARY KEY: Enforce StockCode string as the master lookup identifier
+            entity.HasKey(k => k.StockCode);
+
+            entity.Property(e => e.StockCode)
+                .HasColumnType("varchar(2)") // Restricted to exactly 2 characters matching Clipper limits
+                .HasColumnName("StockCode")
+                .IsRequired();
+
+            entity.Property(p => p.Description)
+                .HasColumnType("varchar(30)") // Switched to optimal varchar to clean up allocation padding
+                .HasColumnName("Description")
+                .IsRequired();
+        }
+    }
+}
+
+===== FILE: Configurations/References/StockItemConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class StockItemConfig : IEntityTypeConfiguration<StockItem>
+    {
+        public void Configure(EntityTypeBuilder<StockItem> entity)
+        {
+            entity.ToTable("StockItems");
+
+            // 1. PRIMARY COMPOSITE STRING KEY: Combines StockCode and ItemCode
+            entity.HasKey(k => new { k.StockCode, k.ItemCode });
+
+            entity.Property(e => e.StockCode)
+                .HasColumnType("varchar(2)")
+                .HasColumnName("StockCode")
+                .IsRequired();
+
+            entity.Property(e => e.ItemCode)
+                .HasColumnType("varchar(4)") // Up to 6 characters matching your legacy parameters
+                .HasColumnName("ItemCode")
+                .IsRequired();
+
+            entity.Property(p => p.Description)
+                .HasColumnType("varchar(100)")
+                .HasColumnName("Description")
+                .IsRequired();
+
+            // 2. Setup the Foreign Key constraint pointing back to the updated string-keyed Stocks table
+            entity.HasOne(e => e.Stock)
+                  .WithMany()
+                  .HasForeignKey(e => e.StockCode)
+                  .OnDelete(DeleteBehavior.Restrict);
+            //entity.HasKey(k => new { k.StockCode, k.ItemCode });
+            //entity.Property(p => p.StockCode)                       
+            //  .IsRequired()
+            //   .HasColumnType("int");
+
+            //entity.Property(p => p.ItemCode)
+            //    .UseIdentityColumn()
+            //  .IsRequired()
+            //  .HasColumnType("int");
+
+
+            //entity.Property(p => p.Description)
+            // .HasMaxLength(20)
+            // .IsRequired()
+            // .HasColumnType("nvarchar");
+        }
+    }
+}
+
+===== FILE: Configurations/References/SubContractorConfig.cs =====
+using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class SubContractorConfig : IEntityTypeConfiguration<SubContractor>
+    {
+        public void Configure(EntityTypeBuilder<SubContractor> entity)
+        {
+            entity.ToTable("SubContractors");
+            entity.HasKey(e => e.Code);
+
+            // Code is space(6) in legacy od_scref.dbf (m_subcnt = space(6) in IN_AIN1.PRG).
+            entity.Property(e => e.Code).HasColumnType("varchar(6)").HasColumnName("Code");
+            entity.Property(e => e.Name).IsRequired().HasColumnType("varchar(40)").HasColumnName("Name");
+        }
+    }
+}
+
+===== FILE: Configurations/References/SupplierConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class SupplierConfig : IEntityTypeConfiguration<Supplier>
+    {
+        public void Configure(EntityTypeBuilder<Supplier> entity)
+        {
+            entity.HasKey(k => k.SupplierCode);
+
+            entity.Property(p => p.SupplierCode)
+                .IsRequired()
+                .HasColumnType("int")
+                .UseIdentityColumn();
+
+            entity.Property(p => p.AddressId)
+                .IsRequired(false)
+                .HasColumnType("uniqueidentifier");
+               // .HasDefaultValue(new Guid("00000000-0000-0000-0000-000000000000"));
+
+            entity.Property<string>("Name")
+                .IsRequired()
+                .HasColumnType("nvarchar")
+                .HasMaxLength(100);
+
+            entity.Property(p => p.TelephoneNos)
+                .HasMaxLength(100)
+                .IsRequired(false)
+                .HasColumnType("nvarchar");
+
+            entity.Property(p => p.MobileNos)
+               .HasMaxLength(100)
+               .IsRequired(false)
+               .HasColumnType("nvarchar");
+
+            entity.Property(p => p.Fax)
+               .HasMaxLength(100)
+               .IsRequired(false)
+               .HasColumnType("nvarchar");
+
+            entity.HasIndex(entity => entity.SupplierCode);
+
+            //entity
+            //   .HasMany(p => p.Addresses)
+            //   .WithOne()
+            //   .HasForeignKey(b => b.AddressId)
+            //   .HasPrincipalKey(k => k.AddressId)
+            //   .OnDelete(DeleteBehavior.Cascade);
+        }
+    }
+}
+
+===== FILE: Configurations/References/UnitConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class UnitConfig : IEntityTypeConfiguration<Unit>
+    {
+        public void Configure(EntityTypeBuilder<Unit> entity)
+        {
+            entity.HasKey(k => k.Id);
+            entity.Property(p => p.Code)
+               .HasMaxLength(3)
+               .IsRequired()
+               .HasColumnType("nvarchar");
+
+            entity.Property(p => p.Description)
+               .HasMaxLength(30)
+               .IsRequired()
+               .HasColumnType("nvarchar");         
+        }
+    }
+}
+
+===== FILE: Configurations/References/UnitConversionConfig.cs =====
+﻿using ApparelPro.Data.Models.References;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ApparelPro.Data.Configurations.References
+{
+    public class UnitConversionConfig : IEntityTypeConfiguration<UnitConversion>
+    {
+        public void Configure(EntityTypeBuilder<UnitConversion> entity)
+        {
+            entity.ToTable("UnitConversion");
+            entity.HasKey(e => new { e.FromUnit, e.ToUnit });
+            entity.Property(e => e.FromUnit).IsRequired().HasColumnType("varchar(3)").HasColumnName("FromUnit");
+            entity.Property(e => e.ToUnit).IsRequired().HasColumnType("varchar(3)").HasColumnName("ToUnit");
+            entity.Property(e => e.Measure).IsRequired().HasColumnType("decimal(12,2)").HasColumnName("Measure");
+        }
+    }
+}
+
+===== FILE: ApparelProDbContext.cs =====
+﻿using apparelPro.BusinessLogic.Services.Models.OrderManagement.Stylewise_Events;
+using ApparelPro.Data.Configurations.OrderManagement;
+using ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption;
+using ApparelPro.Data.Configurations.OrderManagement.Shipment;
+using ApparelPro.Data.Configurations.OrderManagement.Stylewise_events;
+using ApparelPro.Data.Configurations.OrderManagement.SubContracting;
+using ApparelPro.Data.Configurations.OrderwiseInventory;
+using ApparelPro.Data.Configurations.References;
+using ApparelPro.Data.Configurations.Registration;
+using ApparelPro.Data.Configurations.SystemConfiguration;
+using ApparelPro.Data.Models.OrderManagement;
+using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
+using ApparelPro.Data.Models.OrderManagement.Shipments;
+using ApparelPro.Data.Models.OrderManagement.SubContracting;
+using ApparelPro.Data.Models.OrderwiseInventory;
+using ApparelPro.Data.Models.References;
+using ApparelPro.Data.Models.Registration;
+using ApparelPro.Data.Models.SystemConfiguration;
+using Microsoft.EntityFrameworkCore;
+
+namespace ApparelPro.Data
+{
+    public class ApparelProDbContext:DbContext
+    {
+        // Add this temporary block inside your ApparelProDbContext class:
+        public ApparelProDbContext()
+        {
+        }
+        public ApparelProDbContext(DbContextOptions<ApparelProDbContext> options):base(options)
+        {
+        }
+
+        // this entry is used to bypass program.cs in case of connection issues, instead offline via this
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                // Points directly to your local SQL Express server using Windows Authentication
+                optionsBuilder.UseSqlServer("Server=THUSITHPC\\SQLEXPRESS;Database=ApparelPro;Trusted_Connection=True;TrustServerCertificate=True;");
+            }
+        }
+        public virtual DbSet<Currency> Currencies { get; set; }
+        public virtual DbSet<Address> Addresses { get; set; }
+        public virtual DbSet<Buyer> Buyers { get; set; }
+        public virtual DbSet<Destination> Destinations { get; set; }
+        public virtual DbSet<Bank> Banks { get; set; }
+        public virtual DbSet<Country> Countries { get; set; }
+        public virtual DbSet<GarmentType> GarmentTypes { get; set; }
+        public virtual DbSet<Style> Styles { get; set; }
+        public virtual DbSet<Basis> Basis { get; set; }
+        public virtual DbSet<AdditionalCost> AdditionalCosts { get; set; }
+        public virtual DbSet<Unit> Units { get; set; }
+        public virtual DbSet<UnitConversion> UnitConversion { get; set; }
+        public virtual DbSet<Stock> Stocks { get; set; }
+        public virtual DbSet<StockItem> StockItems { get; set; }
+        public virtual DbSet<PODetails>  PODetails { get; set; }
+        public virtual DbSet<CurrencyExchange> CurrencyExchanges { get; set; }
+        public virtual DbSet<User> Users { get; set; }
+
+        public virtual DbSet<PurchaseOrder> PurchaseOrders { get; set; }
+        public virtual DbSet<CurrencyConversion> CurrencyConversions { get; set; }
+
+        public virtual DbSet<Supplier> Suppliers { get; set; }
+        public virtual DbSet<SubContractor> SubContractors { get; set; }
+
+        // Order Management
+        public virtual DbSet<ItemFeature> ItemFeatures { get; set; }
+        public virtual DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<GarmentTypeItems> GarmentTypeItems { get; set; } = null!;
+        public virtual DbSet<OrderItemFeature> OrderItemFeatures { get; set; }
+        public virtual DbSet<StyleMaterialConsumptionLedger> StyleMaterialConsumptionLedgers { get; set; }
+        public virtual DbSet<StyleMaterialCostProfile> StyleMaterialCostProfiles { get; set; }
+        public virtual DbSet<GarmentAdditionalCost> GarmentAdditionalCosts { get; set; }
+        public virtual DbSet<SubContract> SubContracts { get; set; }
+        public virtual DbSet<ColorSizeDetails> ColorSizeDetails { get; set; }
+
+        public virtual DbSet<PurchaseOrderHeader>  PurchaseOrderHeaders { get; set; }
+        public virtual DbSet<EventMaster> EventMasters { get; set; } = null;
+        public virtual DbSet<StylewiseEvent> StylewiseEvents { get; set; } = null;
+
+        // inventory
+        public virtual DbSet<OrderwiseStock> OrderwiseStocks { get; set; }
+        public virtual DbSet<OrderwiseStockMaster> OrderwiseStockMasters { get; set; }
+
+        public virtual DbSet<Department> Departments { get; set; } = null!;
+        public virtual DbSet<OrderwiseStockTransaction> OrderwiseStockTransactions { get; set; } = null!;
+        public virtual DbSet<DocumentSequence> DocumentSequences { get; set; } = null!;
+
+
+        // shipments
+        public virtual DbSet<PartShipment> PartShipments { get; set; } = null!;
+        public virtual DbSet<QuotaTransaction> QuotaTransactions { get; set; } = null!;
+
+        // system configuration
+        public virtual DbSet<SystemParameter> SystemParameters { get; set; } = null!;
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.ApplyConfiguration(new BuyerConfig());
+            modelBuilder.ApplyConfiguration(new CurrencyConfig());
+            modelBuilder.ApplyConfiguration(new DestinationConfig());
+            modelBuilder.ApplyConfiguration(new AddressConfig());
+            modelBuilder.ApplyConfiguration(new BankConfig());
+            modelBuilder.ApplyConfiguration(new CountryConfig());
+            modelBuilder.ApplyConfiguration(new GarmentTypeConfig());
+            modelBuilder.ApplyConfiguration(new StyleConfig());
+            modelBuilder.ApplyConfiguration(new BasisConfig());
+            modelBuilder.ApplyConfiguration(new AdditionalCostConfig());
+            modelBuilder.ApplyConfiguration(new UnitConfig());
+            modelBuilder.ApplyConfiguration(new UnitConversionConfig());
+            modelBuilder.ApplyConfiguration(new StockConfig());
+            modelBuilder.ApplyConfiguration(new StockItemConfig());
+            modelBuilder.ApplyConfiguration(new PODetailsConfig());
+            modelBuilder.ApplyConfiguration(new CurrencyExchangeConfig());
+            modelBuilder.ApplyConfiguration(new UserConfig());
+            modelBuilder.ApplyConfiguration(new SupplierConfig());
+            modelBuilder.ApplyConfiguration(new CurrencyConversionConfig());
+            modelBuilder.ApplyConfiguration(new SubContractorConfig());
+
+            // order management
+            modelBuilder.ApplyConfiguration(new PurchaseOrderConfig());
+            modelBuilder.ApplyConfiguration(new ColorSizeDetailsConfig());
+
+            modelBuilder.ApplyConfiguration(new ItemFeatureConfig());
+            modelBuilder.ApplyConfiguration(new OrderItemConfig());
+            modelBuilder.ApplyConfiguration(new GarmentTypeItemsConfig());
+
+            modelBuilder.ApplyConfiguration(new OrderItemFeatureConfig());
+            modelBuilder.ApplyConfiguration(new StyleMaterialCostProfileConfig());
+            modelBuilder.ApplyConfiguration(new StyleMaterialConsumptionLedgerConfig());
+            modelBuilder.ApplyConfiguration(new GarmentAdditionalCostConfig());
+            modelBuilder.ApplyConfiguration(new SubContractConfig());
+            modelBuilder.ApplyConfiguration(new PurchaseOrderHeaderConfig());
+
+            // styelwise events
+            modelBuilder.ApplyConfiguration(new StylewiseEventConfig());
+            modelBuilder.ApplyConfiguration(new EventMasterConfig());
+
+            // inventory
+            modelBuilder.ApplyConfiguration(new OrderwiseStockConfig());
+            modelBuilder.ApplyConfiguration(new OrderwiseStockMasterConfig());
+
+            modelBuilder.ApplyConfiguration(new DocumentSequenceConfig());
+            modelBuilder.ApplyConfiguration(new DepartmentConfig());
+            modelBuilder.ApplyConfiguration(new OrderwiseStockTransactionConfig());
+
+            // shipments
+            modelBuilder.ApplyConfiguration(new PartShipmentConfig());
+            modelBuilder.ApplyConfiguration(new QuotaTransactionConfig());
+
+            // system configuration
+            modelBuilder.ApplyConfiguration(new SystemParameterConfig());
+        }
+
+        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //{
+        //    base.OnConfiguring(optionsBuilder);
+        //    optionsBuilder.UseSqlServer("ApparelProConnection");
+        //}
+    }
+}

@@ -1,4 +1,5 @@
 ﻿using ApparelPro.Data.Models.OrderManagement.Shipments;
+using ApparelPro.Data.Models.References;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -28,6 +29,14 @@ namespace ApparelPro.Data.Configurations.OrderManagement.Shipment
             entity.Property(e => e.Unit).HasColumnType("varchar(3)").IsRequired();
 
             entity.Property(e => e.Quantity).HasColumnType("decimal(12,2)").IsRequired();
+
+            // Tier 1 relationships audit (2026-08-16): Unit was previously enforced only by
+            // matching values against Units, with no real database constraint.
+            entity.HasOne<Unit>()
+                .WithMany()
+                .HasForeignKey(e => e.Unit)
+                .HasPrincipalKey(u => u.Code)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

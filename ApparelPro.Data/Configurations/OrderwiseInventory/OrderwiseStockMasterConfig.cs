@@ -1,4 +1,5 @@
 ﻿using ApparelPro.Data.Models.OrderwiseInventory;
+using ApparelPro.Data.Models.References;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -34,6 +35,19 @@ namespace ApparelPro.Data.Configurations.OrderwiseInventory
             entity.Property(e => e.SupplierReturnQuantity).HasColumnType("decimal(12,2)").HasColumnName("SupplierReturnQuantity").IsRequired().HasDefaultValue(0m);
             entity.Property(e => e.DamagedQuantity).HasColumnType("decimal(12,2)").HasColumnName("DamagedQuantity").IsRequired().HasDefaultValue(0m);
             entity.Property(e => e.AdditionalIssuedQuantity).HasColumnType("decimal(12,2)").HasColumnName("AdditionalIssuedQuantity").IsRequired().HasDefaultValue(0m);
+
+            // Tier 1 relationships audit (2026-08-16): these 2 columns were previously enforced
+            // only by matching values, with no real database constraint.
+            entity.HasOne<Currency>()
+                .WithMany()
+                .HasForeignKey(e => e.Currency)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Unit>()
+                .WithMany()
+                .HasForeignKey(e => e.Unit)
+                .HasPrincipalKey(u => u.Code)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

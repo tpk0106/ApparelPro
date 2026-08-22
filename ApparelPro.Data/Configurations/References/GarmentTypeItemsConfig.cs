@@ -23,6 +23,19 @@ namespace ApparelPro.Data.Configurations.References
                   .WithMany()
                   .HasForeignKey(e => e.GarmentTypeId)
                   .OnDelete(DeleteBehavior.Restrict);
+
+            // Tier 1 relationships audit (2026-08-16): these 2 columns were previously enforced
+            // only by matching values, with no real database constraint.
+            entity.HasOne<Stock>()
+                .WithMany()
+                .HasForeignKey(e => e.StockCode)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Unit>()
+                .WithMany()
+                .HasForeignKey(e => e.Unit)
+                .HasPrincipalKey(u => u.Code)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

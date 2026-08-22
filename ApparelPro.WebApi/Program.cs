@@ -76,6 +76,7 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.AddMaps(AppDomain.CurrentDomain.GetAssemblies());
 });
 
+
 // Register your open generic type converter so DI can instantiate it
 //builder.Services.AddTransient(typeof(PaginationResultToPaginationAPITypeConverter<,>));
 

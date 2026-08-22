@@ -33,8 +33,27 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
         public async Task<PurchaseOrderServiceModel> AddPurchaseOrderAsync(CreatePurchaseOrderServiceModel createPOServiceModel)
         {
-            var PODbModel = _mapper.Map<PurchaseOrder>(createPOServiceModel);
-            _apparelProDbContext.PurchaseOrders.Add(PODbModel);
+            // The Order Confirmation screen uses this single endpoint for
+            // both creating a new PO and re-saving edits to an existing one
+            // (it loads the existing row via GET, lets the user edit, then
+            // always submits back here) - a blind Add() threw a primary key
+            // violation the moment someone edited and saved an existing
+            // Buyer/Order. Upsert on the (BuyerCode, Order) key instead.
+            var existing = await _apparelProDbContext.PurchaseOrders
+                .FirstOrDefaultAsync(p => p.BuyerCode == createPOServiceModel.BuyerCode &&
+                                           p.Order == createPOServiceModel.Order);
+
+            PurchaseOrder PODbModel;
+            if (existing == null)
+            {
+                PODbModel = _mapper.Map<PurchaseOrder>(createPOServiceModel);
+                _apparelProDbContext.PurchaseOrders.Add(PODbModel);
+            }
+            else
+            {
+                _mapper.Map(createPOServiceModel, existing);
+                PODbModel = existing;
+            }
 
             await _apparelProDbContext.SaveChangesAsync();
             return _mapper.Map<PurchaseOrderServiceModel>(PODbModel);
@@ -71,7 +90,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                      OrderDate = po.po.OrderDate,
                      Season = po.po.Season,
                      TotalQuantity = po.po.TotalQuantity,
-                     UnitCode = po.po.UnitCode
+                     UnitCode = po.po.UnitCode,
+                     Description = po.po.Description
                  })
             .AsNoTracking();
 
@@ -149,7 +169,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         OrderDate = joinedResult.order.OrderDate,
                         Season = joinedResult.order.Season,
                         TotalQuantity = joinedResult.order.TotalQuantity,
-                        UnitCode = joinedResult.order.UnitCode
+                        UnitCode = joinedResult.order.UnitCode,
+                        Description = joinedResult.order.Description
                     })
                 .AsNoTracking()
                 .FirstOrDefaultAsync();

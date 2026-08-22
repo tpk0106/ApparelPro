@@ -244,6 +244,24 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
         // access('trimprof') gate on top of general Trim Sheet viewing. Per explicit project
         // decision (2026-08-07): Merchandiser Manager, Merchandising Manager, Executive Director.
         private static readonly string[] ColorSizeBreakdownBulkSaveRoles = { "Merchandiser", "Merchandiser Manager", "Order Entry Operator" };
+        // Production Control module: three real roles created by
+        // ApparelProSeedController.LoadData (2026-08-16) - "Production", referenced here
+        // originally, was never an actual AspNetRoles entry (just a config string in
+        // appsettings.json's PolicyManager:Reports:Roles for the older raw-role system),
+        // so it silently granted nobody. View widened to the entry-level operator role
+        // plus Merchandiser/Merchandiser Manager/Administrator, mirroring how
+        // OrderwiseInventoryStandardRoles includes Order Entry Operator for view; manage
+        // restricted to the two manager-level roles plus Merchandiser Manager, excluding
+        // the entry operator, matching the Bank/GarmentType -manage precedent.
+        private static readonly string[] ProductionViewRoles = { "Production Manager", "Production Entry Operator", "Factory Manager", "Merchandiser", "Merchandiser Manager", "Administrator" };
+        private static readonly string[] ProductionManageRoles = { "Production Manager", "Factory Manager", "Merchandiser Manager" };
+
+        // Home dashboard spans Order Management + Orderwise Inventory +
+        // Production Progress, so its role set is the union of the roles
+        // that can already see each of those areas individually - anyone
+        // who could reach at least one of the three tabs through its own
+        // screen can also reach the combined summary.
+        private static readonly string[] DashboardViewRoles = { "Production Manager", "Production Entry Operator", "Factory Manager", "Merchandiser", "Merchandiser Manager", "Inventory", "Order Entry Operator", "Store Manager", "Administrator" };
 
         // ---------------------------------------------------------------------------
         // Default permission catalog - reproduces, section by section, the raw-Roles /
@@ -300,6 +318,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
             new("san", "Store Adjustment Note (SAN)", "Orderwise Inventory", "SANController - class-level [Authorize]", StoreManagementOnlyRoles),
             new("ain", "Additional Issue Note (AIN)", "Orderwise Inventory", "AINController - class-level [Authorize]", OrderwiseInventoryStandardRoles),
             new("stock-movement-report", "Stock Movement Report", "Reports", "StockMovementReportController (ApparelPro.WebApi/Reports/) - class-level [Authorize]. Missed by the Stage 1 audit script (different folder) - still on a raw role string today.", OrderwiseInventoryStandardRoles),
+            new("stock-movement-item-report", "Stock Movement Report (for an Item)", "Reports", "StockMovementItemReportController (ApparelPro.WebApi/Reports/) - class-level [Authorize(Policy = \"stock-movement-item-report\")].", OrderwiseInventoryStandardRoles),
             new("bank-view", "Bank Master - View / Lookup", "Reference Data", "BankController GET endpoints (list, list/{code})", OrderwiseInventoryStandardRoles),
             new("bank-manage", "Bank Master - Add / Update", "Reference Data", "BankController POST/PUT endpoints", MerchandisingOnlyRoles),
             new("basis-view", "Basis Master - View / Lookup", "Reference Data", "BasisController GET endpoints (list, list/{code})", OrderwiseInventoryStandardRoles),
@@ -353,6 +372,96 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
             new("order-item-catalog-view", "Order Items Catalog - View / Lookup", "Reference Data", "OrderItemCatalogController GET endpoints (list, list/{stockCode}/{itemCode}, does-exist) - the od_itm Stock/Item master list", OrderwiseInventoryStandardRoles),
             new("order-item-catalog-manage", "Order Items Catalog - Add / Update / Delete", "Reference Data", "OrderItemCatalogController POST/PUT/DELETE endpoints", MerchandisingOnlyRoles),
             new("security-administration", "Security Administration", "System", "SecurityController.Revoke", AdministratorOnlyRoles),
+
+            // production control (Phase 1 - master data, PR_MENU.PRG > Production Details)
+            new("production-line-view", "Production Line Master - View / Lookup", "Production Control", "ProductionLineController GET endpoints (list, list/{lineCode}) - migrated from OD_LINE1.PRG", ProductionViewRoles),
+            new("production-line-manage", "Production Line Master - Add / Update / Delete", "Production Control", "ProductionLineController POST/PUT/DELETE endpoints", ProductionManageRoles),
+            new("operation-view", "Operation Master - View / Lookup", "Production Control", "OperationController GET endpoints (list, list/{operationCode}) - migrated from PR_MOP11.PRG", ProductionViewRoles),
+            new("operation-manage", "Operation Master - Add / Update / Delete", "Production Control", "OperationController POST/PUT/DELETE endpoints", ProductionManageRoles),
+            new("non-productive-hour-view", "Non-Productive Hour Code - View / Lookup", "Production Control", "NonProductiveHourCodeController GET endpoints (list, list/{code}) - migrated from PR_NPH1.PRG", ProductionViewRoles),
+            new("non-productive-hour-manage", "Non-Productive Hour Code - Add / Update / Delete", "Production Control", "NonProductiveHourCodeController POST/PUT/DELETE endpoints", ProductionManageRoles),
+            new("machine-type-view", "Machine Type Master - View / Lookup", "Production Control", "MachineTypeController GET endpoints (list, list/{code}) - migrated from PR_MMCH1.PRG", ProductionViewRoles),
+            new("machine-type-manage", "Machine Type Master - Add / Update / Delete", "Production Control", "MachineTypeController POST/PUT/DELETE endpoints", ProductionManageRoles),
+            new("garment-component-view", "Garment Component Master - View / Lookup", "Production Control", "GarmentComponentController GET endpoints (list, list/{componentCode}) - migrated from PR_CMP1.PRG", ProductionViewRoles),
+            new("garment-component-manage", "Garment Component Master - Add / Update / Delete", "Production Control", "GarmentComponentController POST/PUT/DELETE endpoints", ProductionManageRoles),
+            new("employee-view", "Employee Master - View / Lookup", "Production Control", "EmployeeController GET endpoints (list, list/{employeeCode}) - minimal stand-in for PAY_EMPL, which legacy Production only ever read from a separate Payroll app folder (..\\wpay\\pay_empl); no Payroll module exists yet so Employee is owned here for now", ProductionViewRoles),
+            new("employee-manage", "Employee Master - Add / Update / Delete", "Production Control", "EmployeeController POST/PUT/DELETE endpoints", ProductionManageRoles),
+
+            // production control (Phase 2 - Style Component/Operation Breakdown, PR_OPD1.PRG / PR_OPD2.PRG)
+            new("style-component-breakdown-view", "Style Component Breakdown - View", "Production Control", "StyleComponentBreakdownController GET by-style endpoint - migrated from PR_OPD1.PRG", ProductionViewRoles),
+            new("style-component-breakdown-manage", "Style Component Breakdown - Bulk Save", "Production Control", "StyleComponentBreakdownController bulk-save endpoint", ProductionManageRoles),
+            new("style-operation-breakdown-view", "Style Operation Breakdown - View", "Production Control", "StyleOperationBreakdownController GET by-style endpoint - migrated from PR_OPD2.PRG", ProductionViewRoles),
+            new("style-operation-breakdown-manage", "Style Operation Breakdown - Seed / Bulk Save", "Production Control", "StyleOperationBreakdownController seed-from-template and bulk-save endpoints (includes the line-balancing recalculation)", ProductionManageRoles),
+            new("component-operation-template-view", "Component/Operation Template - View / Lookup", "Production Control", "ComponentOperationTemplateController GET endpoints (list, by-component) - migrated from PR_MOP21.PRG", ProductionViewRoles),
+            new("component-operation-template-manage", "Component/Operation Template - Add / Update / Delete", "Production Control", "ComponentOperationTemplateController POST/PUT/DELETE endpoints - migrated from PR_MOP22.PRG", ProductionManageRoles),
+
+            // production control (Phase 3 - Production Line Allocation, PR_ESTM1.PRG / PR_ESTL1.PRG)
+            new("holiday-view", "Production Calendar (Holidays) - View / Lookup", "Production Control", "HolidayController GET endpoint - migrated from CALENDER.PRG", ProductionViewRoles),
+            new("holiday-manage", "Production Calendar (Holidays) - Add / Delete", "Production Control", "HolidayController POST/DELETE endpoints", ProductionManageRoles),
+            new("production-line-allocation-view", "Production Line Allocation - View", "Production Control", "ProductionLineAllocationController GET by-shipment endpoint - migrated from PR_ESTM1.PRG", ProductionViewRoles),
+            new("production-line-allocation-manage", "Production Line Allocation - Manual / Automatic Allocate / Delete", "Production Control", "ProductionLineAllocationController manual/automatic/delete endpoints", ProductionManageRoles),
+            new("estimated-production-line-allocation-view", "Est. Production Line Allocation - View", "Production Control", "EstimatedProductionLineAllocationController GET endpoint - migrated from PR_ESTL1.PRG", ProductionViewRoles),
+            new("estimated-production-line-allocation-manage", "Est. Production Line Allocation - Manual / Automatic Allocate / Delete", "Production Control", "EstimatedProductionLineAllocationController manual/automatic/delete endpoints", ProductionManageRoles),
+
+            // production control (Phase 4 - Daily Production Time Ticket, PR_DPTT1.PRG)
+            new("daily-production-time-ticket-view", "Daily Production Time Ticket - View", "Production Control", "DailyProductionTimeTicketController GET endpoint - migrated from PR_DPTT1.PRG", ProductionViewRoles),
+            new("daily-production-time-ticket-manage", "Daily Production Time Ticket - Bulk Save", "Production Control", "DailyProductionTimeTicketController bulk-save endpoint (includes the per-employee efficiency recalculation)", ProductionManageRoles),
+
+            // production control (Phase 5a - Estimated Production Entry, PR_ESTD1.PRG)
+            new("estimated-production-entry-view", "Estimated Production Entry - View", "Production Control", "EstimatedProductionEntryController GET by-line endpoint - migrated from PR_ESTD1.PRG", ProductionViewRoles),
+            new("estimated-production-entry-manage", "Estimated Production Entry - Bulk Save", "Production Control", "EstimatedProductionEntryController bulk-save endpoint", ProductionManageRoles),
+
+            // production control (Phase 5b - Section master, prerequisite for Actual Production Entry / PR_DPRO2.PRG)
+            new("section-view", "Section Master - View / Lookup", "Production Control", "SectionController GET endpoints (list, list/all) - migrated from OD_SECT1.PRG", ProductionViewRoles),
+            new("section-manage", "Section Master - Add / Update / Delete", "Production Control", "SectionController POST/PUT/DELETE endpoints - migrated from OD_SECT2.PRG", ProductionManageRoles),
+
+            // production control (Phase 5c - Actual Production Entry, PR_DPRO2.PRG)
+            new("daily-production-entry-view", "Actual Production Entry - View", "Production Control", "DailyProductionEntryController GET by-date endpoint - migrated from PR_DPRO2.PRG", ProductionViewRoles),
+            new("daily-production-entry-manage", "Actual Production Entry - Bulk Save", "Production Control", "DailyProductionEntryController bulk-save endpoint", ProductionManageRoles),
+
+            // home dashboard (Floor pulse)
+            new("dashboard-view", "Home Dashboard - View", "Dashboard", "DashboardController GET endpoints (current-style, production-progress)", DashboardViewRoles),
+
+            // production reports (Reports -> C. Production Summary (Daily), PR_DPROD.PRG)
+            new("production-summary-daily-report-view", "Production Summary (Daily) Report - View", "Production Control", "ProductionSummaryDailyReportController GET endpoint - migrated from PR_DPROD.PRG", ProductionViewRoles),
+
+            // production reports (Reports -> A. Production Schedule, PR_MSCHD.PRG)
+            new("production-schedule-report-view", "Production Schedule Report - View", "Production Control", "ProductionScheduleReportController GET endpoint - migrated from PR_MSCHD.PRG", ProductionViewRoles),
+
+            // production reports (Reports -> B. Production Summary (Monthly), PR_MPROD.PRG)
+            new("production-summary-monthly-report-view", "Production Summary (Monthly) Report - View", "Production Control", "ProductionSummaryMonthlyReportController GET endpoint - migrated from PR_MPROD.PRG", ProductionViewRoles),
+            new("production-summary-monthly-overview-report-view", "Production Summary (Monthly) Simplified Report - View", "Production Control", "ProductionSummaryMonthlyOverviewReportController GET endpoint - not a legacy screen, simplified companion to PR_MPROD.PRG", ProductionViewRoles),
+
+            // production reports (Reports -> D. Production Summary (Style Wise), PR_MPRO1.PRG)
+            new("production-summary-style-wise-report-view", "Production Summary (Style Wise) Report - View", "Production Control", "ProductionSummaryStyleWiseReportController GET endpoint - migrated from PR_MPRO1.PRG", ProductionViewRoles),
+            new("production-summary-style-wise-detailed-report-view", "Production Summary (Style Wise) Detailed Report - View", "Production Control", "ProductionSummaryStyleWiseDetailedReportController GET endpoint - per-line breakdown companion to PR_MPRO1.PRG", ProductionViewRoles),
+
+            // production reports (Reports -> E. Line Production Summary, PR_LPROD.PRG)
+            new("line-production-summary-report-view", "Line Production Summary Report - View", "Production Control", "LineProductionSummaryReportController GET endpoint - migrated from PR_LPROD.PRG", ProductionViewRoles),
+
+            // production reports (Reports -> F. Operation Breakdown, PR_REP1.PRG)
+            new("operation-breakdown-report-view", "Operation Breakdown Report - View", "Production Control", "OperationBreakdownReportController GET endpoint - migrated from PR_REP1.PRG", ProductionViewRoles),
+
+            // production reports (Reports -> G. Manpower Requirement, PR_REP3.PRG)
+            new("manpower-requirement-report-view", "Manpower Requirement Report - View", "Production Control", "ManpowerRequirementReportController GET endpoint - migrated from PR_REP3.PRG", ProductionViewRoles),
+
+            // production reports (Reports -> H. Employee Efficiency (Daily), PR_EEF1.PRG)
+            new("daily-employee-efficiency-report-view", "Daily Employee Efficiency Report - View", "Production Control", "DailyEmployeeEfficiencyReportController GET endpoint - migrated from PR_EEF1.PRG", ProductionViewRoles),
+
+            // production reports (Reports -> I. Employee Efficiency (Monthly), PR_REP4.PRG)
+            new("monthly-employee-efficiency-report-view", "Monthly Employee Efficiency Report - View", "Production Control", "MonthlyEmployeeEfficiencyReportController GET endpoint - migrated from PR_REP4.PRG", ProductionViewRoles),
+
+            // production reports (Reports -> J. Production Line Efficiency, PR_GRH1.PRG)
+            new("line-efficiency-report-view", "Production Line Efficiency Report - View", "Production Control", "LineEfficiencyReportController GET endpoint - migrated from PR_GRH1.PRG", ProductionViewRoles),
+
+            // production reports (Reports -> K. Estimated Production Schedule, PR_ESTL2.PRG)
+            new("estimated-production-schedule-report-view", "Estimated Production Schedule Report - View", "Production Control", "EstimatedProductionScheduleReportController GET endpoint - migrated from PR_ESTL2.PRG", ProductionViewRoles),
+
+            // production reports (Reports -> L. Production Analysis Summary (for Style), PR_MPRO2.PRG)
+            new("production-analysis-summary-report-view", "Production Analysis Summary Report - View", "Production Control", "ProductionAnalysisSummaryReportController GET endpoint - migrated from PR_MPRO2.PRG", ProductionViewRoles),
+
+            // production control (Production Progress Graph, PR_PROG.PRG)
+            new("production-progress-graph-view", "Production Progress Graph - View", "Production Control", "ProductionProgressGraphController GET endpoint - migrated from PR_PROG.PRG", ProductionViewRoles),
         };
 
         private sealed record PermissionCatalogEntry(string Key, string DisplayName, string Category, string? Description, string[] DefaultRoleNames);

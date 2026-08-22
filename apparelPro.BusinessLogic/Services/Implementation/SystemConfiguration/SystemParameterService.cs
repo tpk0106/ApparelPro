@@ -51,6 +51,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.SystemConfiguration
             return bool.TryParse(value, out var parsed) ? parsed : defaultValue;
         }
 
+        public async Task<decimal> GetDecimalValueAsync(string parameterKey, decimal defaultValue = 0)
+        {
+            var value = await GetValueAsync(parameterKey);
+            if (string.IsNullOrWhiteSpace(value)) return defaultValue;
+            return decimal.TryParse(value, out var parsed) ? parsed : defaultValue;
+        }
+
         public async Task UpdateParameterAsync(string parameterKey, string value)
         {
             var parameter = await _apparelProDbContext.SystemParameters

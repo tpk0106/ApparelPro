@@ -1,4 +1,5 @@
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
+using ApparelPro.Data.Models.References;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -35,6 +36,19 @@ namespace ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption
             entity.Property(e => e.Cost).HasColumnType("decimal(12,4)").HasColumnName("Cost");
             entity.Property(e => e.IsCostPerGarment).HasColumnType("bit").HasColumnName("IsCostPerGarment");
             entity.Property(e => e.IsSemiFinishedGarment).HasColumnType("bit").HasColumnName("IsSemiFinishedGarment");
+
+            // Tier 1 relationships audit (2026-08-16): these 2 columns were previously enforced
+            // only by matching values, with no real database constraint.
+            entity.HasOne<Currency>()
+                .WithMany()
+                .HasForeignKey(e => e.Currency)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Unit>()
+                .WithMany()
+                .HasForeignKey(e => e.Unit)
+                .HasPrincipalKey(u => u.Code)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

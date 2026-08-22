@@ -76,10 +76,13 @@ namespace ApparelPro.WebApi.Controllers
             var inventory = "Inventory";
             var administrator = "Administrator";
             var storeManager = "Store Manager";
-        
+            var productionManager = "Production Manager";
+            var productionEntryOperator = "Production Entry Operator";
+            var factoryManager = "Factory Manager";
+
             // create the default roles (if they don't exist yet)
             if (await _roleManager.FindByNameAsync(merchandiser) == null)
-            {               
+            {
                 await _roleManager.CreateAsync(new IdentityRole(merchandiser));
             }
             if( await _roleManager.FindByNameAsync(orderEntryOperator) == null)
@@ -106,6 +109,28 @@ namespace ApparelPro.WebApi.Controllers
                 // this role plus Administrator rather than the broad Inventory/
                 // Merchandiser/Order Entry Operator access every other note allows.
                 await _roleManager.CreateAsync(new IdentityRole(storeManager));
+            }
+            if (await _roleManager.FindByNameAsync(productionManager) == null)
+            {
+                // Production Control module (RF_MENU.PRG > D / PR_MENU.PRG): floor-level
+                // manager role, granted the *-manage permission keys for the Production
+                // reference masters (Line, Operation, Machine Type, Component, NPH,
+                // Employee) so it can maintain them without needing Merchandiser Manager.
+                await _roleManager.CreateAsync(new IdentityRole(productionManager));
+            }
+            if (await _roleManager.FindByNameAsync(productionEntryOperator) == null)
+            {
+                // Data-entry role for Production Control (Daily Production Time Ticket,
+                // Actual/Estimated Production entry in later phases). View-only on the
+                // reference masters, mirroring how Order Entry Operator can view but not
+                // manage Orderwise Inventory reference data.
+                await _roleManager.CreateAsync(new IdentityRole(productionEntryOperator));
+            }
+            if (await _roleManager.FindByNameAsync(factoryManager) == null)
+            {
+                // Cross-cutting authority above Production Manager - granted the same
+                // *-manage access as Production Manager for now.
+                await _roleManager.CreateAsync(new IdentityRole(factoryManager));
             }
 
             // create a list to track the newly added users

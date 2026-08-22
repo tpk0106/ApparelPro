@@ -6,6 +6,7 @@
         public string Order { get; set; }
         public DateTime OrderDate { get; set; }
         public string GarmentType { get; set; }
+        public string? Description { get; set; }
         public string CountryCode { get; set; }
         public string UnitCode { get; set; }
         public decimal TotalQuantity { get; set; }

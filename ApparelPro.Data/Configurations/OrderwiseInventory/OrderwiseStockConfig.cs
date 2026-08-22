@@ -38,6 +38,13 @@ namespace ApparelPro.Data.Configurations.OrderwiseInventory
             entity.Property(e => e.LastDateIssued).HasColumnName("LastDateIssued").HasColumnType("date");
             entity.Property(e => e.LastDateReceived).HasColumnName("LastDateReceived").HasColumnType("date");
 
+            // Tier 1 relationships audit (2026-08-16): Unit was previously enforced only by
+            // matching values against Units, with no real database constraint.
+            entity.HasOne<Unit>()
+                .WithMany()
+                .HasForeignKey(e => e.Unit)
+                .HasPrincipalKey(u => u.Code)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

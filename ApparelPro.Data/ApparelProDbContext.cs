@@ -5,6 +5,7 @@ using ApparelPro.Data.Configurations.OrderManagement.Shipment;
 using ApparelPro.Data.Configurations.OrderManagement.Stylewise_events;
 using ApparelPro.Data.Configurations.OrderManagement.SubContracting;
 using ApparelPro.Data.Configurations.OrderwiseInventory;
+using ApparelPro.Data.Configurations.Production;
 using ApparelPro.Data.Configurations.References;
 using ApparelPro.Data.Configurations.Registration;
 using ApparelPro.Data.Configurations.SystemConfiguration;
@@ -13,6 +14,7 @@ using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Models.OrderManagement.Shipments;
 using ApparelPro.Data.Models.OrderManagement.SubContracting;
 using ApparelPro.Data.Models.OrderwiseInventory;
+using ApparelPro.Data.Models.Production;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Data.Models.Registration;
 using ApparelPro.Data.Models.SystemConfiguration;
@@ -94,6 +96,25 @@ namespace ApparelPro.Data
         // system configuration
         public virtual DbSet<SystemParameter> SystemParameters { get; set; } = null!;
 
+        // production control
+        public virtual DbSet<ProductionLine> ProductionLines { get; set; } = null!;
+        public virtual DbSet<Operation> Operations { get; set; } = null!;
+        public virtual DbSet<NonProductiveHourCode> NonProductiveHourCodes { get; set; } = null!;
+        public virtual DbSet<MachineType> MachineTypes { get; set; } = null!;
+        public virtual DbSet<GarmentComponent> GarmentComponents { get; set; } = null!;
+        public virtual DbSet<Employee> Employees { get; set; } = null!;
+        public virtual DbSet<StyleComponentBreakdown> StyleComponentBreakdowns { get; set; } = null!;
+        public virtual DbSet<StyleOperationBreakdown> StyleOperationBreakdowns { get; set; } = null!;
+        public virtual DbSet<ComponentOperationTemplate> ComponentOperationTemplates { get; set; } = null!;
+        public virtual DbSet<StyleProductionCapacity> StyleProductionCapacities { get; set; } = null!;
+        public virtual DbSet<Holiday> Holidays { get; set; } = null!;
+        public virtual DbSet<ProductionLineAllocation> ProductionLineAllocations { get; set; } = null!;
+        public virtual DbSet<EstimatedProductionLineAllocation> EstimatedProductionLineAllocations { get; set; } = null!;
+        public virtual DbSet<DailyProductionTimeTicketEntry> DailyProductionTimeTicketEntries { get; set; } = null!;
+        public virtual DbSet<EstimatedProductionEntry> EstimatedProductionEntries { get; set; } = null!;
+        public virtual DbSet<Section> Sections { get; set; } = null!;
+        public virtual DbSet<DailyProductionEntry> DailyProductionEntries { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -152,6 +173,25 @@ namespace ApparelPro.Data
 
             // system configuration
             modelBuilder.ApplyConfiguration(new SystemParameterConfig());
+
+            // production control
+            modelBuilder.ApplyConfiguration(new ProductionLineConfig());
+            modelBuilder.ApplyConfiguration(new OperationConfig());
+            modelBuilder.ApplyConfiguration(new NonProductiveHourCodeConfig());
+            modelBuilder.ApplyConfiguration(new MachineTypeConfig());
+            modelBuilder.ApplyConfiguration(new GarmentComponentConfig());
+            modelBuilder.ApplyConfiguration(new EmployeeConfig());
+            modelBuilder.ApplyConfiguration(new StyleComponentBreakdownConfig());
+            modelBuilder.ApplyConfiguration(new StyleOperationBreakdownConfig());
+            modelBuilder.ApplyConfiguration(new ComponentOperationTemplateConfig());
+            modelBuilder.ApplyConfiguration(new StyleProductionCapacityConfig());
+            modelBuilder.ApplyConfiguration(new HolidayConfig());
+            modelBuilder.ApplyConfiguration(new ProductionLineAllocationConfig());
+            modelBuilder.ApplyConfiguration(new EstimatedProductionLineAllocationConfig());
+            modelBuilder.ApplyConfiguration(new DailyProductionTimeTicketEntryConfig());
+            modelBuilder.ApplyConfiguration(new EstimatedProductionEntryConfig());
+            modelBuilder.ApplyConfiguration(new SectionConfig());
+            modelBuilder.ApplyConfiguration(new DailyProductionEntryConfig());
         }
 
         //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

@@ -11,11 +11,14 @@ namespace ApparelPro.Data.Configurations.References
         public void Configure(EntityTypeBuilder<Currency> currency)
         {
             currency.HasKey(x => x.Code);
+            // Fix (2026-08-16): was nvarchar, which mismatched the varchar(3) type used by
+            // every table that references this column via FK (PurchaseOrderHeaders, etc.) -
+            // see AddTier1ReferenceDataForeignKeys migration for the full narrowing steps.
             currency.Property(x => x.Code)
                 .ValueGeneratedNever()
                 .HasMaxLength(3)
                 .IsRequired()
-                .HasColumnType("nvarchar");
+                .HasColumnType("varchar");
 
             //currency.HasOne<Bank>()
             //.WithOne()
@@ -55,6 +58,15 @@ namespace ApparelPro.Data.Configurations.References
             currency.Property(p => p.Minor)
               .HasMaxLength(3)
               .HasColumnType("nvarchar");
+
+            // Tier 1 relationships audit (2026-08-16): CountryCode was previously enforced only
+            // by matching values against Countries, with no real database constraint (see the
+            // commented-out attempts above - none of them were ever actually wired up).
+            // Country's PK IS its Code column, so no HasPrincipalKey override needed.
+            currency.HasOne<Country>()
+                .WithMany()
+                .HasForeignKey(x => x.CountryCode)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

@@ -52,9 +52,13 @@ namespace ApparelPro.Data.Configurations.OrderManagement
                 .HasColumnType("date")
                 .IsRequired();
 
+            // Fix (2026-08-16): was implicitly nvarchar(3) via convention. Now explicit varchar(3)
+            // since Unit.Code narrowed to varchar(3) - EF's FK-type-inheritance convention was
+            // about to silently flip this anyway; making it explicit avoids relying on that.
             entity.Property(p => p.Unit)
-                .HasMaxLength(3) // Maps automatically to nvarchar(3)
-                .IsRequired(false);                
+                .HasMaxLength(3)
+                .HasColumnType("varchar")
+                .IsRequired(false);
 
             entity.Property(p => p.Quantity)
                 .IsRequired(false)
@@ -103,6 +107,14 @@ namespace ApparelPro.Data.Configurations.OrderManagement
                 .IsRequired(false)
                 .HasDefaultValue(false)
                 .HasColumnType("bit");
+
+            // Tier 1 relationships audit (2026-08-16): Unit was previously enforced only by
+            // matching values against Units, with no real database constraint.
+            entity.HasOne<Unit>()
+                .WithMany()
+                .HasForeignKey(p => p.Unit)
+                .HasPrincipalKey(u => u.Code)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

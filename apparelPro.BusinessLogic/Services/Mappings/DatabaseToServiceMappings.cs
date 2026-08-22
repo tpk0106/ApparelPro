@@ -27,8 +27,25 @@ using apparelPro.BusinessLogic.Services.Models.Reference.IUnitService;
 using apparelPro.BusinessLogic.Services.Models.Registration.IPermissionService;
 using apparelPro.BusinessLogic.Services.Models.Registration.IUserService;
 using apparelPro.BusinessLogic.Services.Models.SystemConfiguration.ISystemParameterService;
+using apparelPro.BusinessLogic.Services.Models.Production.IProductionLineService;
+using apparelPro.BusinessLogic.Services.Models.Production.IOperationService;
+using apparelPro.BusinessLogic.Services.Models.Production.INonProductiveHourCodeService;
+using apparelPro.BusinessLogic.Services.Models.Production.IMachineTypeService;
+using apparelPro.BusinessLogic.Services.Models.Production.IGarmentComponentService;
+using apparelPro.BusinessLogic.Services.Models.Production.IEmployeeService;
+using apparelPro.BusinessLogic.Services.Models.Production.IStyleComponentBreakdownService;
+using apparelPro.BusinessLogic.Services.Models.Production.IStyleOperationBreakdownService;
+using apparelPro.BusinessLogic.Services.Models.Production.IComponentOperationTemplateService;
+using apparelPro.BusinessLogic.Services.Models.Production.IHolidayService;
+using apparelPro.BusinessLogic.Services.Models.Production.IProductionLineAllocationService;
+using apparelPro.BusinessLogic.Services.Models.Production.IEstimatedProductionLineAllocationService;
+using apparelPro.BusinessLogic.Services.Models.Production.IDailyProductionTimeTicketService;
+using apparelPro.BusinessLogic.Services.Models.Production.IEstimatedProductionEntryService;
+using apparelPro.BusinessLogic.Services.Models.Production.ISectionService;
+using apparelPro.BusinessLogic.Services.Models.Production.IDailyProductionEntryService;
 using ApparelPro.Data.Models.OrderManagement;
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
+using ApparelPro.Data.Models.Production;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Data.Models.Registration;
 using ApparelPro.Data.Models.SystemConfiguration;
@@ -184,16 +201,13 @@ namespace apparelPro.BusinessLogic.Services.Mappings
           .ForMember(src => src.TypeName, opt => opt.MapFrom(src => src.TypeName));
 
             CreateMap<GarmentType, GarmentTypeServiceModel>().MaxDepth(2)
-                                .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(src => src.TypeName, opt => opt.MapFrom(src => src.TypeName));
-
-
 
             CreateMap<UpdateGarmentTypeServiceModel, GarmentType>().MaxDepth(2)
                 .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(src => src.TypeName, opt => opt.MapFrom(src => src.TypeName))
-                .ReverseMap()
-                .ReverseMap()
+                .ReverseMap()                
                 .ForAllMembers(opt => opt.Ignore());
 
             // basis
@@ -226,7 +240,6 @@ namespace apparelPro.BusinessLogic.Services.Mappings
             CreateMap<StockItem, OrderItemCatalogServiceModel>().MaxDepth(2);
             CreateMap<CreateOrderItemCatalogServiceModel, StockItem>().MaxDepth(2);
             CreateMap<UpdateOrderItemCatalogServiceModel, StockItem>().MaxDepth(2);
-
 
             // PO
             CreateMap<PurchaseOrder, PurchaseOrderServiceModel>().MaxDepth(2)
@@ -269,8 +282,7 @@ namespace apparelPro.BusinessLogic.Services.Mappings
 
             CreateMap<CreateAddressServiceModel, Address>()
                 .ForMember(dest => dest.AddressId, opt => opt.MapFrom(src => Guid.NewGuid())); // 🚀 Generate new Guid automatically!
-
-            // CreateMap<CreateAddressServiceModel, Address>().MaxDepth(2);
+                        
             CreateMap<UpdateAddressServiceModel, Address>().MaxDepth(2);
 
             // Supplier
@@ -486,6 +498,60 @@ namespace apparelPro.BusinessLogic.Services.Mappings
 
             // system configuration
             CreateMap<SystemParameter, SystemParameterServiceModel>().MaxDepth(2).ReverseMap();
+
+            // production control
+            CreateMap<ProductionLineServiceModel, ProductionLine>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateProductionLineServiceModel, ProductionLine>().MaxDepth(2);
+            CreateMap<UpdateProductionLineServiceModel, ProductionLine>().MaxDepth(2);
+
+            CreateMap<OperationServiceModel, Operation>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateOperationServiceModel, Operation>().MaxDepth(2);
+            CreateMap<UpdateOperationServiceModel, Operation>().MaxDepth(2);
+
+            CreateMap<NonProductiveHourCodeServiceModel, NonProductiveHourCode>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateNonProductiveHourCodeServiceModel, NonProductiveHourCode>().MaxDepth(2);
+            CreateMap<UpdateNonProductiveHourCodeServiceModel, NonProductiveHourCode>().MaxDepth(2);
+
+            CreateMap<MachineTypeServiceModel, MachineType>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateMachineTypeServiceModel, MachineType>().MaxDepth(2);
+            CreateMap<UpdateMachineTypeServiceModel, MachineType>().MaxDepth(2);
+
+            CreateMap<GarmentComponentServiceModel, GarmentComponent>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateGarmentComponentServiceModel, GarmentComponent>().MaxDepth(2);
+            CreateMap<UpdateGarmentComponentServiceModel, GarmentComponent>().MaxDepth(2);
+
+            CreateMap<EmployeeServiceModel, Employee>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateEmployeeServiceModel, Employee>().MaxDepth(2);
+            CreateMap<UpdateEmployeeServiceModel, Employee>().MaxDepth(2);
+
+            CreateMap<StyleComponentBreakdownServiceModel, StyleComponentBreakdown>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateStyleComponentBreakdownServiceModel, StyleComponentBreakdown>().MaxDepth(2);
+
+            CreateMap<StyleOperationBreakdownServiceModel, StyleOperationBreakdown>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateStyleOperationBreakdownServiceModel, StyleOperationBreakdown>().MaxDepth(2);
+
+            CreateMap<ComponentOperationTemplateServiceModel, ComponentOperationTemplate>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateComponentOperationTemplateServiceModel, ComponentOperationTemplate>().MaxDepth(2);
+            CreateMap<UpdateComponentOperationTemplateServiceModel, ComponentOperationTemplate>().MaxDepth(2);
+
+            CreateMap<HolidayServiceModel, Holiday>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateHolidayServiceModel, Holiday>().MaxDepth(2);
+
+            CreateMap<ProductionLineAllocationServiceModel, ProductionLineAllocation>().MaxDepth(2).ReverseMap();
+
+            CreateMap<EstimatedProductionLineAllocationServiceModel, EstimatedProductionLineAllocation>().MaxDepth(2).ReverseMap();
+
+            CreateMap<DailyProductionTimeTicketEntryServiceModel, DailyProductionTimeTicketEntry>().MaxDepth(2).ReverseMap();
+
+            CreateMap<EstimatedProductionEntryServiceModel, EstimatedProductionEntry>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateEstimatedProductionEntryServiceModel, EstimatedProductionEntry>().MaxDepth(2);
+
+            CreateMap<SectionServiceModel, Section>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateSectionServiceModel, Section>().MaxDepth(2);
+            CreateMap<UpdateSectionServiceModel, Section>().MaxDepth(2);
+
+            CreateMap<DailyProductionEntryServiceModel, DailyProductionEntry>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateDailyProductionEntryServiceModel, DailyProductionEntry>().MaxDepth(2);
         }
     }
 }

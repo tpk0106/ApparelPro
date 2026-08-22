@@ -85,6 +85,15 @@ namespace ApparelPro.Data.Configurations.References
                 .HasColumnType("nvarchar");
 
             entity.HasIndex(p => p.AddressId);
+
+            // Tier 1 relationships audit (2026-08-16): CountryCode was previously enforced only
+            // by matching values against Countries, with no real database constraint. Country's
+            // PK is a surrogate Id, so it isn't referenced here - Countries.Code is what other
+            // tables actually use, and it's already unique (it's Country's real HasKey column).
+            entity.HasOne<Country>()
+                .WithMany()
+                .HasForeignKey(p => p.CountryCode)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
