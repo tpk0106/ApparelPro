@@ -1,6 +1,7 @@
 ﻿using apparelPro.BusinessLogic.Services.Implementation.Shared;
 
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IColorSizeDetailsService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IColorQuantityRatioService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialConsumptionService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPurchaseOrderService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsService;
@@ -136,7 +137,7 @@ namespace apparelPro.BusinessLogic.Services.Mappings
             CreateMap<PortDestinationServiceModel, Destination>().MaxDepth(2)
                 .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode))
                 .ForMember(src => src.DestinationName, opt => opt.MapFrom(src => src.DestinationName))
-                .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
                 .ReverseMap();
 
             // buyer
@@ -468,6 +469,11 @@ namespace apparelPro.BusinessLogic.Services.Mappings
                 .ForMember(src => src.Ratio, opt => opt.MapFrom(src => src.Ratio))
                 .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description))
                 .MaxDepth(2);
+
+            // color quantity ratio (od_clqr equivalent)
+
+            CreateMap<ColorQuantityRatio, ColorQuantityRatioServiceModel>().ReverseMap().MaxDepth(2);
+            CreateMap<CreateColorQuantityRatioServiceModel, ColorQuantityRatio>().MaxDepth(2);
 
             // material consumptions.
 

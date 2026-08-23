@@ -77,9 +77,7 @@ namespace ApparelPro.Data.Configurations.OrderManagement
               .IsRequired(false);
 
             // Tier 1 relationships audit (2026-08-16): these 4 columns were previously enforced
-            // only by matching values, with no real database constraint. BasisCode -> Basis.Code
-            // is deliberately EXCLUDED here - 3 existing rows have a BasisCode with no matching
-            // Basis row, so that one needs a data-cleanup decision before it can be added.
+            // only by matching values, with no real database constraint.
             entity.HasOne<Country>()
                 .WithMany()
                 .HasForeignKey(p => p.CountryCode)
@@ -99,6 +97,24 @@ namespace ApparelPro.Data.Configurations.OrderManagement
             entity.HasOne<GarmentType>()
                 .WithMany()
                 .HasForeignKey(p => p.GarmentType)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Tier 2 relationships audit: BuyerCode was previously enforced only by matching
+            // values against Buyers, with no real database constraint.
+            entity.HasOne<Buyer>()
+                .WithMany()
+                .HasForeignKey(p => p.BuyerCode)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // BasisCode -> Basis.Code: previously excluded because 3 existing rows referenced
+            // BasisCode "CMP" with no matching Basis row. Resolved by seeding that missing
+            // Basis row (see SystemParameterConfig-style seed data / migration) rather than
+            // altering the PurchaseOrder rows, since "CMP" (Cut-Make-Pack) is a legitimate,
+            // real pricing basis that was simply never added to the reference table.
+            entity.HasOne<Basis>()
+                .WithMany()
+                .HasForeignKey(p => p.BasisCode)
+                .HasPrincipalKey(b => b.Code)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

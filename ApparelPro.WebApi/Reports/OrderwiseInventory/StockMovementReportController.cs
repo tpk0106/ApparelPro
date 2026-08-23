@@ -6,7 +6,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ApparelPro.WebApi.Reports
+namespace ApparelPro.WebApi.Reports.OrderwiseInventory
 {
     [Route("api/stock-movement-reports")]
     [ApiController]

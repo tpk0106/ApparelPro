@@ -19,7 +19,7 @@ namespace apparelPro.BusinessLogic.Services
         Task<bool> SaveSupplierPurchaseOrderAsync(
             string purchaseNumber, string supplierCode, string storeCode,
             string proformaNo, DateOnly? proformaDate, string currencyCode,
-            List<PODetails> lineItems);
+            List<SupplierPurchaseOrderDetails> lineItems);
         Task DeletePurchaseOrderAsync(string code);
         //Task SaveSupplierPurchaseOrderAsync(SaveSupplierPORequestServiceModel request);
         //// 1. Fetches style-scoped planned budget profiles where BalanceQuantity > 0

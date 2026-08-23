@@ -290,7 +290,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         string oldCompositeItemCode = ComposeCostProfileItemCode(
                             request.StockCode, request.ItemCode, request.Feature1, request.Feature2, request.Feature3, request.Feature4);
 
-                        var isPoRaisedOnOld = await _apparelProDbContext.PODetails
+                        var isPoRaisedOnOld = await _apparelProDbContext.SupplierPurchaseOrderDetails
                             .AnyAsync(d => d.Buyer == request.BuyerCode &&
                                            d.Order == request.Order.Trim() &&
                                            d.Type == request.TypeCode &&
@@ -373,7 +373,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
                 // StyleMaterialCostProfiles now keys on a single 22-char composite ItemCode
                 // (StockCode + ItemCode + Feature1-4), matching OrderwiseStockMaster/
-                // OrderwiseStockTransaction/PODetails. StyleMaterialConsumptionLedger keeps its
+                // OrderwiseStockTransaction/SupplierPurchaseOrderDetails. StyleMaterialConsumptionLedger keeps its
                 // separate segments (od_sacc3 legacy shape), so we compose the composite here
                 // from the request's own separate fields before touching the cost profile.
                 string compositeItemCode = ComposeCostProfileItemCode(
@@ -795,13 +795,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     stockCode, itemCode, ledgerItem.Feature1, ledgerItem.Feature2, ledgerItem.Feature3, ledgerItem.Feature4);
 
                 // 2b. SUPPLIER PO LOCK GUARD: block the delete only if a supplier Purchase Order
-                // has actually been raised against THIS specific material line (PODetails) —
+                // has actually been raised against THIS specific material line (SupplierPurchaseOrderDetails) —
                 // NOT just because the buyer/order combination exists in PurchaseOrders (od_po),
                 // which is the garment Order Confirmation record and always exists by the time
                 // you're editing Material Consumption for it. The old check queried PurchaseOrders
                 // for BuyerCode+Order only, which is true for every style in every order, so it
                 // blocked every delete unconditionally regardless of whether a supplier PO existed.
-                var isPoRaised = await _apparelProDbContext.PODetails
+                var isPoRaised = await _apparelProDbContext.SupplierPurchaseOrderDetails
                     .AnyAsync(d => d.Buyer == buyerCode &&
                                    d.Order == order.Trim() &&
                                    d.Type == typeCode &&

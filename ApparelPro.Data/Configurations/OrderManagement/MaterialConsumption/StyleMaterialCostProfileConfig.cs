@@ -28,7 +28,7 @@ namespace ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption
 
             // Collapsed 2026-07-22 from separate StockCode(2)/ItemCode(4)/Feature1-4(4 each)
             // columns into the single 22-char composite already used by OrderwiseStockMaster,
-            // OrderwiseStockTransaction and PODetails.ItemCode.
+            // OrderwiseStockTransaction and SupplierPurchaseOrderDetails.ItemCode.
             entity.Property(e => e.ItemCode).HasColumnType("varchar(22)").HasColumnName("ItemCode");
 
             entity.Property(e => e.Description).HasColumnType("varchar(100)").HasColumnName("Description");
@@ -39,7 +39,7 @@ namespace ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption
 
             // Legacy od_sacc2 fields (SUPP_CD / TOT_CON) added alongside the
             // entity properties. varchar(6) matches the same SupplierCode
-            // convention used on PurchaseOrderHeaderConfig / StyleMaterialConsumptionLedgerConfig;
+            // convention used on SupplierPurchaseOrderConfig / StyleMaterialConsumptionLedgerConfig;
             // decimal(12,2) matches BalanceQuantity, since TotalConsumption tracks the
             // same kind of rolling planned-quantity figure.
             entity.Property(e => e.SupplierCode).HasColumnType("varchar(6)").HasColumnName("SupplierCode");

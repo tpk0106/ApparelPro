@@ -87,7 +87,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
         /// legacy OD_STY1.PRG's chk_unit()/convert() pair (od_conv, keyed f_unit+t_unit).
         ///
         /// Before any of that: if a Supplier Purchase Order has already been raised against this
-        /// Buyer+Order (a PODetails row exists), style quantities are frozen entirely - this lock
+        /// Buyer+Order (a SupplierPurchaseOrderDetails row exists), style quantities are frozen entirely - this lock
         /// is absolute and is checked regardless of the AllowOrderQuantityOverride setting.
         ///
         /// When an override is allowed and actually used to let a save through, the current
@@ -99,7 +99,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
             int buyerCode, string order, string unit, decimal quantity, string? currentUserEmail,
             int? excludeTypeCode = null, string? excludeStyleCode = null)
         {
-            var hasSupplierPurchaseOrder = await _apparelProDbContext.PODetails
+            var hasSupplierPurchaseOrder = await _apparelProDbContext.SupplierPurchaseOrderDetails
                 .AsNoTracking()
                 .AnyAsync(poDetail => poDetail.Buyer == buyerCode && poDetail.Order == order);
 

@@ -5,7 +5,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ApparelPro.WebApi.Reports
+namespace ApparelPro.WebApi.Reports.OrderManagement
 {
     // Replicates OD_CLSZ3.PRG's "COLOUR / SIZE DETAILS" report - Reports -> Order
     // Management -> Colour/Size in this app's nav. See ColorSizeReportServiceModel's

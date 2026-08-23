@@ -297,7 +297,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
         // [Authorize] attribute at all and were reachable by any authenticated user:
         // CountryController (POST/PUT/PATCH/DELETE + 2 of its 5 GETs - the worst gap
         // found), PortDestinationController.AddPortDestinationAsync +
-        // GetPortDestinationByIdAndCountryCodeAsync, ItemFeatureController
+        // GetPortDestinationByCodeAndCountryCodeAsync, ItemFeatureController
         // .GetItemFeatureByFeatureCodeAsync + AddFeatureAsync,
         // DepartmentController.GetDepartmentsLookup, and
         // UnitConversionController's single GET endpoint. It also removed the buggy
@@ -354,7 +354,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
             new("color-size-report", "Colour/Size Report", "Reports", "ColorSizeReportController - both endpoints ([HttpGet(\"details\")], [HttpGet(\"pdf\")]) carry this policy. Same viewing audience as Trim Sheet Report / Order Detail Report.", TrimSheetReportRoles),
             new("purchase-order-list-report", "List of P/O's Report", "Reports", "PurchaseOrderListReportController - all three endpoints ([HttpGet(\"po-numbers\")], [HttpGet(\"details\")], [HttpGet(\"pdf\")]) carry this policy. Same viewing audience as the other Order Management reports.", TrimSheetReportRoles),
             new("outstanding-purchase-order-list-report", "List of Outstanding P/O's Report", "Reports", "OutstandingPurchaseOrderListReportController - both endpoints ([HttpGet(\"details\")], [HttpGet(\"pdf\")]) carry this policy. Same viewing audience as the other Order Management reports.", TrimSheetReportRoles),
-            new("port-destination-view", "Port / Destination Master - View / Lookup", "Reference Data", "PortDestinationController GET endpoints (list, list/{id}/{countryCode})", OrderwiseInventoryStandardRoles),
+            new("scheduled-shipments-report", "Scheduled Shipments Report", "Reports", "ScheduledShipmentsReportController - both endpoints ([HttpGet(\"details\")], [HttpGet(\"pdf\")]) carry this policy - migrated from OD_RSHP1.PRG. Same viewing audience as the other Order Management reports.", TrimSheetReportRoles),
+            new("port-destination-view", "Port / Destination Master - View / Lookup", "Reference Data", "PortDestinationController GET endpoints (list, list/{code}/{countryCode})", OrderwiseInventoryStandardRoles),
             new("port-destination-manage", "Port / Destination Master - Add / Update / Delete", "Reference Data", "PortDestinationController POST/PUT/DELETE endpoints", MerchandisingOnlyRoles),
             new("style-details", "Style Details", "Order Management", "StyleDetailsController.GetStyleDetailsAsync ('list')", OrderwiseInventoryStandardRoles),
             new("style-approval", "Style Event Approval", "Order Management", "StyleApprovalController.ApproveEvents", StyleApprovalOnlyRoles),
@@ -462,6 +463,10 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
 
             // production control (Production Progress Graph, PR_PROG.PRG)
             new("production-progress-graph-view", "Production Progress Graph - View", "Production Control", "ProductionProgressGraphController GET endpoint - migrated from PR_PROG.PRG", ProductionViewRoles),
+
+            // production control (End of Production Confirmation, PR_ENDPR.PRG)
+            new("end-of-production-confirmation-view", "End of Production Confirmation - View", "Production Control", "EndOfProductionConfirmationController GET endpoint - migrated from PR_ENDPR.PRG", ProductionViewRoles),
+            new("end-of-production-confirmation-manage", "End of Production Confirmation - Confirm", "Production Control", "EndOfProductionConfirmationController confirm endpoint - sets Style.ProductionEndDate", ProductionManageRoles),
         };
 
         private sealed record PermissionCatalogEntry(string Key, string DisplayName, string Category, string? Description, string[] DefaultRoleNames);

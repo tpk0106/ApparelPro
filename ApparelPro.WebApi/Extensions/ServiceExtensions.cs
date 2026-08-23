@@ -124,6 +124,7 @@ namespace ApparelPro.WebApi.Extensions
         {
             // order management srevices
             services.AddTransient(typeof(IColorSizeBreakdownDetailsService), typeof(ColorSizeBreakdownDetailsService));
+            services.AddTransient(typeof(IColorQuantityRatioService), typeof(ColorQuantityRatioService));
             services.AddTransient<IPurchaseOrderService, PurchaseOrderService>();
             services.AddTransient(typeof(IStyleDetailsService),typeof(StyleDetailsService));
 
@@ -152,6 +153,7 @@ namespace ApparelPro.WebApi.Extensions
 
             // Colour/Size Report (Reports -> Order Management -> Colour/Size)
             services.AddScoped<IColorSizeReportService, ColorSizeReportService>();
+            services.AddScoped<IScheduledShipmentsReportService, ScheduledShipmentsReportService>();
 
             // Purchase Order List Report (Reports -> Order Management -> List of P/O's)
             services.AddScoped<IPurchaseOrderListReportService, PurchaseOrderListReportService>();
@@ -187,6 +189,7 @@ namespace ApparelPro.WebApi.Extensions
             services.AddScoped<IEstimatedProductionLineAllocationService, EstimatedProductionLineAllocationService>();
             services.AddScoped<IDailyProductionTimeTicketService, DailyProductionTimeTicketService>();
             services.AddScoped<IProductionProgressGraphService, ProductionProgressGraphService>();
+            services.AddScoped<IEndOfProductionConfirmationService, EndOfProductionConfirmationService>();
             services.AddScoped<IEstimatedProductionEntryService, EstimatedProductionEntryService>();
             services.AddScoped<IDailyProductionEntryService, DailyProductionEntryService>();
             services.AddScoped<ISectionService, SectionService>();

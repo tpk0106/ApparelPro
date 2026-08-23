@@ -10,7 +10,7 @@ namespace ApparelPro.Data.Models.OrderManagement.MaterialConsumption
         public string AdditionalCostCode { get; set; } = null!; // add_cost - FK to AdditionalCost.Code
 
         // 22-char composite: StockCode(2) + ItemCode(4) + Feature1-4(4 each) - same convention
-        // as StyleMaterialCostProfile.ItemCode / OrderwiseStockMaster / PODetails, not the split
+        // as StyleMaterialCostProfile.ItemCode / OrderwiseStockMaster / SupplierPurchaseOrderDetails, not the split
         // columns StyleMaterialConsumptionLedger uses (od_aitm's own legacy index treats item_cd
         // as one opaque segment, matching the majority convention).
         public string ItemCode { get; set; } = null!;

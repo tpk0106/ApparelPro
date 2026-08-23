@@ -8,7 +8,7 @@ namespace apparelPro.BusinessLogic.Services.Models.Reference.IPortDestinationSer
 {
     public class UpdatePortDestinationServiceModel
     {
-        public int Id { get; set; }
+        public string Code { get; set; }
         public string CountryCode { get; set; }
         public string DestinationName { get; set; }
     }

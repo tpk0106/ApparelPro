@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace ApparelPro.Data.Models.OrderManagement
 {
-    public class PurchaseOrderHeader
+    public class SupplierPurchaseOrder
     {
         public int Id { get; set; }
 

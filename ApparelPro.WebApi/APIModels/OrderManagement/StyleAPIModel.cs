@@ -13,6 +13,8 @@
         public string? Unit { get; set; }
         public decimal? Quantity { get; set; }
         public decimal? UnitPrice { get; set; }
+        public string? ColorRatio { get; set; }
+        public string? SizeRatio { get; set; }
         public decimal? ExportBalance { get; set; }
         public bool? SupplierReturn { get; set; }
         public bool? CustomerReturn { get; set; }

@@ -170,7 +170,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     if (string.IsNullOrEmpty(poNoSanitized))
                         throw new InvalidOperationException("P/O Number is required when editing an existing P/O.");
 
-                    var existingHeaderCheck = await _apparelProDbContext.PurchaseOrderHeaders
+                    var existingHeaderCheck = await _apparelProDbContext.SupplierPurchaseOrders
                         .AsNoTracking()
                         .FirstOrDefaultAsync(h => h.PurchaseOrderNumber == poNoSanitized);
                     if (existingHeaderCheck == null)
@@ -187,7 +187,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     decimal historicalQuantity = 0;
                     string historicalUnit = "";
 
-                    var existingDetail = await _apparelProDbContext.PODetails
+                    var existingDetail = await _apparelProDbContext.SupplierPurchaseOrderDetails
                         .FirstOrDefaultAsync(d => d.PONumber == poNoSanitized &&
                                                   d.Buyer == header.BuyerCode &&
                                                   d.Order == header.OrderNumber.Trim() &&
@@ -206,11 +206,11 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         existingDetail.LCNo = line.LcNo?.Trim();
                         existingDetail.Balance = line.OrderQuantity;
 
-                        _apparelProDbContext.PODetails.Update(existingDetail);
+                        _apparelProDbContext.SupplierPurchaseOrderDetails.Update(existingDetail);
                     }
                     else
                     {
-                        var newDetail = new PODetails
+                        var newDetail = new SupplierPurchaseOrderDetails
                         {
                             PONumber = poNoSanitized,
                             Buyer = header.BuyerCode,
@@ -228,7 +228,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         };
 
                         // FIXED: Explicit entry tracking configuration state enforcement
-                        var detailEntry = await _apparelProDbContext.PODetails.AddAsync(newDetail);
+                        var detailEntry = await _apparelProDbContext.SupplierPurchaseOrderDetails.AddAsync(newDetail);
                         detailEntry.State = EntityState.Added;
                     }
 
@@ -380,12 +380,12 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 // ---------------------------------------------------------------------
                 // TRANSACTION PHASE 4: Update the Master PO Header File (od_pohed) (FIXED)
                 // ---------------------------------------------------------------------
-                var poHeaderRow = await _apparelProDbContext.PurchaseOrderHeaders
+                var poHeaderRow = await _apparelProDbContext.SupplierPurchaseOrders
                     .FirstOrDefaultAsync(h => h.PurchaseOrderNumber == poNoSanitized);
 
                 if (poHeaderRow == null)
                 {
-                    var newHeader = new PurchaseOrderHeader
+                    var newHeader = new SupplierPurchaseOrder
                     {
                         PurchaseOrderNumber = poNoSanitized,
                         CreatedDate = DateOnly.FromDateTime(DateTime.Now),
@@ -399,7 +399,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     };
 
                     // FIXED: Force EF Core to run an SQL INSERT instead of an UPDATE
-                    var headerEntry = await _apparelProDbContext.PurchaseOrderHeaders.AddAsync(newHeader);
+                    var headerEntry = await _apparelProDbContext.SupplierPurchaseOrders.AddAsync(newHeader);
                     headerEntry.State = EntityState.Added;
                 }
                 else
@@ -411,7 +411,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     poHeaderRow.CurrencyCode = currencyCode;
                     poHeaderRow.IsPoUsed = false;
 
-                    _apparelProDbContext.PurchaseOrderHeaders.Update(poHeaderRow);
+                    _apparelProDbContext.SupplierPurchaseOrders.Update(poHeaderRow);
                 }
 
                 // 3. ATOMIC ENFORCEMENT: A single SaveChangesAsync call processes all track adjustments cleanly

@@ -11,7 +11,7 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.IOutstandingP
     // silently missed. This service checks EVERY detail group on the P/O, and lists
     // every outstanding group found (not just a single representative one).
     //
-    // SCOPE NOTE: relies on PurchaseOrderHeader.CreatedDate (added 2026-08-08). P/O
+    // SCOPE NOTE: relies on SupplierPurchaseOrder.CreatedDate (added 2026-08-08). P/O
     // headers created before that column existed have CreatedDate = null and are
     // correctly excluded from any date-range query, since there's no way to know when
     // they were actually created.

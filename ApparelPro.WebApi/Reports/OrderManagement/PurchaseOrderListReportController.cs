@@ -5,7 +5,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ApparelPro.WebApi.Reports
+namespace ApparelPro.WebApi.Reports.OrderManagement
 {
     // Replicates OD_POLST.PRG's "PURCHASE ORDER LIST" report - Reports -> Order
     // Management -> List of P/O's in this app's nav. See

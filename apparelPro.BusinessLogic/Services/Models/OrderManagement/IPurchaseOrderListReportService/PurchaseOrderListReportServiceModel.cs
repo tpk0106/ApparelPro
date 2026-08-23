@@ -9,7 +9,7 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.IPurchaseOrde
     // raised against.
     //
     // SCOPE NOTE (2026-08-08): legacy prints the P/O's creation Date and Time
-    // (od_pohed->date, od_pohed->time) in its header. PurchaseOrderHeader (the modern
+    // (od_pohed->date, od_pohed->time) in its header. SupplierPurchaseOrder (the modern
     // equivalent of od_pohed) has no column for either - confirmed by tracing every
     // place SupplierPurchaseOrderService.cs writes a header, which sets only
     // SupplierCode/StoreCode/ProformaInvoiceNo/ProformaInvoiceDate/CurrencyCode, never

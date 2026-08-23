@@ -55,7 +55,7 @@ namespace ApparelPro.Data
         public virtual DbSet<UnitConversion> UnitConversion { get; set; }
         public virtual DbSet<Stock> Stocks { get; set; }
         public virtual DbSet<StockItem> StockItems { get; set; }
-        public virtual DbSet<PODetails>  PODetails { get; set; }
+        public virtual DbSet<SupplierPurchaseOrderDetails>  SupplierPurchaseOrderDetails { get; set; }
         public virtual DbSet<CurrencyExchange> CurrencyExchanges { get; set; }
         public virtual DbSet<User> Users { get; set; }
 
@@ -75,8 +75,9 @@ namespace ApparelPro.Data
         public virtual DbSet<GarmentAdditionalCost> GarmentAdditionalCosts { get; set; }
         public virtual DbSet<SubContract> SubContracts { get; set; }
         public virtual DbSet<ColorSizeDetails> ColorSizeDetails { get; set; }
+        public virtual DbSet<ColorQuantityRatio> ColorQuantityRatios { get; set; }
 
-        public virtual DbSet<PurchaseOrderHeader>  PurchaseOrderHeaders { get; set; }
+        public virtual DbSet<SupplierPurchaseOrder>  SupplierPurchaseOrders { get; set; }
         public virtual DbSet<EventMaster> EventMasters { get; set; } = null;
         public virtual DbSet<StylewiseEvent> StylewiseEvents { get; set; } = null;
 
@@ -133,7 +134,7 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new UnitConversionConfig());
             modelBuilder.ApplyConfiguration(new StockConfig());
             modelBuilder.ApplyConfiguration(new StockItemConfig());
-            modelBuilder.ApplyConfiguration(new PODetailsConfig());
+            modelBuilder.ApplyConfiguration(new SupplierPurchaseOrderDetailsConfig());
             modelBuilder.ApplyConfiguration(new CurrencyExchangeConfig());
             modelBuilder.ApplyConfiguration(new UserConfig());
             modelBuilder.ApplyConfiguration(new SupplierConfig());
@@ -143,6 +144,7 @@ namespace ApparelPro.Data
             // order management
             modelBuilder.ApplyConfiguration(new PurchaseOrderConfig());
             modelBuilder.ApplyConfiguration(new ColorSizeDetailsConfig());
+            modelBuilder.ApplyConfiguration(new ColorQuantityRatioConfig());
 
             modelBuilder.ApplyConfiguration(new ItemFeatureConfig());
             modelBuilder.ApplyConfiguration(new OrderItemConfig());
@@ -153,7 +155,7 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new StyleMaterialConsumptionLedgerConfig());
             modelBuilder.ApplyConfiguration(new GarmentAdditionalCostConfig());
             modelBuilder.ApplyConfiguration(new SubContractConfig());
-            modelBuilder.ApplyConfiguration(new PurchaseOrderHeaderConfig());
+            modelBuilder.ApplyConfiguration(new SupplierPurchaseOrderConfig());
 
             // styelwise events
             modelBuilder.ApplyConfiguration(new StylewiseEventConfig());

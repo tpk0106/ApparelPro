@@ -439,7 +439,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
                 // SUPPLIER PO LOCK GUARD - same check DeleteConsumptionEntryAsync uses: block only if
                 // a supplier PO has actually been raised against this specific composite ItemCode.
-                var isPoRaised = await _apparelProDbContext.PODetails
+                var isPoRaised = await _apparelProDbContext.SupplierPurchaseOrderDetails
                     .AnyAsync(d => d.Buyer == buyerCode && d.Order == orderClean && d.Type == typeCode && d.Style == styleClean && d.ItemCode == itemCodeClean);
                 if (isPoRaised)
                 {

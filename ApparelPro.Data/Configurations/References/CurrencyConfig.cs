@@ -12,7 +12,7 @@ namespace ApparelPro.Data.Configurations.References
         {
             currency.HasKey(x => x.Code);
             // Fix (2026-08-16): was nvarchar, which mismatched the varchar(3) type used by
-            // every table that references this column via FK (PurchaseOrderHeaders, etc.) -
+            // every table that references this column via FK (SupplierPurchaseOrders, etc.) -
             // see AddTier1ReferenceDataForeignKeys migration for the full narrowing steps.
             currency.Property(x => x.Code)
                 .ValueGeneratedNever()

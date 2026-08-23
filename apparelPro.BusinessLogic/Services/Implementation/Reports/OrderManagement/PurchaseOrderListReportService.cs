@@ -18,7 +18,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reports.OrderManageme
 
         public async Task<List<string>> GetPurchaseOrderNumbersAsync()
         {
-            return await _apparelProDbContext.PurchaseOrderHeaders
+            return await _apparelProDbContext.SupplierPurchaseOrders
                 .AsNoTracking()
                 .OrderBy(h => h.PurchaseOrderNumber)
                 .Select(h => h.PurchaseOrderNumber)
@@ -29,7 +29,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reports.OrderManageme
         {
             purchaseOrderNumber = purchaseOrderNumber.Trim();
 
-            var header = await _apparelProDbContext.PurchaseOrderHeaders
+            var header = await _apparelProDbContext.SupplierPurchaseOrders
                 .AsNoTracking()
                 .FirstOrDefaultAsync(h => h.PurchaseOrderNumber == purchaseOrderNumber);
 
@@ -37,7 +37,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reports.OrderManageme
                 // Same wording as legacy's own error box for this exact condition.
                 throw new InvalidOperationException("Purchase Order No. not found.");
 
-            var detailRows = await _apparelProDbContext.PODetails
+            var detailRows = await _apparelProDbContext.SupplierPurchaseOrderDetails
                 .AsNoTracking()
                 .Where(d => d.PONumber == purchaseOrderNumber)
                 .ToListAsync();

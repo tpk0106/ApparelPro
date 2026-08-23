@@ -17,7 +17,7 @@ namespace ApparelPro.Data.Models.OrderManagement.MaterialConsumption
         // (its ITEM_CD field is a single 22-char blob, confirmed by reading the DBF header
         // directly: no StockCode/Feature columns exist there at all). Every other table that
         // shares this same 22-char convention (OrderwiseStockMaster, OrderwiseStockTransaction,
-        // PODetails) already stores it as one field, so this entity now matches them — no more
+        // SupplierPurchaseOrderDetails) already stores it as one field, so this entity now matches them — no more
         // packing/unpacking seam at the PO budget lookup or STRN/Stock Movement report joins.
         // ItemCode is the full 22-char composite: StockCode(2) + ItemCode(4) + Feature1-4(4 each).
         public string ItemCode { get; set; } = null!;

@@ -39,8 +39,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
                 country => country.Code, 
                 (destination, country) => new { destination, country })
                 .AsNoTracking().Select(a => new Destination {
-                    Id = a.destination.Id,
-                    CountryCode = a.destination.CountryCode, 
+                    Code = a.destination.Code,
+                    CountryCode = a.destination.CountryCode,
                     CountryName = a.country.Name, 
                     DestinationName = a.destination.DestinationName
                 })
@@ -77,10 +77,10 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
                 sortColumn, sortOrder, filterColumn, filterQuery);
         }
 
-        public async Task<PortDestinationServiceModel> GetPortDestinationByIdAndCountryCodeAsync(int id, string countryCode)
+        public async Task<PortDestinationServiceModel> GetPortDestinationByCodeAndCountryCodeAsync(string code, string countryCode)
         {
             var portDestinationDbModel = await _apparelProDbContext.Destinations
-               .Where(portDestination => portDestination.Id == id && portDestination.CountryCode == countryCode)
+               .Where(portDestination => portDestination.Code == code && portDestination.CountryCode == countryCode)
                .FirstOrDefaultAsync();
             var portDestinationServiceModel = _mapper.Map<PortDestinationServiceModel>(portDestinationDbModel);
             return portDestinationServiceModel;
@@ -97,7 +97,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
         public async Task UpdatePortDestinationAsync(UpdatePortDestinationServiceModel updatePortDestinationServiceModel)
         {
             var portDestinatonDbModel = await _apparelProDbContext.Destinations
-             .Where(portDestination => portDestination.Id == updatePortDestinationServiceModel.Id && 
+             .Where(portDestination => portDestination.Code == updatePortDestinationServiceModel.Code &&
                 portDestination.CountryCode == updatePortDestinationServiceModel.CountryCode)
              .FirstOrDefaultAsync();
 
@@ -107,10 +107,10 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reference
             await _apparelProDbContext.SaveChangesAsync();
         }
 
-        public async Task DeletePortDestinationAsync(int id, string countryCode)
+        public async Task DeletePortDestinationAsync(string code, string countryCode)
         {
             var portDestinatonDbModel = await _apparelProDbContext.Destinations
-              .Where(portDestination => portDestination.CountryCode == countryCode && portDestination.Id == id)
+              .Where(portDestination => portDestination.CountryCode == countryCode && portDestination.Code == code)
               .FirstOrDefaultAsync();
             _apparelProDbContext.Destinations.Remove(portDestinatonDbModel!);
             await _apparelProDbContext.SaveChangesAsync();

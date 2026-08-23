@@ -278,7 +278,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 return new StrnPrintLineServiceModel
                 {
                     // Full 22-char composite (StockCode 2 + ItemCode 4 + Feature1-4 x4),
-                    // same convention as OrderwiseStockMaster/PODetails — same fix already
+                    // same convention as OrderwiseStockMaster/SupplierPurchaseOrderDetails — same fix already
                     // applied to the Stock Movement Report line query. baseItemCode above
                     // is kept only for the StockItems catalog-fallback lookup, not for display.
                     ItemCode = t.ItemCode.Trim(),

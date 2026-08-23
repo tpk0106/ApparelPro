@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <Folder Include="APIModels\Shared\" />
+    <Folder Include="Reports\Production\" />
   </ItemGroup>
 
 </Project>

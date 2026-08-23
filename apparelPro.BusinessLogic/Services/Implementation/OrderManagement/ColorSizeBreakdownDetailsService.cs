@@ -31,35 +31,113 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
             _distributedCache = distributedCache;
         }
 
+        // SUPPLIER PO LOCK GUARD: once a Supplier Purchase Order has been raised against this
+        // exact Buyer/Order/Type/Style, the colour/size allocation that fed its material
+        // consumption calculation is frozen - absolute, no override, matching the same real-world
+        // reasoning as Style.Quantity's own Supplier PO lock (StyleDetailsService
+        // .ValidateStyleQuantityAsync). Scoped to the exact style (not the whole order) since a
+        // Supplier PO is raised per style - locking every style in the order would be too broad.
+        private async Task EnsureNotLockedBySupplierPoAsync(int buyerCode, string order, int typeCode, string styleCode)
+        {
+            var hasSupplierPurchaseOrder = await _apparelProDbContext.SupplierPurchaseOrderDetails
+                .AsNoTracking()
+                .AnyAsync(d => d.Buyer == buyerCode && d.Order == order && d.Type == typeCode && d.Style == styleCode);
+
+            if (hasSupplierPurchaseOrder)
+                throw new InvalidOperationException(
+                    $"Colour/Size Breakdown for Style '{styleCode}' can no longer be changed - " +
+                    "a Supplier Purchase Order has already been raised against this style.");
+        }
+
         public async Task<ColorSizeBreakdownDetailsServiceModel> AddColorSizeDetailsAsync(CreateColorSizeBreakdownDetailsServiceModel createColorSizeDetailsServiceModel)
         {
+            await EnsureNotLockedBySupplierPoAsync(
+                createColorSizeDetailsServiceModel.BuyerCode,
+                createColorSizeDetailsServiceModel.Order,
+                createColorSizeDetailsServiceModel.TypeCode,
+                createColorSizeDetailsServiceModel.StyleCode);
+
             var colorSizeDetailsDbModel = _mapper.Map<ColorSizeDetails>(createColorSizeDetailsServiceModel);
             await _apparelProDbContext.ColorSizeDetails.AddAsync(colorSizeDetailsDbModel);
             await _apparelProDbContext.SaveChangesAsync();
             return _mapper.Map<ColorSizeBreakdownDetailsServiceModel>(colorSizeDetailsDbModel);
         }
-        
+
 
         public async Task<bool> BulkSaveColorSizeDetailsAsync(int buyerCode, string order, int typeCode, string styleCode,
             List<CreateColorSizeBreakdownDetailsServiceModel> records)
         {
-            // f your application has connection resiliency policies enabled (such as automatic retries on SQL Azure),
-            // a plain BeginTransaction() will fail because EF Core cannot automatically retry the operations
-            // if they fail halfway through.To fix this, you must use context.Database.CreateExecutionStrategy()
-            // to wrap your complete block of logic:
+            if (records == null || !records.Any())
+                throw new InvalidOperationException("At least one size matrix row is required.");
 
-            using var context = new ApparelProDbContext();
+            await EnsureNotLockedBySupplierPoAsync(buyerCode, order, typeCode, styleCode);
 
-            var strategy = context.Database.CreateExecutionStrategy();
+            var style = await _apparelProDbContext.Styles
+                .AsNoTracking()
+                .Where(s => s.BuyerCode == buyerCode && s.Order == order && s.TypeCode == typeCode && s.StyleCode == styleCode)
+                .FirstOrDefaultAsync();
+
+            if (style == null)
+                throw new InvalidOperationException("Style not found for the given Buyer/Order/Type/Style.");
+
+            // The Colour stage (ColorQuantityRatios) is the authoritative
+            // per-colour target this size matrix must reconcile against - it
+            // must already be saved, and every colour here must exactly match
+            // the colours saved there (no orphaned colour on either side).
+            var colourAllocations = await _apparelProDbContext.ColorQuantityRatios
+                .AsNoTracking()
+                .Where(d => d.BuyerCode == buyerCode && d.Order == order && d.TypeCode == typeCode && d.StyleCode == styleCode)
+                .ToDictionaryAsync(d => d.Color, d => d.Quantity);
+
+            var groupsByColor = records.GroupBy(r => r.Color).ToList();
+
+            var postedColors = groupsByColor.Select(g => g.Key).ToHashSet();
+            var missingFromColourStage = postedColors.Except(colourAllocations.Keys).ToList();
+            if (missingFromColourStage.Any())
+                throw new InvalidOperationException(
+                    $"Colour(s) {string.Join(", ", missingFromColourStage)} have no saved Colour-stage allocation - save the Colour Target Allocation step first.");
+
+            var missingFromSizeMatrix = colourAllocations.Keys.Except(postedColors).ToList();
+            if (missingFromSizeMatrix.Any())
+                throw new InvalidOperationException(
+                    $"Colour(s) {string.Join(", ", missingFromSizeMatrix)} are missing from the size matrix - every allocated colour needs a full size breakdown.");
+
+            var isRatioMode = string.Equals(style.SizeRatio?.Trim(), "R", StringComparison.OrdinalIgnoreCase);
+
+            foreach (var group in groupsByColor)
+            {
+                var target = (int)Math.Round(colourAllocations[group.Key], MidpointRounding.AwayFromZero);
+                var rows = group.ToList();
+
+                if (isRatioMode)
+                {
+                    var weights = rows.Select(r => r.Ratio).ToList();
+                    var allocated = RatioAllocator.Allocate(target, weights);
+                    for (var i = 0; i < rows.Count; i++)
+                    {
+                        rows[i].Quantity = allocated[i];
+                    }
+                }
+                else
+                {
+                    var postedTotal = rows.Sum(r => r.Quantity);
+                    if (postedTotal != target)
+                        throw new InvalidOperationException(
+                            $"Size matrix for colour '{group.Key}' does not reconcile: entered total is {postedTotal:N2} Pcs but its Colour-stage allocation is {target:N2} Pcs.");
+                    foreach (var r in rows)
+                    {
+                        r.Ratio = 0;
+                    }
+                }
+            }
+
+            var strategy = _apparelProDbContext.Database.CreateExecutionStrategy();
 
             await strategy.ExecuteAsync(async () =>
             {
-                // Wrap the cleanup and insert steps in a single atomic database transaction
-                // Setting the isolation level to Serializable or Snapshot
                 using var dbTransaction = await _apparelProDbContext.Database.BeginTransactionAsync(isolationLevel: IsolationLevel.Snapshot);
                 try
                 {
-                    // 1. Locate and purge all previous size-color assignments for this style scope
                     var existingRecords = await _apparelProDbContext.ColorSizeDetails
                         .Where(d => d.BuyerCode == buyerCode &&
                                     d.Order == order &&
@@ -72,30 +150,20 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         _apparelProDbContext.ColorSizeDetails.RemoveRange(existingRecords);
                     }
 
-                    // 2. Map and append the newly structured matrix list payload
-                    if (records != null && records.Any())
-                    {
-                        var dbModels = _mapper.Map<List<ColorSizeDetails>>(records);
-                        await _apparelProDbContext.ColorSizeDetails.AddRangeAsync(dbModels);
-                    }
+                    var dbModels = _mapper.Map<List<ColorSizeDetails>>(records);
+                    await _apparelProDbContext.ColorSizeDetails.AddRangeAsync(dbModels);
 
-                    // 3. Persist and commit changes to your database instance
                     await _apparelProDbContext.SaveChangesAsync();
                     await dbTransaction.CommitAsync();
-
-                    return true;
                 }
                 catch (Exception)
                 {
-                    // Roll back changes cleanly if an error occurs
-                    await dbTransaction.RollbackAsync();                    
+                    await dbTransaction.RollbackAsync();
                     throw;
-                    
                 }
-                
-
             });
-            return false;
+
+            return true;
         }
     
         public async Task<List<ColorSizeBreakdownDetailsServiceModel>> GetBreakdownByStyleAsync(int buyer, string order, int type, string style)

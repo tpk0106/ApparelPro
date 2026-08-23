@@ -5,7 +5,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ApparelPro.WebApi.Reports
+namespace ApparelPro.WebApi.Reports.OrderManagement
 {
     // Replicates OD_TRIM.PRG's "TRIM SHEET" report - Order Management -> Material Consumption
     // -> Trim Sheet in legacy, exposed here under Reports -> Order Management -> Trim Sheet per

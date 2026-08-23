@@ -5,7 +5,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ApparelPro.WebApi.Reports
+namespace ApparelPro.WebApi.Reports.OrderManagement
 {
     // Replicates OD_RPO1.PRG's "ORDER CONFIRMATION REPORT" - Reports -> Order Management ->
     // Order Detail in this app's nav (the legacy menu item was "B. Order Confirmation

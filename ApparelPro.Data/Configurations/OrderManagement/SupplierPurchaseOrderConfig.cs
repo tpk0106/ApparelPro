@@ -1,4 +1,4 @@
-﻿using ApparelPro.Data.Models.OrderManagement;
+using ApparelPro.Data.Models.OrderManagement;
 using ApparelPro.Data.Models.References;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -8,11 +8,11 @@ using System.Text;
 
 namespace ApparelPro.Data.Configurations.OrderManagement
 {
-    public class PurchaseOrderHeaderConfig : IEntityTypeConfiguration<PurchaseOrderHeader>
+    public class SupplierPurchaseOrderConfig : IEntityTypeConfiguration<SupplierPurchaseOrder>
     {
-        public void Configure(EntityTypeBuilder<PurchaseOrderHeader> entity)
+        public void Configure(EntityTypeBuilder<SupplierPurchaseOrder> entity)
         {
-            entity.ToTable("PurchaseOrderHeaders");
+            entity.ToTable("SupplierPurchaseOrders");
 
             // Set up string primary key based on your Purchase Order number format
             entity.HasKey(e => e.PurchaseOrderNumber);

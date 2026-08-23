@@ -1,5 +1,6 @@
 ﻿using apparelPro.BusinessLogic.Services.Implementation.Shared;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IColorSizeDetailsService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IColorQuantityRatioService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialConsumptionService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPurchaseOrderService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetailsService;
@@ -10,6 +11,7 @@ using apparelPro.BusinessLogic.Services.Models.OrderManagement.IOutstandingPurch
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.ITrimSheetReportService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IGarmentAdditionalCostService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.ISubContractService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IScheduledShipmentsReportService;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.Reference.IAdditionalCostService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ISubContractorService;
@@ -66,6 +68,7 @@ using apparelPro.BusinessLogic.Services.Models.Production.ILineEfficiencyReportS
 using apparelPro.BusinessLogic.Services.Models.Production.IEstimatedProductionScheduleReportService;
 using apparelPro.BusinessLogic.Services.Models.Production.IProductionAnalysisSummaryReportService;
 using apparelPro.BusinessLogic.Services.Models.Production.IProductionProgressGraphService;
+using apparelPro.BusinessLogic.Services.Models.Production.IEndOfProductionConfirmationService;
 using apparelPro.BusinessLogic.Services.Models.Dashboard.IDashboardService;
 using ApparelPro.WebApi.APIModels.Dashboard;
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
@@ -267,24 +270,24 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<PortDestinationAPIModel, PortDestinationServiceModel>().MaxDepth(2)
                 .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode))
                 .ForMember(src => src.DestinationName, opt => opt.MapFrom(src => src.DestinationName))
-                .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
                 .ReverseMap();
 
             CreateMap<CreatePortDestinationAPIModel, CreatePortDestinationServiceModel>().MaxDepth(2)
                 .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode))
                 .ForMember(src => src.DestinationName, opt => opt.MapFrom(src => src.DestinationName))
-                .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id));
+                .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code));
 
             CreateMap<CreatePortDestinationServiceModel, Destination>().MaxDepth(2)
               .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode))
               .ForMember(src => src.DestinationName, opt => opt.MapFrom(src => src.DestinationName))
-              .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id))
+              .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
               .ReverseMap();
 
             CreateMap<UpdatePortDestinationAPIModel, UpdatePortDestinationServiceModel>().MaxDepth(2)
               .ForMember(src => src.CountryCode, opt => opt.MapFrom(src => src.CountryCode))
               .ForMember(src => src.DestinationName, opt => opt.MapFrom(src => src.DestinationName))
-              .ForMember(src => src.Id, opt => opt.MapFrom(src => src.Id));
+              .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code));
 
             // PO
             CreateMap<PurchaseOrderServiceModel, POAPIModel>().MaxDepth(2)
@@ -545,6 +548,8 @@ namespace ApparelPro.WebApi.Mappings
                 .ForMember(src => src.Quantity, opt => opt.MapFrom(src => src.Quantity))
                 .ForMember(src => src.Unit, opt => opt.MapFrom(src => src.Unit))
                 .ForMember(src => src.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice))
+                .ForMember(src => src.ColorRatio, opt => opt.MapFrom(src => src.ColorRatio))
+                .ForMember(src => src.SizeRatio, opt => opt.MapFrom(src => src.SizeRatio))
                 .ForMember(src => src.OrderDate, opt => opt.MapFrom(src => DateTime.Now));
 
             CreateMap<StyleDetailsServiceModel, StyleDetailsAPIModel>().MaxDepth(2)
@@ -578,6 +583,11 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<CreateColorSizeBreakdownDetailsAPIModel, CreateColorSizeBreakdownDetailsServiceModel>()
                 .MaxDepth(2);
             CreateMap<ColorSizeBreakdownDetailsServiceModel, ColorSizeBreakdownDetailsAPIModel>()
+                .MaxDepth(2);
+
+            CreateMap<CreateColorQuantityRatioAPIModel, CreateColorQuantityRatioServiceModel>()
+                .MaxDepth(2);
+            CreateMap<ColorQuantityRatioServiceModel, ColorQuantityRatioAPIModel>()
                 .MaxDepth(2);
 
             // material consumption
@@ -625,6 +635,10 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<ColorSizeReportServiceModel, ColorSizeReportAPIModel>().MaxDepth(2);
             CreateMap<ColorSizeReportStyleServiceModel, ColorSizeReportStyleAPIModel>().MaxDepth(2);
             CreateMap<ColorSizeReportColourServiceModel, ColorSizeReportColourAPIModel>().MaxDepth(2);
+
+            // Scheduled Shipments Report
+            CreateMap<ScheduledShipmentRowServiceModel, ScheduledShipmentRowAPIModel>().MaxDepth(2);
+            CreateMap<ScheduledShipmentsReportServiceModel, ScheduledShipmentsReportAPIModel>().MaxDepth(2);
 
             // Purchase Order List Report (2026-08-08)
             CreateMap<PurchaseOrderListReportServiceModel, PurchaseOrderListReportAPIModel>().MaxDepth(2);
@@ -856,6 +870,8 @@ namespace ApparelPro.WebApi.Mappings
 
             CreateMap<ProductionProgressPointServiceModel, ProductionProgressPointAPIModel>().MaxDepth(2);
             CreateMap<ProductionProgressGraphServiceModel, ProductionProgressGraphAPIModel>().MaxDepth(2);
+
+            CreateMap<EndOfProductionStatusServiceModel, EndOfProductionStatusAPIModel>().MaxDepth(2);
         }
 
         public class PaginationResultToPaginationAPITypeConverter<sourceT, destT> : ITypeConverter<PaginationResult<sourceT>, PaginationAPIModel<destT>>

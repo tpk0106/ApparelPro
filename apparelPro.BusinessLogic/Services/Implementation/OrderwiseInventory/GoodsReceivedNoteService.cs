@@ -26,7 +26,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
             purchaseOrderNumber = purchaseOrderNumber.Trim().ToUpper();
 
             // 1. Confirm the PO exists and grab its header context (Store/Supplier).
-            var poHeaderRow = await _apparelProDbContext.PurchaseOrderHeaders
+            var poHeaderRow = await _apparelProDbContext.SupplierPurchaseOrders
                 .AsNoTracking()
                 .FirstOrDefaultAsync(h => h.PurchaseOrderNumber == purchaseOrderNumber);
 
@@ -34,7 +34,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 throw new KeyNotFoundException($"Purchase Order '{purchaseOrderNumber}' was not found.");
 
             // 2. Pull every PO line for this document in one query (no per-line round trips).
-            var poLines = await _apparelProDbContext.PODetails
+            var poLines = await _apparelProDbContext.SupplierPurchaseOrderDetails
                 .AsNoTracking()
                 .Where(d => d.PONumber == purchaseOrderNumber)
                 .ToListAsync();
@@ -99,7 +99,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 try
                 {
                     // 1. Re-derive header context from the PO itself — never trust a client echo.
-                    var poHeaderRow = await _apparelProDbContext.PurchaseOrderHeaders
+                    var poHeaderRow = await _apparelProDbContext.SupplierPurchaseOrders
                         .AsNoTracking()
                         .FirstOrDefaultAsync(h => h.PurchaseOrderNumber == header.PurchaseOrderNumber);
 
@@ -120,8 +120,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                         line.Unit = line.Unit.Trim().ToUpper();
 
                         // 3. Lock and validate the matching PO detail line.
-                        var poDetailRow = await _apparelProDbContext.PODetails
-                            .FromSqlInterpolated($@"SELECT * FROM PODetails WITH (UPDLOCK, HOLDLOCK)
+                        var poDetailRow = await _apparelProDbContext.SupplierPurchaseOrderDetails
+                            .FromSqlInterpolated($@"SELECT * FROM SupplierPurchaseOrderDetails WITH (UPDLOCK, HOLDLOCK)
                                 WHERE PONumber = {header.PurchaseOrderNumber}
                                   AND Buyer = {line.Buyer}
                                   AND [Order] = {line.Order}
@@ -183,7 +183,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
 
                         // 7. Decrement the PO line's outstanding balance.
                         poDetailRow.Balance -= requestedInOrderUnit;
-                        _apparelProDbContext.PODetails.Update(poDetailRow);
+                        _apparelProDbContext.SupplierPurchaseOrderDetails.Update(poDetailRow);
 
                         // 8. Update order-level master running total.
                         var masterRow = await _apparelProDbContext.OrderwiseStockMasters
@@ -218,7 +218,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
             order = order.Trim();
 
             // 1. Find every PO number that still has an outstanding-balance line for this buyer+order.
-            var outstandingPoNumbers = await _apparelProDbContext.PODetails
+            var outstandingPoNumbers = await _apparelProDbContext.SupplierPurchaseOrderDetails
                 .AsNoTracking()
                 .Where(d => d.Buyer == buyerCode && d.Order == order && d.Balance > 0)
                 .Select(d => d.PONumber)
@@ -229,7 +229,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 return new List<GrnPendingPoServiceModel>();
 
             // 2. Batch-load the matching headers in one query.
-            var headerRows = await _apparelProDbContext.PurchaseOrderHeaders
+            var headerRows = await _apparelProDbContext.SupplierPurchaseOrders
                 .AsNoTracking()
                 .Where(h => outstandingPoNumbers.Contains(h.PurchaseOrderNumber))
                 .ToListAsync();

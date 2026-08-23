@@ -1,6 +1,6 @@
 namespace apparelPro.BusinessLogic.Services.Models.OrderwiseInventory
 {
-    // One outstanding PODetails line, joined with live OrderwiseStock context so the
+    // One outstanding SupplierPurchaseOrderDetails line, joined with live OrderwiseStock context so the
     // frontend can render balances without a second round trip per row.
     public class GrnReceivableLineServiceModel
     {

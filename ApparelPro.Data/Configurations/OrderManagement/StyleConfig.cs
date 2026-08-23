@@ -1,4 +1,5 @@
-﻿using ApparelPro.Data.Models.References;
+﻿using ApparelPro.Data.Models.OrderManagement;
+using ApparelPro.Data.Models.References;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -114,6 +115,15 @@ namespace ApparelPro.Data.Configurations.OrderManagement
                 .WithMany()
                 .HasForeignKey(p => p.Unit)
                 .HasPrincipalKey(u => u.Code)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Tier 2 relationships audit: (BuyerCode, Order) was previously enforced only by
+            // matching values against PurchaseOrders (a Style could reference a nonexistent
+            // order). PurchaseOrder's PK is already (BuyerCode, Order), so no HasPrincipalKey
+            // override is needed here.
+            entity.HasOne<PurchaseOrder>()
+                .WithMany()
+                .HasForeignKey(p => new { p.BuyerCode, p.Order })
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

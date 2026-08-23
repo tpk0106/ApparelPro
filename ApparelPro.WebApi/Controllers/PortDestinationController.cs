@@ -53,17 +53,17 @@ namespace ApparelPro.WebApi.Controllers
         {
             var createPortDestinationServiceModel = _mapper.Map<CreatePortDestinationServiceModel>(createPortDestinationAPIModel);
             var addedPortDestination = await _portDestinationService.AddPortDestinationAsync(createPortDestinationServiceModel);
-            return CreatedAtRoute(nameof(GetPortDestinationByIdAndCountryCodeAsync),
-                new { id = addedPortDestination.Id, countryCode = addedPortDestination.CountryCode }, null);
+            return CreatedAtRoute(nameof(GetPortDestinationByCodeAndCountryCodeAsync),
+                new { code = addedPortDestination.Code, countryCode = addedPortDestination.CountryCode }, null);
         }
 
-        [HttpGet("list/{id}/{countryCode}", Name = "GetPortDestinationByIdAndCountryCodeAsync")]
+        [HttpGet("list/{code}/{countryCode}", Name = "GetPortDestinationByCodeAndCountryCodeAsync")]
         [Authorize(Policy = "port-destination-view")]
         [ProducesResponseType(typeof(PortDestinationAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
-        public async Task<IActionResult> GetPortDestinationByIdAndCountryCodeAsync(int id, string countryCode)
+        public async Task<IActionResult> GetPortDestinationByCodeAndCountryCodeAsync(string code, string countryCode)
         {
-            var portDestination = await _portDestinationService.GetPortDestinationByIdAndCountryCodeAsync(id, countryCode);
+            var portDestination = await _portDestinationService.GetPortDestinationByCodeAndCountryCodeAsync(code, countryCode);
             if (portDestination == null)
             {
                 return UnprocessableEntity("port destination is not available for country code :" + countryCode);
@@ -76,10 +76,10 @@ namespace ApparelPro.WebApi.Controllers
         [Authorize(Policy = "port-destination-manage")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
-        public async Task<IActionResult> UpdateBuyerAsync([FromQuery] int id,string countryCode, [FromBody] UpdatePortDestinationAPIModel
+        public async Task<IActionResult> UpdateBuyerAsync([FromQuery] string code, string countryCode, [FromBody] UpdatePortDestinationAPIModel
            updatePortDestinationAPIModel)
         {
-            var resultPortDestinationAPIModel = _mapper.Map<PortDestinationAPIModel>(await _portDestinationService.GetPortDestinationByIdAndCountryCodeAsync(id, countryCode));
+            var resultPortDestinationAPIModel = _mapper.Map<PortDestinationAPIModel>(await _portDestinationService.GetPortDestinationByCodeAndCountryCodeAsync(code, countryCode));
 
             if (resultPortDestinationAPIModel == null)
             {
@@ -91,18 +91,18 @@ namespace ApparelPro.WebApi.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id}/{countryCode}")]
+        [HttpDelete("{code}/{countryCode}")]
         [Authorize(Policy = "port-destination-manage")]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
-        public async Task<IActionResult> DeletePortDestinationAsync(int id, string countryCode )
+        public async Task<IActionResult> DeletePortDestinationAsync(string code, string countryCode )
         {
-            var portDestination = await _portDestinationService.GetPortDestinationByIdAndCountryCodeAsync(id, countryCode);
+            var portDestination = await _portDestinationService.GetPortDestinationByCodeAndCountryCodeAsync(code, countryCode);
             if (portDestination == null)
             {
                 return UnprocessableEntity("Port Destination is not available for code :" + countryCode);
             }
-            await _portDestinationService.DeletePortDestinationAsync(id, countryCode);
+            await _portDestinationService.DeletePortDestinationAsync(code, countryCode);
             return NoContent();
         }
     }

@@ -22,14 +22,14 @@ namespace ApparelPro.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.ColorSizeDetails", b =>
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.ColorQuantityRatio", b =>
                 {
                     b.Property<int>("BuyerCode")
                         .HasColumnType("int")
                         .HasColumnName("Buyer");
 
                     b.Property<string>("Order")
-                        .HasColumnType("varchar(12)")
+                        .HasColumnType("nvarchar(12)")
                         .HasColumnName("Order");
 
                     b.Property<int>("TypeCode")
@@ -37,7 +37,46 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnName("Type");
 
                     b.Property<string>("StyleCode")
+                        .HasColumnType("nvarchar(12)")
+                        .HasColumnName("Style");
+
+                    b.Property<string>("Color")
                         .HasColumnType("varchar(12)")
+                        .HasColumnName("Color");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("Description");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("Quantity");
+
+                    b.Property<decimal>("Ratio")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("Ratio");
+
+                    b.HasKey("BuyerCode", "Order", "TypeCode", "StyleCode", "Color");
+
+                    b.ToTable("ColorQuantityRatios", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.ColorSizeDetails", b =>
+                {
+                    b.Property<int>("BuyerCode")
+                        .HasColumnType("int")
+                        .HasColumnName("Buyer");
+
+                    b.Property<string>("Order")
+                        .HasColumnType("nvarchar(12)")
+                        .HasColumnName("Order");
+
+                    b.Property<int>("TypeCode")
+                        .HasColumnType("int")
+                        .HasColumnName("Type");
+
+                    b.Property<string>("StyleCode")
+                        .HasColumnType("nvarchar(12)")
                         .HasColumnName("Style");
 
                     b.Property<string>("Color")
@@ -366,66 +405,6 @@ namespace ApparelPro.Data.Migrations
                     b.ToTable("StyleMaterialCostProfiles", (string)null);
                 });
 
-            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.PODetails", b =>
-                {
-                    b.Property<string>("PONumber")
-                        .HasColumnType("varchar(10)")
-                        .HasColumnName("PONumber");
-
-                    b.Property<int>("Buyer")
-                        .HasColumnType("int")
-                        .HasColumnName("Buyer");
-
-                    b.Property<string>("Order")
-                        .HasColumnType("varchar(12)")
-                        .HasColumnName("Order");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int")
-                        .HasColumnName("Type");
-
-                    b.Property<string>("Style")
-                        .HasColumnType("varchar(12)")
-                        .HasColumnName("Style");
-
-                    b.Property<string>("ItemCode")
-                        .HasColumnType("varchar(40)")
-                        .HasColumnName("ItemCode");
-
-                    b.Property<decimal>("Balance")
-                        .HasColumnType("decimal(12,2)")
-                        .HasColumnName("Balance");
-
-                    b.Property<DateTime?>("ExportDate")
-                        .HasColumnType("datetime")
-                        .HasColumnName("ExportDate");
-
-                    b.Property<string>("LCNo")
-                        .HasColumnType("varchar(23)")
-                        .HasColumnName("LCNo");
-
-                    b.Property<decimal>("OrderQuantity")
-                        .HasColumnType("decimal(12,2)")
-                        .HasColumnName("OrderQuantity");
-
-                    b.Property<string>("OrderUnit")
-                        .IsRequired()
-                        .HasColumnType("varchar(3)")
-                        .HasColumnName("OrderUnit");
-
-                    b.Property<string>("RefNo")
-                        .HasColumnType("varchar(30)")
-                        .HasColumnName("RefNo");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(10,4)")
-                        .HasColumnName("UnitPrice");
-
-                    b.HasKey("PONumber", "Buyer", "Order", "Type", "Style", "ItemCode");
-
-                    b.ToTable("PODetails", (string)null);
-                });
-
             modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.PurchaseOrder", b =>
                 {
                     b.Property<int>("BuyerCode")
@@ -485,6 +464,8 @@ namespace ApparelPro.Data.Migrations
 
                     b.HasKey("BuyerCode", "Order");
 
+                    b.HasIndex("BasisCode");
+
                     b.HasIndex("CountryCode");
 
                     b.HasIndex("CurrencyCode");
@@ -494,57 +475,6 @@ namespace ApparelPro.Data.Migrations
                     b.HasIndex("UnitCode");
 
                     b.ToTable("PurchaseOrders");
-                });
-
-            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.PurchaseOrderHeader", b =>
-                {
-                    b.Property<string>("PurchaseOrderNumber")
-                        .HasColumnType("varchar(10)")
-                        .HasColumnName("PurchaseOrderNumber");
-
-                    b.Property<DateOnly?>("CreatedDate")
-                        .HasColumnType("date")
-                        .HasColumnName("CreatedDate");
-
-                    b.Property<TimeOnly?>("CreatedTime")
-                        .HasColumnType("time")
-                        .HasColumnName("CreatedTime");
-
-                    b.Property<string>("CurrencyCode")
-                        .IsRequired()
-                        .HasColumnType("varchar(3)")
-                        .HasColumnName("CurrencyCode");
-
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsPoUsed")
-                        .HasColumnType("bit")
-                        .HasColumnName("IsPoUsed");
-
-                    b.Property<DateOnly?>("ProformaInvoiceDate")
-                        .HasColumnType("date")
-                        .HasColumnName("ProformaInvoiceDate");
-
-                    b.Property<string>("ProformaInvoiceNo")
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("ProformaInvoiceNo");
-
-                    b.Property<string>("StoreCode")
-                        .IsRequired()
-                        .HasColumnType("varchar(3)")
-                        .HasColumnName("StoreCode");
-
-                    b.Property<string>("SupplierCode")
-                        .IsRequired()
-                        .HasColumnType("varchar(6)")
-                        .HasColumnName("SupplierCode");
-
-                    b.HasKey("PurchaseOrderNumber");
-
-                    b.HasIndex("CurrencyCode");
-
-                    b.ToTable("PurchaseOrderHeaders", (string)null);
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.Shipments.PartShipment", b =>
@@ -575,7 +505,7 @@ namespace ApparelPro.Data.Migrations
 
                     b.Property<string>("Order")
                         .IsRequired()
-                        .HasColumnType("varchar(12)");
+                        .HasColumnType("nvarchar(12)");
 
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("date");
@@ -608,7 +538,7 @@ namespace ApparelPro.Data.Migrations
 
                     b.Property<string>("StyleCode")
                         .IsRequired()
-                        .HasColumnType("varchar(12)");
+                        .HasColumnType("nvarchar(12)");
 
                     b.Property<string>("SubContractFlag")
                         .IsRequired()
@@ -626,6 +556,8 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnType("varchar(3)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DestinationCode");
 
                     b.HasIndex("Unit");
 
@@ -754,6 +686,117 @@ namespace ApparelPro.Data.Migrations
                     b.HasIndex("Unit");
 
                     b.ToTable("SubContracts", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.SupplierPurchaseOrder", b =>
+                {
+                    b.Property<string>("PurchaseOrderNumber")
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("PurchaseOrderNumber");
+
+                    b.Property<DateOnly?>("CreatedDate")
+                        .HasColumnType("date")
+                        .HasColumnName("CreatedDate");
+
+                    b.Property<TimeOnly?>("CreatedTime")
+                        .HasColumnType("time")
+                        .HasColumnName("CreatedTime");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("CurrencyCode");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsPoUsed")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsPoUsed");
+
+                    b.Property<DateOnly?>("ProformaInvoiceDate")
+                        .HasColumnType("date")
+                        .HasColumnName("ProformaInvoiceDate");
+
+                    b.Property<string>("ProformaInvoiceNo")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("ProformaInvoiceNo");
+
+                    b.Property<string>("StoreCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("StoreCode");
+
+                    b.Property<string>("SupplierCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("SupplierCode");
+
+                    b.HasKey("PurchaseOrderNumber");
+
+                    b.HasIndex("CurrencyCode");
+
+                    b.ToTable("SupplierPurchaseOrders", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.SupplierPurchaseOrderDetails", b =>
+                {
+                    b.Property<string>("PONumber")
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("PONumber");
+
+                    b.Property<int>("Buyer")
+                        .HasColumnType("int")
+                        .HasColumnName("Buyer");
+
+                    b.Property<string>("Order")
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("Order");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int")
+                        .HasColumnName("Type");
+
+                    b.Property<string>("Style")
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("Style");
+
+                    b.Property<string>("ItemCode")
+                        .HasColumnType("varchar(40)")
+                        .HasColumnName("ItemCode");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("Balance");
+
+                    b.Property<DateTime?>("ExportDate")
+                        .HasColumnType("datetime")
+                        .HasColumnName("ExportDate");
+
+                    b.Property<string>("LCNo")
+                        .HasColumnType("varchar(23)")
+                        .HasColumnName("LCNo");
+
+                    b.Property<decimal>("OrderQuantity")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("OrderQuantity");
+
+                    b.Property<string>("OrderUnit")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("OrderUnit");
+
+                    b.Property<string>("RefNo")
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("RefNo");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(10,4)")
+                        .HasColumnName("UnitPrice");
+
+                    b.HasKey("PONumber", "Buyer", "Order", "Type", "Style", "ItemCode");
+
+                    b.ToTable("SupplierPurchaseOrderDetails", (string)null);
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.OrderwiseInventory.DocumentSequence", b =>
@@ -1822,6 +1865,15 @@ namespace ApparelPro.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Basis");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9,
+                            Code = "CMP",
+                            Description = "CUT, MAKE & PACK",
+                            ValueAdd = false
+                        });
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Buyer", b =>
@@ -1888,6 +1940,14 @@ namespace ApparelPro.Data.Migrations
                     b.HasKey("Code");
 
                     b.ToTable("Countries");
+
+                    b.HasData(
+                        new
+                        {
+                            Code = "GB",
+                            Id = 50,
+                            Name = "United Kingdom"
+                        });
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Currency", b =>
@@ -1991,24 +2051,39 @@ namespace ApparelPro.Data.Migrations
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.Destination", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
                     b.Property<string>("CountryCode")
                         .HasMaxLength(3)
                         .HasColumnType("nvarchar");
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(3)
+                        .HasColumnType("varchar");
 
                     b.Property<string>("DestinationName")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar");
 
-                    b.HasKey("Id", "CountryCode");
+                    b.HasKey("CountryCode", "Code");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
 
                     b.ToTable("Destinations");
+
+                    b.HasData(
+                        new
+                        {
+                            CountryCode = "USA",
+                            Code = "BAL",
+                            DestinationName = "Baltimore"
+                        },
+                        new
+                        {
+                            CountryCode = "GB",
+                            Code = "LON",
+                            DestinationName = "London"
+                        });
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.References.GarmentType", b =>
@@ -2542,6 +2617,26 @@ namespace ApparelPro.Data.Migrations
                     b.ToTable("StylewiseEvents", (string)null);
                 });
 
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.ColorQuantityRatio", b =>
+                {
+                    b.HasOne("ApparelPro.Data.Models.References.Style", null)
+                        .WithMany()
+                        .HasForeignKey("BuyerCode", "Order", "TypeCode", "StyleCode")
+                        .HasPrincipalKey("BuyerCode", "Order", "TypeCode", "StyleCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.ColorSizeDetails", b =>
+                {
+                    b.HasOne("ApparelPro.Data.Models.References.Style", null)
+                        .WithMany()
+                        .HasForeignKey("BuyerCode", "Order", "TypeCode", "StyleCode")
+                        .HasPrincipalKey("BuyerCode", "Order", "TypeCode", "StyleCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.MaterialConsumption.GarmentAdditionalCost", b =>
                 {
                     b.HasOne("ApparelPro.Data.Models.References.Currency", null)
@@ -2560,6 +2655,19 @@ namespace ApparelPro.Data.Migrations
 
             modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.PurchaseOrder", b =>
                 {
+                    b.HasOne("ApparelPro.Data.Models.References.Basis", null)
+                        .WithMany()
+                        .HasForeignKey("BasisCode")
+                        .HasPrincipalKey("Code")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ApparelPro.Data.Models.References.Buyer", null)
+                        .WithMany()
+                        .HasForeignKey("BuyerCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("ApparelPro.Data.Models.References.Country", null)
                         .WithMany()
                         .HasForeignKey("CountryCode")
@@ -2586,21 +2694,26 @@ namespace ApparelPro.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.PurchaseOrderHeader", b =>
-                {
-                    b.HasOne("ApparelPro.Data.Models.References.Currency", null)
-                        .WithMany()
-                        .HasForeignKey("CurrencyCode")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.Shipments.PartShipment", b =>
                 {
+                    b.HasOne("ApparelPro.Data.Models.References.Destination", null)
+                        .WithMany()
+                        .HasForeignKey("DestinationCode")
+                        .HasPrincipalKey("Code")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("ApparelPro.Data.Models.References.Unit", null)
                         .WithMany()
                         .HasForeignKey("Unit")
                         .HasPrincipalKey("Code")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ApparelPro.Data.Models.References.Style", null)
+                        .WithMany()
+                        .HasForeignKey("BuyerCode", "Order", "TypeCode", "StyleCode")
+                        .HasPrincipalKey("BuyerCode", "Order", "TypeCode", "StyleCode")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
@@ -2627,6 +2740,15 @@ namespace ApparelPro.Data.Migrations
                         .WithMany()
                         .HasForeignKey("Unit")
                         .HasPrincipalKey("Code")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.SupplierPurchaseOrder", b =>
+                {
+                    b.HasOne("ApparelPro.Data.Models.References.Currency", null)
+                        .WithMany()
+                        .HasForeignKey("CurrencyCode")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
@@ -2865,6 +2987,15 @@ namespace ApparelPro.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ApparelPro.Data.Models.References.Destination", b =>
+                {
+                    b.HasOne("ApparelPro.Data.Models.References.Country", null)
+                        .WithMany()
+                        .HasForeignKey("CountryCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ApparelPro.Data.Models.References.GarmentTypeItems", b =>
                 {
                     b.HasOne("ApparelPro.Data.Models.References.GarmentType", "GarmentType")
@@ -2907,6 +3038,12 @@ namespace ApparelPro.Data.Migrations
                         .HasForeignKey("Unit")
                         .HasPrincipalKey("Code")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ApparelPro.Data.Models.OrderManagement.PurchaseOrder", null)
+                        .WithMany()
+                        .HasForeignKey("BuyerCode", "Order")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("apparelPro.BusinessLogic.Services.Models.OrderManagement.Stylewise_Events.EventMaster", b =>

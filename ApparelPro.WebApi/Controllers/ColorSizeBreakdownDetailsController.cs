@@ -59,8 +59,15 @@ namespace ApparelPro.WebApi.Controllers
         public async Task<IActionResult> AddColorSizeDetailsAsync([FromBody] CreateColorSizeBreakdownDetailsAPIModel  createColorSizeBreakdownDetailsAPIModel)
         {
             var createColorSizeDetailsServiceModel = _mapper.Map<CreateColorSizeBreakdownDetailsServiceModel>(createColorSizeBreakdownDetailsAPIModel);
-            var addedColorSizeDetails = await _colorSizeBreakdownDetailsService.AddColorSizeDetailsAsync(createColorSizeDetailsServiceModel);
-            return CreatedAtRoute(nameof(GetColorSizeDetailsAsync), new { buyerCode = addedColorSizeDetails.BuyerCode }, null);
+            try
+            {
+                var addedColorSizeDetails = await _colorSizeBreakdownDetailsService.AddColorSizeDetailsAsync(createColorSizeDetailsServiceModel);
+                return CreatedAtRoute(nameof(GetColorSizeDetailsAsync), new { buyerCode = addedColorSizeDetails.BuyerCode }, null);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
         }
 
         [HttpGet("singleOrDefault-By-Style")]
@@ -102,9 +109,15 @@ namespace ApparelPro.WebApi.Controllers
 
             var serviceModels = _mapper.Map<List<CreateColorSizeBreakdownDetailsServiceModel>>(payload);
 
-            await _colorSizeBreakdownDetailsService.BulkSaveColorSizeDetailsAsync(buyerCode, order, typeCode, styleCode, serviceModels);
-
-            return Ok(new { Message = "Style allocation matrix synced with SQL Server successfully." });
+            try
+            {
+                await _colorSizeBreakdownDetailsService.BulkSaveColorSizeDetailsAsync(buyerCode, order, typeCode, styleCode, serviceModels);
+                return Ok(new { Message = "Style allocation matrix synced with SQL Server successfully." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
         }
 
         [HttpGet("style-dimensions")]

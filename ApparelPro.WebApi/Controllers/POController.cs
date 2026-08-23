@@ -108,7 +108,7 @@ namespace ApparelPro.WebApi.Controllers
         public async Task<IActionResult> SaveSupplierPurchaseOrderAsync(
               string purchaseNumber, string supplierCode, string storeCode,
              string proformaNo, DateOnly? proformaDate, string currencyCode,
-             List<PODetails> lineItems
+             List<SupplierPurchaseOrderDetails> lineItems
         )
         {
             // 1. Get the boolean result from your service

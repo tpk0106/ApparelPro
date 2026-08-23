@@ -15,8 +15,11 @@ namespace ApparelPro.Data.Configurations.OrderManagement.Shipment
             // Setup a strict composite constraint index to enable high-speed historical tracking seeks
             entity.HasIndex(e => new { e.BuyerCode, e.Order, e.TypeCode, e.StyleCode, e.NewOrder, e.DestinationCode, e.ShipDate }).IsUnique();
 
-            entity.Property(e => e.Order).HasColumnType("varchar(12)").IsRequired();
-            entity.Property(e => e.StyleCode).HasColumnType("varchar(12)").IsRequired();
+            // nvarchar (not varchar) to match Styles.Order / Styles.Style - required for the FK
+            // to Styles' natural key added in the Tier 2 relationships audit (SQL Server rejects
+            // an FK across differing column types even at equal length).
+            entity.Property(e => e.Order).HasColumnType("nvarchar(12)").IsRequired();
+            entity.Property(e => e.StyleCode).HasColumnType("nvarchar(12)").IsRequired();
             entity.Property(e => e.NewOrder).HasColumnType("varchar(12)").IsRequired();
             entity.Property(e => e.DestinationCode).HasColumnType("varchar(3)").IsRequired();
             entity.Property(e => e.SubContractFlag).HasColumnType("varchar(1)").IsRequired();
@@ -41,6 +44,24 @@ namespace ApparelPro.Data.Configurations.OrderManagement.Shipment
                 .WithMany()
                 .HasForeignKey(e => e.Unit)
                 .HasPrincipalKey(u => u.Code)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Tier 2 relationships audit: (BuyerCode, Order, TypeCode, StyleCode) was previously
+            // enforced only by matching values against Styles' natural key, with no real
+            // database constraint.
+            entity.HasOne<Style>()
+                .WithMany()
+                .HasForeignKey(e => new { e.BuyerCode, e.Order, e.TypeCode, e.StyleCode })
+                .HasPrincipalKey(s => new { s.BuyerCode, s.Order, s.TypeCode, s.StyleCode })
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Part B fix: DestinationCode was previously free text with no master data behind
+            // it at all (Destinations had no business-code column to reference). Destination.Code
+            // now exists with a unique constraint, so this can be a real FK.
+            entity.HasOne<Destination>()
+                .WithMany()
+                .HasForeignKey(e => e.DestinationCode)
+                .HasPrincipalKey(d => d.Code)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

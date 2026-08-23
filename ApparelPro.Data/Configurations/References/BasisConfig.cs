@@ -27,6 +27,13 @@ namespace ApparelPro.Data.Configurations.References
             // other tables reference it by Code. Code needs its own unique constraint before
             // anything can declare a real FOREIGN KEY against it.
             entity.HasIndex(p => p.Code).IsUnique();
+
+            // Tier 2 relationships audit: seeds the "CMP" (Cut-Make-Pack) basis row that 3
+            // existing PurchaseOrder rows already reference but which was never added here -
+            // required before PurchaseOrder.BasisCode -> Basis.Code can be enforced as a real FK.
+            entity.HasData(
+                new Basis { Id = 9, Code = "CMP", Description = "CUT, MAKE & PACK", ValueAdd = false }
+            );
         }
     }
 }

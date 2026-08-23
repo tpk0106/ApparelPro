@@ -225,7 +225,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
         public async Task<bool> SaveSupplierPurchaseOrderAsync(
             string purchaseNumber, string supplierCode, string storeCode,
             string proformaNo, DateOnly? proformaDate, string currencyCode,
-            List<PODetails> lineItems)
+            List<SupplierPurchaseOrderDetails> lineItems)
         {
             // Enforce clean layout data trimming
             purchaseNumber = purchaseNumber.Trim();
@@ -246,7 +246,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                     string historicalUnit = "";
 
                     // Check if this material allocation record line already exists under this active PO scope
-                    var existingDetail = await _apparelProDbContext.PODetails
+                    var existingDetail = await _apparelProDbContext.SupplierPurchaseOrderDetails
                         .FirstOrDefaultAsync(d => d.PONumber == purchaseNumber &&
                                                   d.Buyer == item.Buyer &&
                                                   d.Order == item.Order.Trim() &&
@@ -266,11 +266,11 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         existingDetail.UnitPrice = item.UnitPrice;
                         existingDetail.ExportDate = item.ExportDate;
 
-                        _apparelProDbContext.PODetails.Update(existingDetail);
+                        _apparelProDbContext.SupplierPurchaseOrderDetails.Update(existingDetail);
                     }
                     else
                     {
-                        var newDetail = new PODetails
+                        var newDetail = new SupplierPurchaseOrderDetails
                         {
                             PONumber = purchaseNumber,
                             Buyer = item.Buyer,
@@ -285,7 +285,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                             Balance = item.OrderQuantity, // Initial open delivery balance equals ordered qty
                             ExportDate = item.ExportDate
                         };
-                        await _apparelProDbContext.PODetails.AddAsync(newDetail);
+                        await _apparelProDbContext.SupplierPurchaseOrderDetails.AddAsync(newDetail);
                     }
 
                     // ---------------------------------------------------------------------
@@ -378,12 +378,12 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 // ---------------------------------------------------------------------
                 // TRANSACTION PHASE 4: Commit and finalize the PO Header Record (od_pohed)
                 // ---------------------------------------------------------------------
-                var header = await _apparelProDbContext.PurchaseOrderHeaders
+                var header = await _apparelProDbContext.SupplierPurchaseOrders
                     .FirstOrDefaultAsync(h => h.PurchaseOrderNumber == purchaseNumber);
                 if (header == null)
                 {
-                    header = new PurchaseOrderHeader { PurchaseOrderNumber = purchaseNumber };
-                    await _apparelProDbContext.PurchaseOrderHeaders.AddAsync(header);
+                    header = new SupplierPurchaseOrder { PurchaseOrderNumber = purchaseNumber };
+                    await _apparelProDbContext.SupplierPurchaseOrders.AddAsync(header);
                 }
 
                 header.SupplierCode = supplierCode;
@@ -393,7 +393,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 header.CurrencyCode = currencyCode;
                 header.IsPoUsed = false; // Release multi-user record edit lock cleanly upon successful completion
 
-                _apparelProDbContext.PurchaseOrderHeaders.Update(header);
+                _apparelProDbContext.SupplierPurchaseOrders.Update(header);
 
                 // Atomic commit saves all modifications inside an implicit transaction block safely supporting MARS connections
                 await _apparelProDbContext.SaveChangesAsync();

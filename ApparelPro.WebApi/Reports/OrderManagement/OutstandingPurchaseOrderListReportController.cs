@@ -5,7 +5,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ApparelPro.WebApi.Reports
+namespace ApparelPro.WebApi.Reports.OrderManagement
 {
     // Replicates OD_PLST1.PRG's "LIST OF OUTSTANDING P/O's - Date Wise" report -
     // Reports -> Order Management -> List of Outstanding P/O's.

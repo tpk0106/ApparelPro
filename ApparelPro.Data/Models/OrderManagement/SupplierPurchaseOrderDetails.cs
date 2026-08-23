@@ -1,6 +1,6 @@
-﻿namespace ApparelPro.Data.Models.OrderManagement
+namespace ApparelPro.Data.Models.OrderManagement
 {
-    public class PODetails
+    public class SupplierPurchaseOrderDetails
     {
         public int Id { get; set; } // Maintain an internal database auto-increment identity
 

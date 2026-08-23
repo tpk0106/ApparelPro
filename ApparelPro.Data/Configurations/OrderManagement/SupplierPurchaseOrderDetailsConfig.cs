@@ -1,16 +1,16 @@
-﻿using ApparelPro.Data.Models.OrderManagement;
+using ApparelPro.Data.Models.OrderManagement;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ApparelPro.Data.Configurations.OrderManagement
 {
-    public class PODetailsConfig : IEntityTypeConfiguration<PODetails>
+    public class SupplierPurchaseOrderDetailsConfig : IEntityTypeConfiguration<SupplierPurchaseOrderDetails>
     {
-        public void Configure(EntityTypeBuilder<PODetails> entity)
+        public void Configure(EntityTypeBuilder<SupplierPurchaseOrderDetails> entity)
         {
-            entity.ToTable("PODetails");
+            entity.ToTable("SupplierPurchaseOrderDetails");
 
-            // 1. FIXED PRIMARY KEY: Composite key includes PONo and ItemCode 
+            // 1. FIXED PRIMARY KEY: Composite key includes PONo and ItemCode
             // This safely allows multiple different material line items to exist under one PO!
             entity.HasKey(k => new { k.PONumber, k.Buyer, k.Order, k.Type, k.Style, k.ItemCode });
 
@@ -18,7 +18,7 @@ namespace ApparelPro.Data.Configurations.OrderManagement
             entity.Ignore(e => e.Id);
 
 
-            // 2. THE PERMANENT MAP FIX: Links your C# class property "PONumber" 
+            // 2. THE PERMANENT MAP FIX: Links your C# class property "PONumber"
             // straight to your physical SQL Server database column "PONo" safely!
             entity.Property(e => e.PONumber)
                 .HasColumnType("varchar(10)")
@@ -45,7 +45,7 @@ namespace ApparelPro.Data.Configurations.OrderManagement
                 .HasColumnName("Style")
                 .IsRequired();
 
-            // 3. SECURED ITEM STRING EXTENSION: Increased to varchar(40) 
+            // 3. SECURED ITEM STRING EXTENSION: Increased to varchar(40)
             // This safely accommodates your long 22+ character dynamic item configurations
             entity.Property(p => p.ItemCode)
                 .HasColumnType("varchar(40)")

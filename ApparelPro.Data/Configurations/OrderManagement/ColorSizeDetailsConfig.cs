@@ -1,4 +1,5 @@
 ﻿using ApparelPro.Data.Models.OrderManagement;
+using ApparelPro.Data.Models.References;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -22,7 +23,10 @@ namespace ApparelPro.Data.Configurations.OrderManagement
 
             entity.Property(e => e.Order)
                 .IsRequired()
-                .HasColumnType("varchar(12)") // Standard order length constraint
+                // nvarchar (not varchar) to match Styles.Order / PurchaseOrders.Order - required
+                // for the FK to Styles' natural key added in the Tier 2 relationships audit
+                // (SQL Server rejects an FK across differing column types even at equal length).
+                .HasColumnType("nvarchar(12)")
                 .HasColumnName("Order");
 
             entity.Property(e => e.TypeCode)
@@ -32,7 +36,8 @@ namespace ApparelPro.Data.Configurations.OrderManagement
 
             entity.Property(e => e.StyleCode)
                 .IsRequired()
-                .HasColumnType("varchar(12)") // Matches your StyleCode type length
+                // nvarchar to match Styles.Style - see the Order property's comment above.
+                .HasColumnType("nvarchar(12)")
                 .HasColumnName("Style");
 
             entity.Property(e => e.Color)
@@ -62,6 +67,15 @@ namespace ApparelPro.Data.Configurations.OrderManagement
                 .IsRequired(false)
                 .HasColumnType("varchar(30)")
                 .HasColumnName("Description");
+
+            // Tier 2 relationships audit: (BuyerCode, Order, TypeCode, StyleCode) was previously
+            // enforced only by matching values against Styles' natural key, with no real
+            // database constraint - a breakdown row could outlive its style.
+            entity.HasOne<Style>()
+                .WithMany()
+                .HasForeignKey(e => new { e.BuyerCode, e.Order, e.TypeCode, e.StyleCode })
+                .HasPrincipalKey(s => new { s.BuyerCode, s.Order, s.TypeCode, s.StyleCode })
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

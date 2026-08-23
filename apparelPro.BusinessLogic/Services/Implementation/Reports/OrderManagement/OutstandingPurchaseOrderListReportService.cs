@@ -22,7 +22,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reports.OrderManageme
         {
             var basisFilter = string.IsNullOrWhiteSpace(basisCode) ? null : basisCode.Trim();
 
-            var headersQuery = _apparelProDbContext.PurchaseOrderHeaders
+            var headersQuery = _apparelProDbContext.SupplierPurchaseOrders
                 .AsNoTracking()
                 .Where(h => h.CreatedDate.HasValue && h.CreatedDate.Value >= startDate && h.CreatedDate.Value <= endDate);
 
@@ -37,7 +37,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Reports.OrderManageme
 
             var poNumbers = headers.Select(h => h.PurchaseOrderNumber).ToList();
 
-            var details = await _apparelProDbContext.PODetails
+            var details = await _apparelProDbContext.SupplierPurchaseOrderDetails
                 .AsNoTracking()
                 .Where(d => poNumbers.Contains(d.PONumber))
                 .ToListAsync();
