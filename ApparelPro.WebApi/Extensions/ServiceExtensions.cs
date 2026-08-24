@@ -100,6 +100,7 @@ namespace ApparelPro.WebApi.Extensions
             services.AddTransient<IGarmentTypeItemsService, GarmentTypeItemsService>();
             services.AddTransient(typeof(IBuyerService), typeof(BuyerService));
             services.AddTransient(typeof(IBasisService), typeof(BasisService));
+            services.AddTransient(typeof(ISeasonService), typeof(SeasonService));
             services.AddTransient(typeof(IBankService), typeof(BankService));
             services.AddTransient(typeof(IAddressService), typeof(AddressService));
             services.AddTransient(typeof(ISupplierService), typeof(SupplierService));
@@ -154,6 +155,30 @@ namespace ApparelPro.WebApi.Extensions
             // Colour/Size Report (Reports -> Order Management -> Colour/Size)
             services.AddScoped<IColorSizeReportService, ColorSizeReportService>();
             services.AddScoped<IScheduledShipmentsReportService, ScheduledShipmentsReportService>();
+
+            // Shipment Status Report (Reports -> Order Management -> Shipment status Report)
+            services.AddScoped<IShipmentStatusReportService, ShipmentStatusReportService>();
+
+            // Year/Season Wise Orders Report (Reports -> Order Management -> Year/Season Wise Orders)
+            services.AddScoped<IYearSeasonOrdersReportService, YearSeasonOrdersReportService>();
+
+            // Pending Events Report (Reports -> Order Management -> Pending Events)
+            services.AddScoped<IPendingEventsReportService, PendingEventsReportService>();
+
+            // Stock Arrival Status Report (Reports -> Order Management -> Stock Arrival Status)
+            services.AddScoped<IStockArrivalStatusReportService, StockArrivalStatusReportService>();
+
+            // Cost of Production Report (Reports -> Order Management -> Cost of Production)
+            services.AddScoped<ICostOfProductionReportService, CostOfProductionReportService>();
+
+            // Order/Quota Detail Report (Reports -> Order Management -> Order/Quota Detail)
+            services.AddScoped<IOrderQuotaDetailReportService, OrderQuotaDetailReportService>();
+
+            // Post Order Cost Sheet Report (Reports -> Order Management -> Post Order Cost Sheet)
+            services.AddScoped<IPostOrderCostSheetReportService, PostOrderCostSheetReportService>();
+
+            // Monthly Actual Shipments Report (Reports -> Order Management -> Monthly Actual Shipments)
+            services.AddScoped<IMonthlyActualShipmentsReportService, MonthlyActualShipmentsReportService>();
 
             // Purchase Order List Report (Reports -> Order Management -> List of P/O's)
             services.AddScoped<IPurchaseOrderListReportService, PurchaseOrderListReportService>();

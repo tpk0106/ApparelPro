@@ -472,9 +472,163 @@ namespace ApparelPro.Data.Migrations
 
                     b.HasIndex("GarmentType");
 
+                    b.HasIndex("Season");
+
                     b.HasIndex("UnitCode");
 
                     b.ToTable("PurchaseOrders");
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.Shipments.CommercialInvoiceHeader", b =>
+                {
+                    b.Property<string>("InvoiceNumber")
+                        .HasColumnType("varchar(25)");
+
+                    b.Property<string>("AssessmentNumber")
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<int>("BuyerCode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CarrierCode")
+                        .HasColumnType("varchar(6)");
+
+                    b.Property<string>("ConsigneeCode")
+                        .HasColumnType("varchar(6)");
+
+                    b.Property<string>("ContinuingDestinationCode")
+                        .HasColumnType("varchar(3)");
+
+                    b.Property<string>("CurrencyCode")
+                        .HasColumnType("varchar(3)");
+
+                    b.Property<string>("DestinationCode")
+                        .HasColumnType("varchar(3)");
+
+                    b.Property<string>("Detail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DocumentaryBuyerCode")
+                        .HasColumnType("varchar(6)");
+
+                    b.Property<DateTime>("InvoiceDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("IssuingBankCode")
+                        .HasColumnType("varchar(3)");
+
+                    b.Property<DateTime?>("LcDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("LcNumber")
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("LoadPortCode")
+                        .HasColumnType("varchar(3)");
+
+                    b.Property<string>("NotifyPartyCode")
+                        .HasColumnType("varchar(6)");
+
+                    b.Property<string>("Remark1")
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<string>("Remark2")
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<string>("Remark3")
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<DateTime?>("ShipDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("TradeTermCode")
+                        .HasColumnType("varchar(3)");
+
+                    b.Property<string>("TradeTermLine1")
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("TradeTermLine2")
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("TradeTermLine3")
+                        .HasColumnType("varchar(30)");
+
+                    b.HasKey("InvoiceNumber");
+
+                    b.HasIndex("BuyerCode");
+
+                    b.ToTable("CommercialInvoiceHeaders", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.Shipments.CommercialInvoiceLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<int>("BuyerCode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FromYearMonth")
+                        .IsRequired()
+                        .HasColumnType("varchar(5)");
+
+                    b.Property<string>("InvoiceNumber")
+                        .IsRequired()
+                        .HasColumnType("varchar(25)");
+
+                    b.Property<string>("NewOrder")
+                        .IsRequired()
+                        .HasColumnType("varchar(12)");
+
+                    b.Property<string>("Order")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(12)");
+
+                    b.Property<string>("PackingMedia")
+                        .IsRequired()
+                        .HasColumnType("varchar(1)");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("QuotaCategory")
+                        .IsRequired()
+                        .HasColumnType("varchar(6)");
+
+                    b.Property<string>("QuotaCountry")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("StyleCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(12)");
+
+                    b.Property<string>("ToYearMonth")
+                        .IsRequired()
+                        .HasColumnType("varchar(5)");
+
+                    b.Property<int>("TypeCode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvoiceNumber");
+
+                    b.HasIndex("Unit");
+
+                    b.HasIndex("BuyerCode", "Order", "TypeCode", "StyleCode", "NewOrder");
+
+                    b.ToTable("CommercialInvoiceLines", (string)null);
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.Shipments.PartShipment", b =>
@@ -816,6 +970,20 @@ namespace ApparelPro.Data.Migrations
                     b.HasKey("NoteType");
 
                     b.ToTable("DocumentSequences", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderwiseInventory.GeneralStockReference", b =>
+                {
+                    b.Property<string>("ItemCode")
+                        .HasColumnType("varchar(22)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(60)");
+
+                    b.HasKey("ItemCode");
+
+                    b.ToTable("GeneralStockReferences", (string)null);
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.OrderwiseInventory.OrderwiseStock", b =>
@@ -2146,6 +2314,82 @@ namespace ApparelPro.Data.Migrations
                     b.ToTable("GarmentTypeItems", (string)null);
                 });
 
+            modelBuilder.Entity("ApparelPro.Data.Models.References.Season", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Seasons", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Code = "WINTER",
+                            Description = "WINTER"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Code = "SPRING",
+                            Description = "SPRING SEASON"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Code = "HOLIDA",
+                            Description = "HOLIDAY"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Code = "FALL",
+                            Description = "FALL"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Code = "FA93",
+                            Description = "FALL 1993"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Code = "FA95",
+                            Description = "FALL 1995"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Code = "SUMR96",
+                            Description = "SUMMER 1996"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Code = "SPRI96",
+                            Description = "SPRING SEASON 1996"
+                        });
+                });
+
             modelBuilder.Entity("ApparelPro.Data.Models.References.Stock", b =>
                 {
                     b.Property<string>("StockCode")
@@ -2686,10 +2930,49 @@ namespace ApparelPro.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("ApparelPro.Data.Models.References.Season", null)
+                        .WithMany()
+                        .HasForeignKey("Season")
+                        .HasPrincipalKey("Code")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("ApparelPro.Data.Models.References.Unit", null)
                         .WithMany()
                         .HasForeignKey("UnitCode")
                         .HasPrincipalKey("Code")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.Shipments.CommercialInvoiceHeader", b =>
+                {
+                    b.HasOne("ApparelPro.Data.Models.References.Buyer", null)
+                        .WithMany()
+                        .HasForeignKey("BuyerCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.Shipments.CommercialInvoiceLine", b =>
+                {
+                    b.HasOne("ApparelPro.Data.Models.OrderManagement.Shipments.CommercialInvoiceHeader", null)
+                        .WithMany()
+                        .HasForeignKey("InvoiceNumber")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ApparelPro.Data.Models.References.Unit", null)
+                        .WithMany()
+                        .HasForeignKey("Unit")
+                        .HasPrincipalKey("Code")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ApparelPro.Data.Models.References.Style", null)
+                        .WithMany()
+                        .HasForeignKey("BuyerCode", "Order", "TypeCode", "StyleCode")
+                        .HasPrincipalKey("BuyerCode", "Order", "TypeCode", "StyleCode")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

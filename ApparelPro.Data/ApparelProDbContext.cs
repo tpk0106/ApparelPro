@@ -50,6 +50,7 @@ namespace ApparelPro.Data
         public virtual DbSet<GarmentType> GarmentTypes { get; set; }
         public virtual DbSet<Style> Styles { get; set; }
         public virtual DbSet<Basis> Basis { get; set; }
+        public virtual DbSet<Season> Seasons { get; set; }
         public virtual DbSet<AdditionalCost> AdditionalCosts { get; set; }
         public virtual DbSet<Unit> Units { get; set; }
         public virtual DbSet<UnitConversion> UnitConversion { get; set; }
@@ -83,6 +84,7 @@ namespace ApparelPro.Data
 
         // inventory
         public virtual DbSet<OrderwiseStock> OrderwiseStocks { get; set; }
+        public virtual DbSet<GeneralStockReference> GeneralStockReferences { get; set; }
         public virtual DbSet<OrderwiseStockMaster> OrderwiseStockMasters { get; set; }
 
         public virtual DbSet<Department> Departments { get; set; } = null!;
@@ -93,6 +95,8 @@ namespace ApparelPro.Data
         // shipments
         public virtual DbSet<PartShipment> PartShipments { get; set; } = null!;
         public virtual DbSet<QuotaTransaction> QuotaTransactions { get; set; } = null!;
+        public virtual DbSet<CommercialInvoiceHeader> CommercialInvoiceHeaders { get; set; } = null!;
+        public virtual DbSet<CommercialInvoiceLine> CommercialInvoiceLines { get; set; } = null!;
 
         // system configuration
         public virtual DbSet<SystemParameter> SystemParameters { get; set; } = null!;
@@ -129,6 +133,7 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new GarmentTypeConfig());
             modelBuilder.ApplyConfiguration(new StyleConfig());
             modelBuilder.ApplyConfiguration(new BasisConfig());
+            modelBuilder.ApplyConfiguration(new SeasonConfig());
             modelBuilder.ApplyConfiguration(new AdditionalCostConfig());
             modelBuilder.ApplyConfiguration(new UnitConfig());
             modelBuilder.ApplyConfiguration(new UnitConversionConfig());
@@ -163,6 +168,7 @@ namespace ApparelPro.Data
 
             // inventory
             modelBuilder.ApplyConfiguration(new OrderwiseStockConfig());
+            modelBuilder.ApplyConfiguration(new GeneralStockReferenceConfig());
             modelBuilder.ApplyConfiguration(new OrderwiseStockMasterConfig());
 
             modelBuilder.ApplyConfiguration(new DocumentSequenceConfig());
@@ -172,6 +178,8 @@ namespace ApparelPro.Data
             // shipments
             modelBuilder.ApplyConfiguration(new PartShipmentConfig());
             modelBuilder.ApplyConfiguration(new QuotaTransactionConfig());
+            modelBuilder.ApplyConfiguration(new CommercialInvoiceHeaderConfig());
+            modelBuilder.ApplyConfiguration(new CommercialInvoiceLineConfig());
 
             // system configuration
             modelBuilder.ApplyConfiguration(new SystemParameterConfig());

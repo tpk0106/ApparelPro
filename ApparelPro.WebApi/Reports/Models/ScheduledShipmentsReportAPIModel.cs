@@ -6,6 +6,7 @@ namespace ApparelPro.WebApi.Reports.Models
         public string BuyerName { get; set; } = "";
         public string Order { get; set; } = null!;
         public int TypeCode { get; set; }
+        public string TypeName { get; set; } = "";
         public string StyleCode { get; set; } = null!;
         public string ShipmentOrderNo { get; set; } = null!;
         public string Unit { get; set; } = null!;

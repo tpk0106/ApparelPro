@@ -116,6 +116,16 @@ namespace ApparelPro.Data.Configurations.OrderManagement
                 .HasForeignKey(p => p.BasisCode)
                 .HasPrincipalKey(b => b.Code)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Season -> Season.Code: added for the Year/Season Wise Orders report, which
+            // needs a real season description, not just the raw code. Confirmed all 3
+            // distinct Season values already in use (FA95, FALL, Spring) resolve against
+            // the newly-seeded Seasons table before adding this constraint.
+            entity.HasOne<Season>()
+                .WithMany()
+                .HasForeignKey(p => p.Season)
+                .HasPrincipalKey(s => s.Code)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

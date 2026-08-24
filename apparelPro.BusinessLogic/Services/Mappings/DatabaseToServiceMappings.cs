@@ -10,6 +10,7 @@ using apparelPro.BusinessLogic.Services.Models.Reference.IAdditionalCostService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ISubContractorService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBasisService;
+using apparelPro.BusinessLogic.Services.Models.Reference.ISeasonService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBuyerService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICountryService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyConversionService;
@@ -216,6 +217,11 @@ namespace apparelPro.BusinessLogic.Services.Mappings
             CreateMap<Basis, BasisServiceModel>().MaxDepth(2);
             CreateMap<CreateBasisServiceModel,Basis>().MaxDepth(2);
             CreateMap<UpdateBasisServiceModel,Basis>().MaxDepth(2);
+
+            // season (od_sea) - reference data for the Season dropdown
+            CreateMap<Season, SeasonServiceModel>().MaxDepth(2);
+            CreateMap<CreateSeasonServiceModel, Season>().MaxDepth(2);
+            CreateMap<UpdateSeasonServiceModel, Season>().MaxDepth(2);
 
             // additional cost
             CreateMap<AdditionalCost, AdditionalCostServiceModel>().MaxDepth(2);

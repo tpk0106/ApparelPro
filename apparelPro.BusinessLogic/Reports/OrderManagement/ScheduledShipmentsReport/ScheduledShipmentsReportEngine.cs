@@ -66,7 +66,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderManagement.ScheduledShipmentsRep
                         {
                             table.Cell().Padding(2).Text(row.BuyerName);
                             table.Cell().Padding(2).Text(row.Order);
-                            table.Cell().Padding(2).Text($"{row.TypeCode}");
+                            table.Cell().Padding(2).Text(row.TypeName);
                             table.Cell().Padding(2).Text(row.StyleCode);
                             table.Cell().Padding(2).Text(row.ShipmentOrderNo);
                             table.Cell().Padding(2).Text(row.Unit);

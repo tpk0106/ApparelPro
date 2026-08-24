@@ -45,12 +45,20 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 .Where(b => buyerCodes.Contains(b.BuyerCode))
                 .ToDictionaryAsync(b => b.BuyerCode, b => b.Name);
 
+            // Type is always shown by name in this project's reports, never by raw code.
+            var typeCodes = shipments.Select(p => p.TypeCode).Distinct().ToList();
+            var typeNames = await _apparelProDbContext.GarmentTypes
+                .AsNoTracking()
+                .Where(t => typeCodes.Contains(t.Id))
+                .ToDictionaryAsync(t => t.Id, t => t.TypeName);
+
             var rows = shipments.Select(p => new ScheduledShipmentRowServiceModel
             {
                 BuyerCode = p.BuyerCode,
                 BuyerName = buyerNames.GetValueOrDefault(p.BuyerCode, p.BuyerCode.ToString()),
                 Order = p.Order,
                 TypeCode = p.TypeCode,
+                TypeName = typeNames.GetValueOrDefault(p.TypeCode, ""),
                 StyleCode = p.StyleCode,
                 ShipmentOrderNo = p.NewOrder,
                 Unit = p.Unit,

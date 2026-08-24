@@ -12,11 +12,20 @@ using apparelPro.BusinessLogic.Services.Models.OrderManagement.ITrimSheetReportS
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IGarmentAdditionalCostService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.ISubContractService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IScheduledShipmentsReportService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IShipmentStatusReportService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IYearSeasonOrdersReportService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPendingEventsReportService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStockArrivalStatusReportService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.ICostOfProductionReportService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IOrderQuotaDetailReportService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPostOrderCostSheetReportService;
+using apparelPro.BusinessLogic.Services.Models.OrderManagement.IMonthlyActualShipmentsReportService;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.Reference.IAdditionalCostService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ISubContractorService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBasisService;
+using apparelPro.BusinessLogic.Services.Models.Reference.ISeasonService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBuyerService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICountryService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ICurrencyConversionService;
@@ -220,6 +229,11 @@ namespace ApparelPro.WebApi.Mappings
 
             // basis
             CreateMap<UpdateBasisServiceModel, BasisAPIModel>().MaxDepth(2);
+            CreateMap<SeasonServiceModel, SeasonAPIModel>().MaxDepth(2);
+            CreateMap<CreateSeasonServiceModel, CreateSeasonAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<SeasonServiceModel, CreateSeasonAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<UpdateSeasonAPIModel, UpdateSeasonServiceModel>().MaxDepth(2);
+
             CreateMap<BasisServiceModel, BasisAPIModel>().MaxDepth(2)
                 .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))
                 .ForMember(src => src.Description, opt => opt.MapFrom(src => src.Description))
@@ -639,6 +653,50 @@ namespace ApparelPro.WebApi.Mappings
             // Scheduled Shipments Report
             CreateMap<ScheduledShipmentRowServiceModel, ScheduledShipmentRowAPIModel>().MaxDepth(2);
             CreateMap<ScheduledShipmentsReportServiceModel, ScheduledShipmentsReportAPIModel>().MaxDepth(2);
+
+            // Order/Quota Detail Report
+            CreateMap<OrderQuotaDetailRowServiceModel, OrderQuotaDetailRowAPIModel>().MaxDepth(2);
+            CreateMap<OrderQuotaDetailReportServiceModel, OrderQuotaDetailReportAPIModel>().MaxDepth(2);
+
+            // Post Order Cost Sheet Report
+            CreateMap<PostOrderCostSheetStyleServiceModel, PostOrderCostSheetStyleAPIModel>().MaxDepth(2);
+            CreateMap<PostOrderCostSheetSectionQuantityServiceModel, PostOrderCostSheetSectionQuantityAPIModel>().MaxDepth(2);
+            CreateMap<PostOrderCostSheetMaterialGroupServiceModel, PostOrderCostSheetMaterialGroupAPIModel>().MaxDepth(2);
+            CreateMap<PostOrderCostSheetAdditionalCostGroupServiceModel, PostOrderCostSheetAdditionalCostGroupAPIModel>().MaxDepth(2);
+            CreateMap<PostOrderCostSheetReportServiceModel, PostOrderCostSheetReportAPIModel>().MaxDepth(2);
+
+            // Monthly Actual Shipments Report
+            CreateMap<MonthlyActualShipmentRowServiceModel, MonthlyActualShipmentRowAPIModel>().MaxDepth(2);
+            CreateMap<MonthlyActualShipmentsReportServiceModel, MonthlyActualShipmentsReportAPIModel>().MaxDepth(2);
+
+            // Shipment Status Report
+            CreateMap<ShipmentStatusInvoiceLineServiceModel, ShipmentStatusInvoiceLineAPIModel>().MaxDepth(2);
+            CreateMap<ShipmentStatusRowServiceModel, ShipmentStatusRowAPIModel>().MaxDepth(2);
+            CreateMap<ShipmentStatusReportServiceModel, ShipmentStatusReportAPIModel>().MaxDepth(2);
+
+            // Year/Season Wise Orders Report
+            CreateMap<YearSeasonOrderStyleServiceModel, YearSeasonOrderStyleAPIModel>().MaxDepth(2);
+            CreateMap<YearSeasonOrderRowServiceModel, YearSeasonOrderRowAPIModel>().MaxDepth(2);
+            CreateMap<YearSeasonOrdersReportServiceModel, YearSeasonOrdersReportAPIModel>().MaxDepth(2);
+
+            // Pending Events Report
+            CreateMap<PendingEventRowServiceModel, PendingEventRowAPIModel>().MaxDepth(2);
+            CreateMap<PendingEventStyleGroupServiceModel, PendingEventStyleGroupAPIModel>().MaxDepth(2);
+            CreateMap<PendingEventsReportServiceModel, PendingEventsReportAPIModel>().MaxDepth(2);
+
+            // Stock Arrival Status Report
+            CreateMap<StockArrivalPoLineServiceModel, StockArrivalPoLineAPIModel>().MaxDepth(2);
+            CreateMap<StockArrivalItemServiceModel, StockArrivalItemAPIModel>().MaxDepth(2);
+            CreateMap<StockArrivalStatusReportServiceModel, StockArrivalStatusReportAPIModel>().MaxDepth(2);
+
+            // Cost of Production Report
+            CreateMap<CostOfProductionMaterialLineServiceModel, CostOfProductionMaterialLineAPIModel>().MaxDepth(2);
+            CreateMap<CostOfProductionAdditionalCostLineServiceModel, CostOfProductionAdditionalCostLineAPIModel>().MaxDepth(2);
+            CreateMap<CostOfProductionAdditionalCostGroupServiceModel, CostOfProductionAdditionalCostGroupAPIModel>().MaxDepth(2);
+            CreateMap<CostOfProductionSubContractLineServiceModel, CostOfProductionSubContractLineAPIModel>().MaxDepth(2);
+            CreateMap<CostOfProductionStyleRevenueServiceModel, CostOfProductionStyleRevenueAPIModel>().MaxDepth(2);
+            CreateMap<CostOfProductionLineCostServiceModel, CostOfProductionLineCostAPIModel>().MaxDepth(2);
+            CreateMap<CostOfProductionReportServiceModel, CostOfProductionReportAPIModel>().MaxDepth(2);
 
             // Purchase Order List Report (2026-08-08)
             CreateMap<PurchaseOrderListReportServiceModel, PurchaseOrderListReportAPIModel>().MaxDepth(2);
