@@ -2,6 +2,7 @@ using apparelPro.BusinessLogic.Configuration;
 using apparelPro.BusinessLogic.Services;
 using apparelPro.BusinessLogic.Services.Implementation.OrderManagement;
 using apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory;
+using apparelPro.BusinessLogic.Services.Implementation.GeneralInventory;
 using apparelPro.BusinessLogic.Services.Implementation.Dashboard;
 using apparelPro.BusinessLogic.Services.Implementation.Production;
 using apparelPro.BusinessLogic.Services.Implementation.Reference;
@@ -10,6 +11,7 @@ using apparelPro.BusinessLogic.Services.Implementation.Shared;
 using apparelPro.BusinessLogic.Services.Implementation.SystemConfiguration;
 using apparelPro.BusinessLogic.Services.interfaces.ISharedService;
 using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
+using apparelPro.BusinessLogic.Services.interfaces.GeneralInventory;
 using apparelPro.BusinessLogic.Services.interfaces.Reference;
 using apparelPro.BusinessLogic.Services.interfaces.Reports.OrderManagement;
 using apparelPro.BusinessLogic.Services.Implementation.Reports.OrderManagement;
@@ -198,6 +200,17 @@ namespace ApparelPro.WebApi.Extensions
             services.AddScoped<IAdditionalIssueNoteService, AdditionalIssueNoteService>();
             services.AddScoped<IStockMovementReportService, StockMovementReportService>();
             services.AddScoped<IStockMovementItemReportService, StockMovementItemReportService>();
+
+            // general inventory
+            services.AddScoped<IGeneralStoresRequisitionService, GeneralStoresRequisitionService>();
+            services.AddScoped<IGeneralGoodsIssueService, GeneralGoodsIssueService>();
+            services.AddScoped<IGeneralGoodsReceivedService, GeneralGoodsReceivedService>();
+            services.AddScoped<IGeneralGoodsTransferService, GeneralGoodsTransferService>();
+            services.AddScoped<IOrderGoodsTransferService, OrderGoodsTransferService>();
+            services.AddScoped<IGeneralGoodsReturnService, GeneralGoodsReturnService>();
+            services.AddScoped<IGeneralDamagedGoodsService, GeneralDamagedGoodsService>();
+            services.AddScoped<IGeneralSupplierReturnService, GeneralSupplierReturnService>();
+            services.AddScoped<IGeneralPurchaseOrderService, GeneralPurchaseOrderService>();
 
             // production control
             services.AddScoped<IProductionLineService, ProductionLineService>();

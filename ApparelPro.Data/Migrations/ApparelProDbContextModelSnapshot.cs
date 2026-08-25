@@ -22,6 +22,303 @@ namespace ApparelPro.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("ApparelPro.Data.Models.GeneralInventory.GeneralPurchaseOrder", b =>
+                {
+                    b.Property<string>("PoNumber")
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("PoNumber");
+
+                    b.Property<string>("BasisCode")
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("BasisCode");
+
+                    b.Property<string>("CurrencyCode")
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("CurrencyCode");
+
+                    b.Property<DateOnly?>("OrderDate")
+                        .HasColumnType("date")
+                        .HasColumnName("OrderDate");
+
+                    b.Property<TimeOnly?>("OrderTime")
+                        .HasColumnType("time")
+                        .HasColumnName("OrderTime");
+
+                    b.Property<DateOnly?>("ProformaInvoiceDate")
+                        .HasColumnType("date")
+                        .HasColumnName("ProformaInvoiceDate");
+
+                    b.Property<string>("ProformaInvoiceNo")
+                        .HasColumnType("varchar(15)")
+                        .HasColumnName("ProformaInvoiceNo");
+
+                    b.Property<string>("SupplierCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("SupplierCode");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("UserId");
+
+                    b.HasKey("PoNumber");
+
+                    b.ToTable("GeneralPurchaseOrders", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.GeneralInventory.GeneralPurchaseOrderDetails", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("Balance");
+
+                    b.Property<DateOnly?>("ExpectedDate")
+                        .HasColumnType("date")
+                        .HasColumnName("ExpectedDate");
+
+                    b.Property<string>("ItemCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(22)")
+                        .HasColumnName("ItemCode");
+
+                    b.Property<decimal>("OrderedQuantity")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("OrderedQuantity");
+
+                    b.Property<string>("PoNumber")
+                        .IsRequired()
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("PoNumber");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(10,4)")
+                        .HasColumnName("Price");
+
+                    b.Property<string>("RefNo")
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("RefNo");
+
+                    b.Property<string>("StoreCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("StoreCode");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("Unit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PoNumber");
+
+                    b.ToTable("GeneralPurchaseOrderDetails", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.GeneralInventory.GeneralStockMaster", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("Currency");
+
+                    b.Property<decimal>("DamagedQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("DamagedQuantity");
+
+                    b.Property<string>("ItemCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(22)")
+                        .HasColumnName("ItemCode");
+
+                    b.Property<decimal>("MaxStock")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("MaxStock");
+
+                    b.Property<decimal>("MinStock")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("MinStock");
+
+                    b.Property<decimal>("QtyInHand")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("QtyInHand");
+
+                    b.Property<decimal>("ReorderLevel")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("ReorderLevel");
+
+                    b.Property<decimal>("ReorderQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("ReorderQuantity");
+
+                    b.Property<decimal>("ShadowBalance")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("ShadowBalance");
+
+                    b.Property<string>("StoreCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("StoreCode");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("Unit");
+
+                    b.Property<decimal>("Value")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("Value");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Currency");
+
+                    b.HasIndex("Unit");
+
+                    b.HasIndex("StoreCode", "ItemCode")
+                        .IsUnique();
+
+                    b.ToTable("GeneralStockMasters", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.GeneralInventory.GeneralStockTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BuyerCode")
+                        .HasColumnType("int")
+                        .HasColumnName("BuyerCode");
+
+                    b.Property<string>("Currency")
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("Currency");
+
+                    b.Property<string>("DepartmentCode")
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("DepartmentCode");
+
+                    b.Property<string>("DocumentNumber")
+                        .IsRequired()
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("DocumentNumber");
+
+                    b.Property<decimal?>("ExchangeRate")
+                        .HasColumnType("decimal(7,3)")
+                        .HasColumnName("ExchangeRate");
+
+                    b.Property<string>("InvoiceNumber")
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("InvoiceNumber");
+
+                    b.Property<string>("ItemCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(22)")
+                        .HasColumnName("ItemCode");
+
+                    b.Property<string>("LinkedDocumentNumber")
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("LinkedDocumentNumber");
+
+                    b.Property<string>("Order")
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("Order");
+
+                    b.Property<string>("PoNumber")
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("PoNumber");
+
+                    b.Property<decimal>("Price")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("Price");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("Quantity");
+
+                    b.Property<string>("StoreCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("StoreCode");
+
+                    b.Property<string>("SupplierCode")
+                        .HasColumnType("varchar(6)")
+                        .HasColumnName("SupplierCode");
+
+                    b.Property<DateOnly>("TransactionDate")
+                        .HasColumnType("date")
+                        .HasColumnName("TransactionDate");
+
+                    b.Property<TimeOnly?>("TransactionTime")
+                        .HasColumnType("time")
+                        .HasColumnName("TransactionTime");
+
+                    b.Property<string>("TransactionTypeCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("TransactionTypeCode");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("Unit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreCode", "ItemCode", "TransactionDate");
+
+                    b.ToTable("GeneralStockTransactions", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.GeneralInventory.GeneralStore", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("Code");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("Description");
+
+                    b.HasKey("Code");
+
+                    b.ToTable("GeneralStores", (string)null);
+                });
+
             modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.ColorQuantityRatio", b =>
                 {
                     b.Property<int>("BuyerCode")
@@ -2859,6 +3156,31 @@ namespace ApparelPro.Data.Migrations
                     b.HasKey("EventCode");
 
                     b.ToTable("StylewiseEvents", (string)null);
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.GeneralInventory.GeneralPurchaseOrderDetails", b =>
+                {
+                    b.HasOne("ApparelPro.Data.Models.GeneralInventory.GeneralPurchaseOrder", null)
+                        .WithMany()
+                        .HasForeignKey("PoNumber")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ApparelPro.Data.Models.GeneralInventory.GeneralStockMaster", b =>
+                {
+                    b.HasOne("ApparelPro.Data.Models.References.Currency", null)
+                        .WithMany()
+                        .HasForeignKey("Currency")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ApparelPro.Data.Models.References.Unit", null)
+                        .WithMany()
+                        .HasForeignKey("Unit")
+                        .HasPrincipalKey("Code")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.OrderManagement.ColorQuantityRatio", b =>

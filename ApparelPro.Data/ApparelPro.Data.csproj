@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Configurations\GeneralInventory\" />
     <Folder Include="Migrations\UserIdentityDb\" />
   </ItemGroup>
 

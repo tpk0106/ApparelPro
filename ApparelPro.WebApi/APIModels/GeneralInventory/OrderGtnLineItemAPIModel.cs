@@ -1,0 +1,10 @@
+namespace ApparelPro.WebApi.APIModels.GeneralInventory
+{
+    public class OrderGtnLineItemAPIModel
+    {
+        public string StoreCode { get; set; } = null!;
+        public string ItemCode { get; set; } = null!;
+        public string Unit { get; set; } = null!;
+        public decimal Quantity { get; set; }
+    }
+}

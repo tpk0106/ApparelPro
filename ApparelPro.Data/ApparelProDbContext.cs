@@ -2,6 +2,7 @@
 using ApparelPro.Data.Configurations.OrderManagement;
 using ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Configurations.OrderManagement.Shipment;
+using ApparelPro.Data.Configurations.GeneralInventory;
 using ApparelPro.Data.Configurations.OrderManagement.Stylewise_events;
 using ApparelPro.Data.Configurations.OrderManagement.SubContracting;
 using ApparelPro.Data.Configurations.OrderwiseInventory;
@@ -14,6 +15,7 @@ using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Models.OrderManagement.Shipments;
 using ApparelPro.Data.Models.OrderManagement.SubContracting;
 using ApparelPro.Data.Models.OrderwiseInventory;
+using ApparelPro.Data.Models.GeneralInventory;
 using ApparelPro.Data.Models.Production;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Data.Models.Registration;
@@ -98,6 +100,13 @@ namespace ApparelPro.Data
         public virtual DbSet<CommercialInvoiceHeader> CommercialInvoiceHeaders { get; set; } = null!;
         public virtual DbSet<CommercialInvoiceLine> CommercialInvoiceLines { get; set; } = null!;
 
+        // general inventory
+        public virtual DbSet<GeneralStockMaster> GeneralStockMasters { get; set; } = null!;
+        public virtual DbSet<GeneralStockTransaction> GeneralStockTransactions { get; set; } = null!;
+        public virtual DbSet<GeneralPurchaseOrder> GeneralPurchaseOrders { get; set; } = null!;
+        public virtual DbSet<GeneralPurchaseOrderDetails> GeneralPurchaseOrderDetails { get; set; } = null!;
+        public virtual DbSet<GeneralStore> GeneralStores { get; set; } = null!;
+
         // system configuration
         public virtual DbSet<SystemParameter> SystemParameters { get; set; } = null!;
 
@@ -180,6 +189,13 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new QuotaTransactionConfig());
             modelBuilder.ApplyConfiguration(new CommercialInvoiceHeaderConfig());
             modelBuilder.ApplyConfiguration(new CommercialInvoiceLineConfig());
+
+            // general inventory
+            modelBuilder.ApplyConfiguration(new GeneralStockMasterConfig());
+            modelBuilder.ApplyConfiguration(new GeneralStockTransactionConfig());
+            modelBuilder.ApplyConfiguration(new GeneralPurchaseOrderConfig());
+            modelBuilder.ApplyConfiguration(new GeneralPurchaseOrderDetailsConfig());
+            modelBuilder.ApplyConfiguration(new GeneralStoreConfig());
 
             // system configuration
             modelBuilder.ApplyConfiguration(new SystemParameterConfig());

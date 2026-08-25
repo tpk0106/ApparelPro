@@ -21,6 +21,7 @@ using apparelPro.BusinessLogic.Services.Models.OrderManagement.IOrderQuotaDetail
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPostOrderCostSheetReportService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IMonthlyActualShipmentsReportService;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
+using apparelPro.BusinessLogic.Services.Models.GeneralInventory;
 using apparelPro.BusinessLogic.Services.Models.Reference.IAdditionalCostService;
 using apparelPro.BusinessLogic.Services.Models.Reference.ISubContractorService;
 using apparelPro.BusinessLogic.Services.Models.Reference.IBankService;
@@ -87,6 +88,7 @@ using ApparelPro.Shared.Extensions;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.OrderManagement;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
+using ApparelPro.WebApi.APIModels.GeneralInventory;
 using ApparelPro.WebApi.APIModels.Production;
 using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.APIModels.Registration;
@@ -719,6 +721,70 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<StrnPrintHeaderServiceModel, StrnPrintHeaderAPIModel>().MaxDepth(2);
             CreateMap<StrnPrintLineServiceModel, StrnPrintLineAPIModel>().MaxDepth(2);
             CreateMap<StrnPrintDetailsServiceModel, StrnPrintDetailsAPIModel>().MaxDepth(2);
+
+            // general inventory - STRN
+            CreateMap<GeneralRequisitionHeaderAPIModel, GeneralRequisitionHeaderServiceModel>().MaxDepth(2);
+            CreateMap<GeneralRequisitionLineItemAPIModel, GeneralRequisitionLineItemServiceModel>().MaxDepth(2);
+            CreateMap<GeneralSTRNAPIModel, GeneralSTRNServiceModel>().MaxDepth(2);
+            CreateMap<GeneralStockItemAvailabilityServiceModel, GeneralStockItemAvailabilityAPIModel>().MaxDepth(2);
+            CreateMap<GeneralStockLookupRowServiceModel, GeneralStockLookupRowAPIModel>().MaxDepth(2);
+            CreateMap<GeneralStrnPrintHeaderServiceModel, GeneralStrnPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralStrnPrintLineServiceModel, GeneralStrnPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralStrnPrintDetailsServiceModel, GeneralStrnPrintDetailsAPIModel>().MaxDepth(2);
+            CreateMap<GeneralStoreServiceModel, GeneralStoreAPIModel>().MaxDepth(2);
+
+            // general inventory - GIN
+            CreateMap<GeneralGinHeaderAPIModel, GeneralGinHeaderServiceModel>().MaxDepth(2);
+            CreateMap<GeneralGinLineItemAPIModel, GeneralGinLineItemServiceModel>().MaxDepth(2);
+            CreateMap<GeneralGinIssuableStrnLineServiceModel, GeneralGinIssuableStrnLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralGinStrnLookupResultServiceModel, GeneralGinStrnLookupResultAPIModel>().MaxDepth(2);
+            CreateMap<GeneralGinPrintHeaderServiceModel, GeneralGinPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralGinPrintLineServiceModel, GeneralGinPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralGinPrintDetailsServiceModel, GeneralGinPrintDetailsAPIModel>().MaxDepth(2);
+
+            // general inventory - GRN
+            CreateMap<GeneralGrnHeaderAPIModel, GeneralGrnHeaderServiceModel>().MaxDepth(2);
+            CreateMap<GeneralGrnLineItemAPIModel, GeneralGrnLineItemServiceModel>().MaxDepth(2);
+            CreateMap<GeneralGrnReceivableLineServiceModel, GeneralGrnReceivableLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralGrnPoLookupResultServiceModel, GeneralGrnPoLookupResultAPIModel>().MaxDepth(2);
+            CreateMap<GeneralGrnPrintHeaderServiceModel, GeneralGrnPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralGrnPrintLineServiceModel, GeneralGrnPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralGrnPrintDetailsServiceModel, GeneralGrnPrintDetailsAPIModel>().MaxDepth(2);
+            CreateMap<GeneralGtnHeaderAPIModel, GeneralGtnHeaderServiceModel>().MaxDepth(2);
+            CreateMap<GeneralGtnLineItemAPIModel, GeneralGtnLineItemServiceModel>().MaxDepth(2);
+            CreateMap<GeneralGtnPrintHeaderServiceModel, GeneralGtnPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralGtnPrintLineServiceModel, GeneralGtnPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralGtnPrintDetailsServiceModel, GeneralGtnPrintDetailsAPIModel>().MaxDepth(2);
+            CreateMap<OrderGtnHeaderAPIModel, OrderGtnHeaderServiceModel>().MaxDepth(2);
+            CreateMap<OrderGtnLineItemAPIModel, OrderGtnLineItemServiceModel>().MaxDepth(2);
+            CreateMap<OrderGtnTransferableStockRowServiceModel, OrderGtnTransferableStockRowAPIModel>().MaxDepth(2);
+            CreateMap<OrderGtnPrintHeaderServiceModel, OrderGtnPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<OrderGtnPrintLineServiceModel, OrderGtnPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<OrderGtnPrintDetailsServiceModel, OrderGtnPrintDetailsAPIModel>().MaxDepth(2);
+            CreateMap<GeneralRtnHeaderAPIModel, GeneralRtnHeaderServiceModel>().MaxDepth(2);
+            CreateMap<GeneralRtnLineItemAPIModel, GeneralRtnLineItemServiceModel>().MaxDepth(2);
+            CreateMap<GeneralRtnPrintHeaderServiceModel, GeneralRtnPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralRtnPrintLineServiceModel, GeneralRtnPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralRtnPrintDetailsServiceModel, GeneralRtnPrintDetailsAPIModel>().MaxDepth(2);
+            CreateMap<GeneralDgnHeaderAPIModel, GeneralDgnHeaderServiceModel>().MaxDepth(2);
+            CreateMap<GeneralDgnLineItemAPIModel, GeneralDgnLineItemServiceModel>().MaxDepth(2);
+            CreateMap<GeneralDgnPrintHeaderServiceModel, GeneralDgnPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralDgnPrintLineServiceModel, GeneralDgnPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralDgnPrintDetailsServiceModel, GeneralDgnPrintDetailsAPIModel>().MaxDepth(2);
+            CreateMap<GeneralSrtnHeaderAPIModel, GeneralSrtnHeaderServiceModel>().MaxDepth(2);
+            CreateMap<GeneralSrtnLineItemAPIModel, GeneralSrtnLineItemServiceModel>().MaxDepth(2);
+            CreateMap<GeneralSrtnPrintHeaderServiceModel, GeneralSrtnPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralSrtnPrintLineServiceModel, GeneralSrtnPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralSrtnPrintDetailsServiceModel, GeneralSrtnPrintDetailsAPIModel>().MaxDepth(2);
+            CreateMap<GeneralPoHeaderAPIModel, GeneralPoHeaderServiceModel>().MaxDepth(2);
+            CreateMap<GeneralPoHeaderServiceModel, GeneralPoHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralPoLineItemAPIModel, GeneralPoLineItemServiceModel>().MaxDepth(2);
+            CreateMap<GeneralPoLineItemServiceModel, GeneralPoLineItemAPIModel>().MaxDepth(2);
+            CreateMap<GeneralPOServiceModel, GeneralPOAPIModel>().MaxDepth(2);
+            CreateMap<GeneralPoCommitResultServiceModel, GeneralPoCommitResultAPIModel>().MaxDepth(2);
+            CreateMap<GeneralPoPrintHeaderServiceModel, GeneralPoPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralPoPrintLineServiceModel, GeneralPoPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralPoPrintDetailsServiceModel, GeneralPoPrintDetailsAPIModel>().MaxDepth(2);
 
             // orderwise inventory - GIN
             CreateMap<GinHeaderAPIModel, GinHeaderServiceModel>().MaxDepth(2);

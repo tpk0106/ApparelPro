@@ -19,9 +19,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Reports\GeneralInventory\" />
+    <Folder Include="Services\Implementation\GeneralInventory\" />
     <Folder Include="Services\Implementation\Reports\OrderManagement\" />
+    <Folder Include="Services\interfaces\GeneralInventory\" />
     <Folder Include="Services\interfaces\OrderManagement\" />
     <Folder Include="Services\interfaces\Reports\OrderManagement\" />
+    <Folder Include="Services\Models\GeneralInventory\" />
     <Folder Include="Services\Models\OrderManagement\ISupplierPurchaseOrder\" />
     <Folder Include="Services\Reports\Models\" />
   </ItemGroup>

@@ -32,7 +32,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="APIModels\GeneralInventory\" />
     <Folder Include="APIModels\Shared\" />
+    <Folder Include="Controllers\GeneralInventory\" />
+    <Folder Include="Reports\GeneralInventory\" />
     <Folder Include="Reports\Production\" />
   </ItemGroup>
 
