@@ -60,6 +60,10 @@ namespace ApparelPro.Data.Configurations.OrderwiseInventory
             entity.Property(e => e.SubContractorCode).HasColumnType("varchar(6)").IsRequired(false);
             entity.Property(e => e.AdditionalProcessCode).HasColumnType("varchar(3)").IsRequired(false);
 
+            // ARN traceability addition - Invoice No for an Additional Goods Receipt Note
+            // ('0X') row (legacy inv_no), same width as GeneralStockTransaction.InvoiceNumber.
+            entity.Property(e => e.InvoiceNumber).HasColumnType("varchar(10)").IsRequired(false);
+
             // Tier 1 relationships audit (2026-08-16): these 5 columns were previously enforced
             // only by matching values, with no real database constraint. DepartmentCode ->
             // Departments.DepartmentCode is deliberately EXCLUDED here - 17 existing rows have

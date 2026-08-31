@@ -58,7 +58,7 @@ namespace ApparelPro.Data.Migrations
                         .HasColumnName("SupplierCode");
 
                     b.Property<string>("UserId")
-                        .HasColumnType("varchar(6)")
+                        .HasColumnType("varchar(50)")
                         .HasColumnName("UserId");
 
                     b.HasKey("PoNumber");
@@ -1500,6 +1500,9 @@ namespace ApparelPro.Data.Migrations
 
                     b.Property<string>("DocumentNumber")
                         .IsRequired()
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("InvoiceNumber")
                         .HasColumnType("varchar(10)");
 
                     b.Property<string>("ItemCode")

@@ -133,6 +133,14 @@ namespace ApparelPro.Data
         {
             base.OnModelCreating(modelBuilder);
 
+
+            // 1. Force the database engine to maintain a stable, active state on the server
+            modelBuilder.HasAnnotation("SqlServer:Identity", "1, 1");
+
+            // Note: EF Core does not have a native fluent API for 'AUTO_CLOSE' or explicit initial file sizes.
+            // To handle this cleanly via code-first migrations, we can generate an empty migration 
+            // and inject raw T-SQL directly into the migration's Up() method.
+
             modelBuilder.ApplyConfiguration(new BuyerConfig());
             modelBuilder.ApplyConfiguration(new CurrencyConfig());
             modelBuilder.ApplyConfiguration(new DestinationConfig());

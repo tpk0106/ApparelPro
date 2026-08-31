@@ -198,6 +198,15 @@ namespace ApparelPro.WebApi.Extensions
             services.AddScoped<IDamagedGoodsNoteService, DamagedGoodsNoteService>();
             services.AddScoped<IStockAdjustmentNoteService, StockAdjustmentNoteService>();
             services.AddScoped<IAdditionalIssueNoteService, AdditionalIssueNoteService>();
+            services.AddScoped<IAdditionalGoodsReceiptNoteService, AdditionalGoodsReceiptNoteService>();
+            services.AddScoped<IStockValuationReportService, StockValuationReportService>();
+            services.AddScoped<IStockValuationMonthlyReportService, StockValuationMonthlyReportService>();
+            services.AddScoped<IStockStatusReportService, StockStatusReportService>();
+            services.AddScoped<ITransactionListReportService, TransactionListReportService>();
+            services.AddScoped<IItemWiseStockBalanceService, ItemWiseStockBalanceService>();
+            services.AddScoped<IRawMaterialControlSheetService, RawMaterialControlSheetService>();
+            services.AddScoped<IStockSummaryReportService, StockSummaryReportService>();
+            services.AddScoped<IGrnListingReportService, GrnListingReportService>();
             services.AddScoped<IStockMovementReportService, StockMovementReportService>();
             services.AddScoped<IStockMovementItemReportService, StockMovementItemReportService>();
 
@@ -211,6 +220,16 @@ namespace ApparelPro.WebApi.Extensions
             services.AddScoped<IGeneralDamagedGoodsService, GeneralDamagedGoodsService>();
             services.AddScoped<IGeneralSupplierReturnService, GeneralSupplierReturnService>();
             services.AddScoped<IGeneralPurchaseOrderService, GeneralPurchaseOrderService>();
+            services.AddScoped<IGeneralStockMasterService, GeneralStockMasterService>();
+            services.AddScoped<IGeneralStockAdjustmentService, GeneralStockAdjustmentService>();
+            services.AddScoped<IGeneralStockStatusReportService, GeneralStockStatusReportService>();
+            services.AddScoped<IGeneralStockMovementReportService, GeneralStockMovementReportService>();
+            services.AddScoped<IGeneralStockValuationReportService, GeneralStockValuationReportService>();
+            services.AddScoped<IGeneralStockReorderReportService, GeneralStockReorderReportService>();
+            services.AddScoped<IGeneralTransactionListReportService, GeneralTransactionListReportService>();
+            services.AddScoped<IGeneralPurchaseOrderListReportService, GeneralPurchaseOrderListReportService>();
+            services.AddScoped<IGeneralStockSummaryReportService, GeneralStockSummaryReportService>();
+            services.AddScoped<IGeneralGrnListingReportService, GeneralGrnListingReportService>();
 
             // production control
             services.AddScoped<IProductionLineService, ProductionLineService>();

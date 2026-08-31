@@ -1,3 +1,4 @@
+using apparelPro.BusinessLogic.Reports.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
@@ -87,6 +88,51 @@ namespace ApparelPro.WebApi.Controllers.OrderwiseInventory
             catch (Exception ex)
             {
                 return StatusCode(500, new { Error = $"Transaction processing failed on the SQL server: {ex.Message}" });
+            }
+        }
+
+        // 3. GET: api/orderwise-inventory-ain/print?ainNumber=000123
+        [HttpGet("print")]
+        public async Task<IActionResult> GetAinPrintDetails([FromQuery] string ainNumber)
+        {
+            if (string.IsNullOrWhiteSpace(ainNumber))
+                return BadRequest("Parameter 'ainNumber' is required.");
+
+            try
+            {
+                var details = await _additionalIssueNoteService.GetAinPrintDetailsAsync(ainNumber);
+                return Ok(_mapper.Map<AinPrintDetailsAPIModel>(details));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to load Additional Issue Note: {ex.Message}" });
+            }
+        }
+
+        // 4. GET: api/orderwise-inventory-ain/print/pdf?ainNumber=000123
+        [HttpGet("print/pdf")]
+        public async Task<IActionResult> GetAinPrintPdf([FromQuery] string ainNumber)
+        {
+            if (string.IsNullOrWhiteSpace(ainNumber))
+                return BadRequest("Parameter 'ainNumber' is required.");
+
+            try
+            {
+                var details = await _additionalIssueNoteService.GetAinPrintDetailsAsync(ainNumber);
+                byte[] pdfBytes = AinPrintEngine.GenerateAinPrintPdf(details);
+                return File(pdfBytes, "application/pdf", $"AIN_{ainNumber}.pdf");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to generate Additional Issue Note PDF: {ex.Message}" });
             }
         }
     }

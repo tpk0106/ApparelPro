@@ -1,13 +1,13 @@
+using apparelPro.BusinessLogic.Reports.Shared;
 using apparelPro.BusinessLogic.Services.Models.GeneralInventory;
 using QuestPDF.Fluent;
-using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
 namespace apparelPro.BusinessLogic.Reports.GeneralInventory
 {
     // Modern equivalent of legacy GI_GRN2.PRG (print run of a committed General
     // Inventory Goods Received Note). Same header-repeats / signature-once-at-end
-    // structure as GeneralStrnPrintEngine/GeneralGinPrintEngine.
+    // structure as GeneralStrnPrintEngine/GeneralGinPrintEngine - see NotePrintEngineHelper.
     public class GeneralGrnPrintEngine
     {
         public static byte[] GenerateGrnPrintPdf(GeneralGrnPrintDetailsServiceModel details)
@@ -20,39 +20,26 @@ namespace apparelPro.BusinessLogic.Reports.GeneralInventory
             {
                 container.Page(page =>
                 {
-                    page.Size(PageSizes.A4);
-                    page.Margin(2, Unit.Centimetre);
-                    page.PageColor(Colors.White);
-                    page.DefaultTextStyle(x => x.FontFamily(Fonts.Arial).FontSize(9));
+                    page.ConfigureStandardPage();
 
-                    page.Header().Column(column =>
-                    {
-                        column.Item().Row(row =>
+                    page.RenderNoteHeader(
+                        "GOODS RECEIVED NOTE (General Inventory)",
+                        "GRN No",
+                        details.Header.GrnNumber,
+                        details.Header.PrintedOn,
+                        detailsColumn =>
                         {
-                            row.RelativeItem().Text("GOODS RECEIVED NOTE (General Inventory)").FontSize(14).Bold();
-                            row.ConstantItem(160).Column(dateCol =>
+                            detailsColumn.Item().Row(row =>
                             {
-                                dateCol.Item().AlignRight().Text($"Date : {details.Header.PrintedOn:dd/MM/yyyy}").FontSize(9);
-                                dateCol.Item().AlignRight().Text($"Time : {details.Header.PrintedOn:HH:mm}").FontSize(9);
+                                row.RelativeItem().Text(t => { t.Span("P/O No : ").Bold(); t.Span(details.Header.PoNumber); });
+                                row.RelativeItem().Text(t => { t.Span("Supplier : ").Bold(); t.Span(details.Header.SupplierCode); });
+                                row.RelativeItem().Text(t => { t.Span("Currency : ").Bold(); t.Span(details.Header.CurrencyCode); });
+                            });
+                            detailsColumn.Item().PaddingTop(4).Row(row =>
+                            {
+                                row.RelativeItem().Text(t => { t.Span("Invoice No : ").Bold(); t.Span(details.Header.InvoiceNumber ?? ""); });
                             });
                         });
-                        column.Item().PaddingTop(2).Text($"GRN No : {details.Header.GrnNumber}").Bold();
-
-                        column.Item().PaddingTop(6).LineHorizontal(1).LineColor(Colors.Black);
-
-                        column.Item().PaddingTop(6).Row(row =>
-                        {
-                            row.RelativeItem().Text(t => { t.Span("P/O No : ").Bold(); t.Span(details.Header.PoNumber); });
-                            row.RelativeItem().Text(t => { t.Span("Supplier : ").Bold(); t.Span(details.Header.SupplierCode); });
-                            row.RelativeItem().Text(t => { t.Span("Currency : ").Bold(); t.Span(details.Header.CurrencyCode); });
-                        });
-                        column.Item().PaddingTop(4).Row(row =>
-                        {
-                            row.RelativeItem().Text(t => { t.Span("Invoice No : ").Bold(); t.Span(details.Header.InvoiceNumber ?? ""); });
-                        });
-
-                        column.Item().PaddingTop(8).LineHorizontal(1).LineColor(Colors.Black);
-                    });
 
                     page.Content().PaddingTop(10).Column(column =>
                     {
@@ -76,7 +63,7 @@ namespace apparelPro.BusinessLogic.Reports.GeneralInventory
                                 headerRow.Cell().Text("Unit").Bold();
                                 headerRow.Cell().AlignRight().Text("Quantity").Bold();
                                 headerRow.Cell().AlignRight().Text("Price").Bold();
-                                headerRow.Cell().ColumnSpan(6).PaddingTop(2).LineHorizontal(1).LineColor(Colors.Grey.Darken2);
+                                headerRow.Cell().ColumnSpan(6).PaddingTop(2).LineHorizontal(1).LineColor(QuestPDF.Helpers.Colors.Grey.Darken2);
                             });
 
                             foreach (var line in details.Lines)
@@ -90,34 +77,10 @@ namespace apparelPro.BusinessLogic.Reports.GeneralInventory
                             }
                         });
 
-                        column.Item().PaddingTop(40).Row(row =>
-                        {
-                            row.RelativeItem().Column(sig =>
-                            {
-                                sig.Item().PaddingRight(20).LineHorizontal(1).LineColor(Colors.Black);
-                                sig.Item().PaddingTop(2).Text("Prepared By").FontSize(9);
-                            });
-                            row.RelativeItem().Column(sig =>
-                            {
-                                sig.Item().PaddingRight(20).LineHorizontal(1).LineColor(Colors.Black);
-                                sig.Item().PaddingTop(2).Text("Checked By").FontSize(9);
-                            });
-                            row.RelativeItem().Column(sig =>
-                            {
-                                sig.Item().PaddingRight(20).LineHorizontal(1).LineColor(Colors.Black);
-                                sig.Item().PaddingTop(2).Text("Authorised By").FontSize(9);
-                            });
-                        });
+                        column.RenderSignatureBlock();
                     });
 
-                    page.Footer().AlignCenter().Text(x =>
-                    {
-                        x.DefaultTextStyle(TextStyle.Default.FontSize(8));
-                        x.Span("Page ");
-                        x.CurrentPageNumber();
-                        x.Span(" of ");
-                        x.TotalPages();
-                    });
+                    page.RenderPageNumberFooter();
                 });
             }).GeneratePdf(memoryStream);
 

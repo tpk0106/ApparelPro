@@ -24,6 +24,9 @@ namespace ApparelPro.Data.Models.OrderwiseInventory
         public decimal IssuedQuantity { get; set; }
 
         // GRN traceability addition: running total received via GRN (legacy rcvd_qty).
+        // Also incremented by ARN ("Additional Goods Receipts Note") - legacy IN_ARN4.PRG
+        // writes to this same rcvd_qty field, since both represent "goods received against
+        // this order," just from a Supplier (GRN) or a Sub-Contractor (ARN).
         public decimal ReceivedQuantity { get; set; }
 
         // RTN traceability addition: running total returned via Goods Return Note

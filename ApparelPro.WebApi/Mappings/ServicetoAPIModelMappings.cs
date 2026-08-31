@@ -722,6 +722,16 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<StrnPrintLineServiceModel, StrnPrintLineAPIModel>().MaxDepth(2);
             CreateMap<StrnPrintDetailsServiceModel, StrnPrintDetailsAPIModel>().MaxDepth(2);
 
+            // orderwise inventory - AIN print
+            CreateMap<AinPrintHeaderServiceModel, AinPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<AinPrintLineServiceModel, AinPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<AinPrintDetailsServiceModel, AinPrintDetailsAPIModel>().MaxDepth(2);
+
+            // orderwise inventory - ARN print
+            CreateMap<ArnPrintHeaderServiceModel, ArnPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<ArnPrintLineServiceModel, ArnPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<ArnPrintDetailsServiceModel, ArnPrintDetailsAPIModel>().MaxDepth(2);
+
             // general inventory - STRN
             CreateMap<GeneralRequisitionHeaderAPIModel, GeneralRequisitionHeaderServiceModel>().MaxDepth(2);
             CreateMap<GeneralRequisitionLineItemAPIModel, GeneralRequisitionLineItemServiceModel>().MaxDepth(2);
@@ -785,6 +795,30 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<GeneralPoPrintHeaderServiceModel, GeneralPoPrintHeaderAPIModel>().MaxDepth(2);
             CreateMap<GeneralPoPrintLineServiceModel, GeneralPoPrintLineAPIModel>().MaxDepth(2);
             CreateMap<GeneralPoPrintDetailsServiceModel, GeneralPoPrintDetailsAPIModel>().MaxDepth(2);
+            CreateMap<GeneralStockMasterEntryAPIModel, GeneralStockMasterEntryServiceModel>().MaxDepth(2);
+            CreateMap<GeneralStockMasterRowServiceModel, GeneralStockMasterRowAPIModel>().MaxDepth(2);
+            CreateMap<GeneralStockMasterUpdateAPIModel, GeneralStockMasterUpdateServiceModel>().MaxDepth(2);
+            CreateMap<GeneralSanHeaderAPIModel, GeneralSanHeaderServiceModel>().MaxDepth(2);
+            CreateMap<GeneralSanLineItemAPIModel, GeneralSanLineItemServiceModel>().MaxDepth(2);
+            CreateMap<GeneralSanPrintHeaderServiceModel, GeneralSanPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralSanPrintLineServiceModel, GeneralSanPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralSanPrintDetailsServiceModel, GeneralSanPrintDetailsAPIModel>().MaxDepth(2);
+            CreateMap<GeneralStockStatusReportHeaderServiceModel, GeneralStockStatusReportHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralStockStatusReportLineServiceModel, GeneralStockStatusReportLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralStockMovementReportHeaderServiceModel, GeneralStockMovementReportHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralStockMovementReportLineServiceModel, GeneralStockMovementReportLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralStockValuationReportHeaderServiceModel, GeneralStockValuationReportHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralStockValuationReportLineServiceModel, GeneralStockValuationReportLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralStockReorderReportHeaderServiceModel, GeneralStockReorderReportHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralStockReorderReportLineServiceModel, GeneralStockReorderReportLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralTransactionListReportHeaderServiceModel, GeneralTransactionListReportHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralTransactionListReportLineServiceModel, GeneralTransactionListReportLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralPurchaseOrderListReportHeaderServiceModel, GeneralPurchaseOrderListReportHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralPurchaseOrderListReportLineServiceModel, GeneralPurchaseOrderListReportLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralStockSummaryReportHeaderServiceModel, GeneralStockSummaryReportHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralStockSummaryReportLineServiceModel, GeneralStockSummaryReportLineAPIModel>().MaxDepth(2);
+            CreateMap<GeneralGrnListingReportHeaderServiceModel, GeneralGrnListingReportHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GeneralGrnListingReportLineServiceModel, GeneralGrnListingReportLineAPIModel>().MaxDepth(2);
 
             // orderwise inventory - GIN
             CreateMap<GinHeaderAPIModel, GinHeaderServiceModel>().MaxDepth(2);
@@ -821,6 +855,28 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<AinIssuableStockRowServiceModel, AinIssuableStockRowAPIModel>().MaxDepth(2);
             CreateMap<AinHeaderAPIModel, AinHeaderServiceModel>().MaxDepth(2);
             CreateMap<AinLineItemAPIModel, AinLineItemServiceModel>().MaxDepth(2);
+            CreateMap<ArnReceivableStockRowServiceModel, ArnReceivableStockRowAPIModel>().MaxDepth(2);
+            CreateMap<ArnHeaderAPIModel, ArnHeaderServiceModel>().MaxDepth(2);
+            CreateMap<ArnLineItemAPIModel, ArnLineItemServiceModel>().MaxDepth(2);
+
+            // orderwise inventory - Stock Valuation Report
+            CreateMap<StockValuationReportHeaderServiceModel, StockValuationReportHeaderAPIModel>().MaxDepth(2);
+            CreateMap<StockValuationReportStyleServiceModel, StockValuationReportStyleAPIModel>().MaxDepth(2);
+            CreateMap<StockValuationReportLineServiceModel, StockValuationReportLineAPIModel>().MaxDepth(2);
+            CreateMap<StockValuationMonthlyReportHeaderServiceModel, StockValuationMonthlyReportHeaderAPIModel>().MaxDepth(2);
+            CreateMap<StockValuationMonthlyReportLineServiceModel, StockValuationMonthlyReportLineAPIModel>().MaxDepth(2);
+            CreateMap<StockStatusReportHeaderServiceModel, StockStatusReportHeaderAPIModel>().MaxDepth(2);
+            CreateMap<StockStatusReportLineServiceModel, StockStatusReportLineAPIModel>().MaxDepth(2);
+            CreateMap<TransactionListReportHeaderServiceModel, TransactionListReportHeaderAPIModel>().MaxDepth(2);
+            CreateMap<TransactionListReportLineServiceModel, TransactionListReportLineAPIModel>().MaxDepth(2);
+            CreateMap<ItemWiseStockBalanceHeaderServiceModel, ItemWiseStockBalanceHeaderAPIModel>().MaxDepth(2);
+            CreateMap<ItemWiseStockBalanceLineServiceModel, ItemWiseStockBalanceLineAPIModel>().MaxDepth(2);
+            CreateMap<RawMaterialControlSheetHeaderServiceModel, RawMaterialControlSheetHeaderAPIModel>().MaxDepth(2);
+            CreateMap<RawMaterialControlSheetLineServiceModel, RawMaterialControlSheetLineAPIModel>().MaxDepth(2);
+            CreateMap<StockSummaryReportHeaderServiceModel, StockSummaryReportHeaderAPIModel>().MaxDepth(2);
+            CreateMap<StockSummaryReportLineServiceModel, StockSummaryReportLineAPIModel>().MaxDepth(2);
+            CreateMap<GrnListingReportHeaderServiceModel, GrnListingReportHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GrnListingReportLineServiceModel, GrnListingReportLineAPIModel>().MaxDepth(2);
 
             // orderwise inventory - DGN (Damaged Goods Note)
             // FIXED (2026-08-07): found via a full sweep of every controller's _mapper.Map<>

@@ -285,5 +285,80 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 }
             }
         }
+
+        // Modern equivalent of legacy IN_AIN2.PRG - "seek m_docno+'4X'" then walks
+        // in_sttr while docno+id matches, printing Item/Description/Unit/Qty/Store.
+        public async Task<AinPrintDetailsServiceModel> GetAinPrintDetailsAsync(string ainNumber)
+        {
+            ainNumber = ainNumber.Trim();
+
+            var transactionRows = await _apparelProDbContext.OrderwiseStockTransactions
+                .AsNoTracking()
+                .Where(t => t.DocumentNumber == ainNumber && t.TransactionType == "4X")
+                .OrderBy(t => t.Id)
+                .ToListAsync();
+
+            if (transactionRows.Count == 0)
+                throw new KeyNotFoundException($"AIN No '{ainNumber}' not found.");
+
+            var firstRow = transactionRows[0];
+
+            // Same two-tier description lookup as StoresRequisitionService.GetStrnPrintDetailsAsync
+            // (cost profile primary, StockItems catalog fallback) - legacy IN_AIN2.PRG only
+            // ever reads od_sacc2 with no fallback, so this is a deliberate improvement.
+            var costProfiles = await _apparelProDbContext.StyleMaterialCostProfiles
+                .AsNoTracking()
+                .Where(p => p.BuyerCode == firstRow.BuyerCode && p.Order.Trim() == firstRow.Order)
+                .ToListAsync();
+            var profileByItemCode = costProfiles.ToDictionary(p => p.ItemCode.Trim(), p => p);
+
+            static string DecomposePart(string fullItemCode, int start, int length) =>
+                fullItemCode.Length >= start + length ? fullItemCode.Substring(start, length).Trim() : string.Empty;
+
+            var baseItemCodes = transactionRows.Select(t => DecomposePart(t.ItemCode, 2, 4)).Distinct().ToList();
+            var catalogDescriptionByItemCode = await _apparelProDbContext.StockItems
+                .AsNoTracking()
+                .Where(c => baseItemCodes.Contains(c.ItemCode.Trim()))
+                .ToDictionaryAsync(c => c.ItemCode.Trim(), c => c.Description);
+
+            var lines = transactionRows.Select(t =>
+            {
+                profileByItemCode.TryGetValue(t.ItemCode.Trim(), out var matchingProfile);
+                var description = matchingProfile?.Description?.Trim();
+                if (string.IsNullOrWhiteSpace(description))
+                    catalogDescriptionByItemCode.TryGetValue(DecomposePart(t.ItemCode, 2, 4), out description);
+
+                return new AinPrintLineServiceModel
+                {
+                    ItemCode = t.ItemCode.Trim(),
+                    Description = !string.IsNullOrWhiteSpace(description) ? description!.Trim() : "(No description available)",
+                    Unit = t.Unit,
+                    Quantity = t.Quantity,
+                    StoreCode = t.StoreCode,
+                };
+            }).ToList();
+
+            var buyerName = await _apparelProDbContext.Buyers
+                .AsNoTracking()
+                .Where(b => b.BuyerCode == firstRow.BuyerCode)
+                .Select(b => b.Name)
+                .FirstOrDefaultAsync();
+
+            return new AinPrintDetailsServiceModel
+            {
+                Header = new AinPrintHeaderServiceModel
+                {
+                    AinNumber = ainNumber,
+                    BuyerCode = firstRow.BuyerCode,
+                    BuyerName = !string.IsNullOrWhiteSpace(buyerName) ? buyerName : firstRow.BuyerCode.ToString(),
+                    Order = firstRow.Order,
+                    SubContractorCode = firstRow.SubContractorCode ?? "",
+                    AdditionalProcessCode = firstRow.AdditionalProcessCode ?? "",
+                    TransactionDate = firstRow.TransactionDate,
+                    PrintedOn = DateTime.Now,
+                },
+                Lines = lines,
+            };
+        }
     }
 }

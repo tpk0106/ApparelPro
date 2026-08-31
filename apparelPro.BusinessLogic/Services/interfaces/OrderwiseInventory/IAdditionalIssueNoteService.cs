@@ -17,5 +17,9 @@ namespace apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory
             AinHeaderServiceModel header,
             List<AinLineItemServiceModel> lines,
             string username);
+
+        // Modern equivalent of legacy IN_AIN2.PRG - loads an already-committed AIN by
+        // its document number for printing.
+        Task<AinPrintDetailsServiceModel> GetAinPrintDetailsAsync(string ainNumber);
     }
 }

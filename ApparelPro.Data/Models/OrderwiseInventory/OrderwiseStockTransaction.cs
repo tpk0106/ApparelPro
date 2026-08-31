@@ -27,9 +27,19 @@ namespace ApparelPro.Data.Models.OrderwiseInventory
 
         // GIN traceability additions (see GinTraceabilityColumns migration)
         public decimal BalanceToReceive { get; set; } // bal_to_rec — STRN ('0S') rows only. Remaining unissued qty for this line; decremented by each GIN raised against it.
-        public string? SourceDocumentNumber { get; set; } // GIN ('4I') rows only — the STRN doc number this issue was raised against.
-        public decimal? Price { get; set; } // GIN rows only — snapshotted from OrderwiseStockMaster at issue time.
-        public string? Currency { get; set; } // GIN rows only — snapshotted from OrderwiseStockMaster at issue time.
+        // GIN ('4I') rows: the STRN doc number this issue was raised against. Also
+        // reused by GRN ('GR') rows for the Supplier PO number the receipt was raised
+        // against (GoodsReceivedNoteService: "SourceDocumentNumber = header.PurchaseOrderNumber")
+        // - both meanings are "the other document this row traces back to", just a
+        // different kind of document per note type.
+        public string? SourceDocumentNumber { get; set; }
+        // GIN rows: snapshotted from OrderwiseStockMaster at issue time. Also reused by ARN
+        // ('0X') rows for the note's own entered price/currency — these are generic "entered
+        // price/currency for this line" columns with no GIN-specific business meaning, unlike
+        // the SubContractorCode/AdditionalProcessCode vs CounterpartyBuyerCode/CounterpartyOrder
+        // split below, which really do carry different meanings per note type.
+        public decimal? Price { get; set; }
+        public string? Currency { get; set; }
 
         // GTN traceability additions (see GtnTraceabilityColumns migration). GTN ('6T'/'1T')
         // rows only — mirrors legacy IN_GTN1.PRG's t_buyer/t_order fields written onto BOTH
@@ -52,8 +62,18 @@ namespace ApparelPro.Data.Models.OrderwiseInventory
         // CounterpartyOrder above are for, GTN's own use of the same two legacy columns) —
         // different domain, different type (Sub-Contractor's code is a 6-char string, not
         // an int Buyer code), so AIN gets its own two dedicated columns rather than reusing
-        // those.
+        // those. Also used by ARN ('0X') rows for the same purpose - legacy IN_ARN4.PRG
+        // writes its Sub-Contractor code into the DBF's own supp_cd field (SupplierCode
+        // above is that field's modern equivalent, but it's a typed int? Supplier FK,
+        // not a free-text Sub-Contractor code), so AdditionalGoodsReceiptNoteService
+        // stores it here instead, giving ARN rows the same Sub-Contractor/Process
+        // traceability AIN rows already have.
         public string? SubContractorCode { get; set; } // t_buyer (AIN's own meaning, not GTN's)
         public string? AdditionalProcessCode { get; set; } // t_order (AIN's own meaning, not GTN's)
+
+        // ARN traceability addition. ARN ('0X') rows only - legacy IN_ARN4.PRG's own
+        // "Invoice No" header field (xinv_no), same concept and width as
+        // GeneralStockTransaction.InvoiceNumber.
+        public string? InvoiceNumber { get; set; } // inv_no
     }
 }

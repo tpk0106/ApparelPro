@@ -1,11 +1,15 @@
+using apparelPro.BusinessLogic.Reports.Shared;
 using apparelPro.BusinessLogic.Services.Models.GeneralInventory;
 using QuestPDF.Fluent;
-using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
 namespace apparelPro.BusinessLogic.Reports.GeneralInventory
 {
-    // Modern equivalent of legacy GI_FPO.PRG - "PURCHASE ORDER (GENERAL)" printable form.
+    // Modern equivalent of legacy GI_FPO.PRG - "PURCHASE ORDER (GENERAL)" printable
+    // form. See NotePrintEngineHelper for the shared header/signature/footer
+    // scaffolding; the Order Date (a business date, distinct from the Date/Time-printed
+    // pair every note header shows) moves into the detail row alongside Currency/P.I.
+    // No/P.I. Date, same place every other note's own business fields live.
     public class GeneralPoPrintEngine
     {
         public static byte[] GeneratePoPrintPdf(GeneralPoPrintDetailsServiceModel details)
@@ -18,39 +22,32 @@ namespace apparelPro.BusinessLogic.Reports.GeneralInventory
             {
                 container.Page(page =>
                 {
-                    page.Size(PageSizes.A4);
-                    page.Margin(2, Unit.Centimetre);
-                    page.PageColor(Colors.White);
-                    page.DefaultTextStyle(x => x.FontFamily(Fonts.Arial).FontSize(9));
+                    page.ConfigureStandardPage();
 
-                    page.Header().Column(column =>
-                    {
-                        column.Item().Row(row =>
+                    page.RenderNoteHeader(
+                        "PURCHASE ORDER (General Inventory)",
+                        "P/O No",
+                        details.Header.PoNumber,
+                        details.Header.PrintedOn,
+                        detailsColumn =>
                         {
-                            row.RelativeItem().Text("PURCHASE ORDER (General Inventory)").FontSize(14).Bold();
-                            row.ConstantItem(160).Column(dateCol =>
+                            detailsColumn.Item().Text(t => { t.Span("To : ").Bold(); t.Span($"{details.Header.SupplierCode} - {details.Header.SupplierName}"); });
+                            detailsColumn.Item().PaddingTop(4).Row(row =>
                             {
-                                dateCol.Item().AlignRight().Text($"P/O No : {details.Header.PoNumber}").FontSize(9).Bold();
-                                dateCol.Item().AlignRight().Text($"Date : {(details.Header.OrderDate.HasValue ? details.Header.OrderDate.Value.ToString("dd/MM/yyyy") : "")}").FontSize(9);
+                                row.RelativeItem().Text(t =>
+                                {
+                                    t.Span("Order Date : ").Bold();
+                                    t.Span(details.Header.OrderDate.HasValue ? details.Header.OrderDate.Value.ToString("dd/MM/yyyy") : "");
+                                });
+                                row.RelativeItem().Text(t => { t.Span("Currency : ").Bold(); t.Span(details.Header.CurrencyCode); });
+                                row.RelativeItem().Text(t => { t.Span("P/I No : ").Bold(); t.Span(details.Header.ProformaInvoiceNo ?? ""); });
+                                row.RelativeItem().Text(t =>
+                                {
+                                    t.Span("P/I Date : ").Bold();
+                                    t.Span(details.Header.ProformaInvoiceDate.HasValue ? details.Header.ProformaInvoiceDate.Value.ToString("dd/MM/yyyy") : "");
+                                });
                             });
                         });
-
-                        column.Item().PaddingTop(6).LineHorizontal(1).LineColor(Colors.Black);
-
-                        column.Item().PaddingTop(6).Text(t => { t.Span("To : ").Bold(); t.Span($"{details.Header.SupplierCode} - {details.Header.SupplierName}"); });
-                        column.Item().PaddingTop(2).Row(row =>
-                        {
-                            row.RelativeItem().Text(t => { t.Span("Currency : ").Bold(); t.Span(details.Header.CurrencyCode); });
-                            row.RelativeItem().Text(t => { t.Span("P/I No : ").Bold(); t.Span(details.Header.ProformaInvoiceNo ?? ""); });
-                            row.RelativeItem().Text(t =>
-                            {
-                                t.Span("P/I Date : ").Bold();
-                                t.Span(details.Header.ProformaInvoiceDate.HasValue ? details.Header.ProformaInvoiceDate.Value.ToString("dd/MM/yyyy") : "");
-                            });
-                        });
-
-                        column.Item().PaddingTop(8).LineHorizontal(1).LineColor(Colors.Black);
-                    });
 
                     page.Content().PaddingTop(10).Column(column =>
                     {
@@ -76,7 +73,7 @@ namespace apparelPro.BusinessLogic.Reports.GeneralInventory
                                 headerRow.Cell().AlignRight().Text("Quantity").Bold();
                                 headerRow.Cell().AlignRight().Text("U/Price").Bold();
                                 headerRow.Cell().Text("Delivery").Bold();
-                                headerRow.Cell().ColumnSpan(7).PaddingTop(2).LineHorizontal(1).LineColor(Colors.Grey.Darken2);
+                                headerRow.Cell().ColumnSpan(7).PaddingTop(2).LineHorizontal(1).LineColor(QuestPDF.Helpers.Colors.Grey.Darken2);
                             });
 
                             foreach (var line in details.Lines)
@@ -93,34 +90,10 @@ namespace apparelPro.BusinessLogic.Reports.GeneralInventory
 
                         column.Item().PaddingTop(10).Text("Please, state our P/O No. on your delivery note.").Italic();
 
-                        column.Item().PaddingTop(40).Row(row =>
-                        {
-                            row.RelativeItem().Column(sig =>
-                            {
-                                sig.Item().PaddingRight(20).LineHorizontal(1).LineColor(Colors.Black);
-                                sig.Item().PaddingTop(2).Text("Prepared By").FontSize(9);
-                            });
-                            row.RelativeItem().Column(sig =>
-                            {
-                                sig.Item().PaddingRight(20).LineHorizontal(1).LineColor(Colors.Black);
-                                sig.Item().PaddingTop(2).Text("Purchasing Officer").FontSize(9);
-                            });
-                            row.RelativeItem().Column(sig =>
-                            {
-                                sig.Item().PaddingRight(20).LineHorizontal(1).LineColor(Colors.Black);
-                                sig.Item().PaddingTop(2).Text("Director/G.Manager").FontSize(9);
-                            });
-                        });
+                        column.RenderSignatureBlock("Prepared By", "Purchasing Officer", "Director/G.Manager");
                     });
 
-                    page.Footer().AlignCenter().Text(x =>
-                    {
-                        x.DefaultTextStyle(TextStyle.Default.FontSize(8));
-                        x.Span("Page ");
-                        x.CurrentPageNumber();
-                        x.Span(" of ");
-                        x.TotalPages();
-                    });
+                    page.RenderPageNumberFooter();
                 });
             }).GeneratePdf(memoryStream);
 

@@ -19,7 +19,10 @@ namespace ApparelPro.Data.Configurations.GeneralInventory
             entity.Property(e => e.ProformaInvoiceNo).HasColumnType("varchar(15)").HasColumnName("ProformaInvoiceNo");
             entity.Property(e => e.ProformaInvoiceDate).HasColumnType("date").HasColumnName("ProformaInvoiceDate");
             entity.Property(e => e.CurrencyCode).HasColumnType("varchar(3)").HasColumnName("CurrencyCode");
-            entity.Property(e => e.UserId).HasColumnType("varchar(6)").HasColumnName("UserId");
+            // Widened from legacy's varchar(6) USERID code - this app populates it from
+            // User.Identity.Name (an email address), same varchar(50) width already used
+            // for OrderwiseStockTransaction.CreatedByUsername for the same reason.
+            entity.Property(e => e.UserId).HasColumnType("varchar(50)").HasColumnName("UserId");
 
             // CurrencyCode/BasisCode left unconstrained (nullable in source data - see sample
             // rows with blank CURR/BASIS) - same reasoning as SupplierPurchaseOrder's SupplierCode.
