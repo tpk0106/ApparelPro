@@ -28,26 +28,38 @@ Console.WriteLine($"JwtSettings:TokenKey present: {!string.IsNullOrEmpty(builder
 Console.WriteLine($"JwtSettings:Issuer present: {!string.IsNullOrEmpty(builder.Configuration["JwtSettings:Issuer"])}");
 Console.WriteLine($"Cors:Origins value: {builder.Configuration["Cors:Origins"] ?? "(null)"}");
 
-// Add Serilog support
-builder.Host.UseSerilog((ctx, lc) => lc
-    .ReadFrom.Configuration(ctx.Configuration)
-    .Enrich.FromLogContext()
-    .WriteTo.MSSqlServer(
-        connectionString: ctx.Configuration.GetConnectionString("ApparelProConnection"),
-        restrictedToMinimumLevel: LogEventLevel.Information,
-        sinkOptions: new MSSqlServerSinkOptions { TableName = "LogEvents", AutoCreateSqlTable = true }
-        )
-    .WriteTo.Console()
+// Add Serilog support — gracefully skip MSSQL sink when connection string is absent
+builder.Host.UseSerilog((ctx, lc) =>
+{
+    var connStr = ctx.Configuration.GetConnectionString("ApparelProConnection");
+
+    lc.ReadFrom.Configuration(ctx.Configuration)
+      .Enrich.FromLogContext()
+      .WriteTo.Console();
+
+    // Only add the MSSQL sink if we actually have a connection string
+    if (!string.IsNullOrEmpty(connStr))
+    {
+        lc.WriteTo.MSSqlServer(
+            connectionString: connStr,
+            restrictedToMinimumLevel: LogEventLevel.Information,
+            sinkOptions: new MSSqlServerSinkOptions { TableName = "LogEvents", AutoCreateSqlTable = true }
+        );
+
         // In Serilog configuration -- filter EF Core command events by duration
-        // Separate sink for slow queries: filter on EF Core's elapsed time property
-        .WriteTo.Logger(lc => lc
+        lc.WriteTo.Logger(sub => sub
             .Filter.ByIncludingOnly(e =>
                 e.Properties.TryGetValue("ElapsedMilliseconds", out var ms) &&
                 ms is ScalarValue sv &&
                 sv.Value is long ms2 &&
                 ms2 > 500)
-            .WriteTo.File("logs/slow-queries-.log", rollingInterval: RollingInterval.Day))
-);
+            .WriteTo.File("logs/slow-queries-.log", rollingInterval: RollingInterval.Day));
+    }
+    else
+    {
+        Console.WriteLine("WARNING: ApparelProConnection is null — Serilog MSSQL sink disabled, logging to console only.");
+    }
+});
 
 //// Add ASP.NET Core Identity support
 builder.Services.AddIdentity<ApparelProUser, IdentityRole>(options =>
@@ -280,12 +292,22 @@ builder.Services.AddSwaggerGen(options =>
 // add response caching middleware for server side caching
 builder.Services.AddResponseCaching();
 
-builder.Services.AddDistributedSqlServerCache(options =>
+var cacheConnStr = builder.Configuration.GetConnectionString("ApparelProConnection");
+if (!string.IsNullOrEmpty(cacheConnStr))
 {
-    options.ConnectionString = builder.Configuration.GetConnectionString("ApparelProConnection");
-    options.SchemaName = "dbo";
-    options.TableName = "AppCache";
-});
+    builder.Services.AddDistributedSqlServerCache(options =>
+    {
+        options.ConnectionString = cacheConnStr;
+        options.SchemaName = "dbo";
+        options.TableName = "AppCache";
+    });
+}
+else
+{
+    // Fallback to in-memory distributed cache when no SQL connection available
+    builder.Services.AddDistributedMemoryCache();
+    Console.WriteLine("WARNING: Using in-memory distributed cache (no SQL connection string).");
+}
 
 var app = builder.Build();
 
