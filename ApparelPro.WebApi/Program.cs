@@ -305,7 +305,7 @@ using (var scope = app.Services.CreateScope())
             UserName = adminEmail,
             Email = adminEmail,
             KnownAs = "System Admin",
-            Gender = "Male",
+            Gender =Gender.Male,
             EmailConfirmed = true
         };
 
