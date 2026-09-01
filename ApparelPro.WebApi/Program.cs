@@ -18,6 +18,16 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ── Global startup diagnostics ─────────────────────────────────────
+try
+{
+Console.WriteLine("=== ApparelPro Backend Starting ===");
+Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
+Console.WriteLine($"Connection string present: {!string.IsNullOrEmpty(builder.Configuration.GetConnectionString("ApparelProConnection"))}");
+Console.WriteLine($"JwtSettings:TokenKey present: {!string.IsNullOrEmpty(builder.Configuration["JwtSettings:TokenKey"])}");
+Console.WriteLine($"JwtSettings:Issuer present: {!string.IsNullOrEmpty(builder.Configuration["JwtSettings:Issuer"])}");
+Console.WriteLine($"Cors:Origins value: {builder.Configuration["Cors:Origins"] ?? "(null)"}");
+
 // Add Serilog support
 builder.Host.UseSerilog((ctx, lc) => lc
     .ReadFrom.Configuration(ctx.Configuration)
@@ -426,7 +436,11 @@ app.Use(async (context, next) =>
     await next();
 
 });
-app.UseHttpsRedirection();
+// Only redirect to HTTPS in development; Traefik handles SSL termination in production
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 // 4. Run Authentication and Authorization AFTER CORS
 app.UseAuthentication(); // Ensure this is present if using JWT!
@@ -445,4 +459,26 @@ app.MapControllers();
 //    await identityContext.Database.EnsureCreatedAsync();
 //    await apparelContext.Database.EnsureCreatedAsync();
 //}
+Console.WriteLine("=== ApparelPro Backend ready, starting listener ===");
 app.Run();
+
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine("========================================");
+    Console.Error.WriteLine("FATAL: Application startup crashed!");
+    Console.Error.WriteLine($"Exception: {ex.GetType().Name}");
+    Console.Error.WriteLine($"Message: {ex.Message}");
+    Console.Error.WriteLine($"StackTrace: {ex.StackTrace}");
+    if (ex.InnerException != null)
+    {
+        Console.Error.WriteLine($"Inner: {ex.InnerException.Message}");
+        Console.Error.WriteLine($"Inner Stack: {ex.InnerException.StackTrace}");
+    }
+    Console.Error.WriteLine("========================================");
+    Console.Error.Flush();
+    Console.Out.Flush();
+    // Keep container alive briefly so logs can be captured
+    await Task.Delay(30000);
+    Environment.Exit(1);
+}
