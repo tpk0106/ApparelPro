@@ -31,9 +31,9 @@ namespace ApparelPro.Data.Configurations.References
             // Tier 2 relationships audit: seeds the "CMP" (Cut-Make-Pack) basis row that 3
             // existing PurchaseOrder rows already reference but which was never added here -
             // required before PurchaseOrder.BasisCode -> Basis.Code can be enforced as a real FK.
-            entity.HasData(
-                new Basis { Id = 9, Code = "CMP", Description = "CUT, MAKE & PACK", ValueAdd = false }
-            );
+            //entity.HasData(
+            //    new Basis { Id = 9, Code = "CMP", Description = "CUT, MAKE & PACK", ValueAdd = false }
+            //);
         }
     }
 }

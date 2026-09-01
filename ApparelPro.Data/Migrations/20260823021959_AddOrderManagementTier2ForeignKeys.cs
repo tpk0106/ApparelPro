@@ -64,10 +64,10 @@ namespace ApparelPro.Data.Migrations
                 table: "Basis",
                 column: "Code");
 
-            migrationBuilder.InsertData(
-                table: "Basis",
-                columns: new[] { "Id", "Code", "Description" },
-                values: new object[] { 9, "CMP", "CUT, MAKE & PACK" });
+            //migrationBuilder.InsertData(
+            //    table: "Basis",
+            //    columns: new[] { "Id", "Code", "Description" },
+            //    values: new object[] { 9, "CMP", "CUT, MAKE & PACK" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_PurchaseOrders_BasisCode",

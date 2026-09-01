@@ -25,16 +25,16 @@ namespace ApparelPro.Data.Configurations.References
 
             // Seeded directly from od_sea.dbf (8 records, confirmed against the existing
             // PurchaseOrders.Season values in use: FA95, FALL, Spring all resolve here).
-            entity.HasData(
-                new Season { Id = 1, Code = "WINTER", Description = "WINTER" },
-                new Season { Id = 2, Code = "SPRING", Description = "SPRING SEASON" },
-                new Season { Id = 3, Code = "HOLIDA", Description = "HOLIDAY" },
-                new Season { Id = 4, Code = "FALL", Description = "FALL" },
-                new Season { Id = 5, Code = "FA93", Description = "FALL 1993" },
-                new Season { Id = 6, Code = "FA95", Description = "FALL 1995" },
-                new Season { Id = 7, Code = "SUMR96", Description = "SUMMER 1996" },
-                new Season { Id = 8, Code = "SPRI96", Description = "SPRING SEASON 1996" }
-            );
+            //entity.HasData(
+            //    new Season { Id = 1, Code = "WINTER", Description = "WINTER" },
+            //    new Season { Id = 2, Code = "SPRING", Description = "SPRING SEASON" },
+            //    new Season { Id = 3, Code = "HOLIDA", Description = "HOLIDAY" },
+            //    new Season { Id = 4, Code = "FALL", Description = "FALL" },
+            //    new Season { Id = 5, Code = "FA93", Description = "FALL 1993" },
+            //    new Season { Id = 6, Code = "FA95", Description = "FALL 1995" },
+            //    new Season { Id = 7, Code = "SUMR96", Description = "SUMMER 1996" },
+            //    new Season { Id = 8, Code = "SPRI96", Description = "SPRING SEASON 1996" }
+            //);
         }
     }
 }

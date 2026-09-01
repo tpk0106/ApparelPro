@@ -30,9 +30,10 @@ namespace ApparelPro.Data.Configurations.References
             // Destinations row for "LON" (London) - PartShipments already had a live "LON"
             // DestinationCode with nothing behind it. Id 50 chosen as the next free value
             // (existing rows top out at 49).
-            entity.HasData(
-                new Country { Id = 50, Code = "GB", Name = "United Kingdom" }
-            );
+            //entity.HasData(
+            //    new Country { Id = 50, Code = "GB", Name = "United Kingdom" },
+            //     new Country { Code = "USA", Id = 51, Name = "United States" }
+            //);
         }
     }
 }

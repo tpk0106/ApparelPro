@@ -27,18 +27,18 @@ namespace ApparelPro.Data.Migrations
                     table.PrimaryKey("PK_Sections", x => x.Code);
                 });
 
-            migrationBuilder.InsertData(
-                table: "Sections",
-                columns: new[] { "Code", "Description", "Id", "IsFinal" },
-                values: new object[,]
-                {
-                    { "001", "CUTTING", 1, false },
-                    { "002", "SEWING", 2, false },
-                    { "003", "CHECKING", 3, false },
-                    { "004", "FINISHING", 4, false },
-                    { "005", "PACKING", 5, true },
-                    { "006", "SHIPPING", 6, false }
-                });
+            //migrationBuilder.InsertData(
+            //    table: "Sections",
+            //    columns: new[] { "Code", "Description", "Id", "IsFinal" },
+            //    values: new object[,]
+            //    {
+            //        { "001", "CUTTING", 1, false },
+            //        { "002", "SEWING", 2, false },
+            //        { "003", "CHECKING", 3, false },
+            //        { "004", "FINISHING", 4, false },
+            //        { "005", "PACKING", 5, true },
+            //        { "006", "SHIPPING", 6, false }
+            //    });
         }
 
         /// <inheritdoc />

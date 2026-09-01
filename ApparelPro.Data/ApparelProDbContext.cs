@@ -41,6 +41,7 @@ namespace ApparelPro.Data
             {
                 // Points directly to your local SQL Express server using Windows Authentication
                 optionsBuilder.UseSqlServer("Server=THUSITHPC\\SQLEXPRESS;Database=ApparelPro;Trusted_Connection=True;TrustServerCertificate=True;");
+                //optionsBuilder.UseSqlServer("Server=192.168.20.6;Database=ApparelPro;Trusted_Connection=false;User Id=sa;Password=s1L9s7Q8##;TrustServerCertificate=True;");
             }
         }
         public virtual DbSet<Currency> Currencies { get; set; }

@@ -50,10 +50,10 @@ namespace ApparelPro.Data.Configurations.References
             // before PartShipments.DestinationCode -> Destinations.Code can be enforced as a
             // real FK. Confirmed with the user (2026-08-23): BAL = Baltimore, USA; LON = London,
             // United Kingdom (GB row added in CountryConfig.cs for this).
-            entity.HasData(
-                new Destination { CountryCode = "USA", Code = "BAL", DestinationName = "Baltimore" },
-                new Destination { CountryCode = "GB", Code = "LON", DestinationName = "London" }
-            );
+            //entity.HasData(
+            //    new Destination { CountryCode = "USA", Code = "BAL", DestinationName = "Baltimore" },
+            //    new Destination { CountryCode = "GB", Code = "LON", DestinationName = "London" }
+            //);
         }
     }
 }

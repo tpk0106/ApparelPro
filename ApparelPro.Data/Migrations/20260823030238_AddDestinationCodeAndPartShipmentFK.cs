@@ -42,19 +42,19 @@ namespace ApparelPro.Data.Migrations
                 table: "Destinations",
                 columns: new[] { "CountryCode", "Code" });
 
-            migrationBuilder.InsertData(
-                table: "Countries",
-                columns: new[] { "Code", "Flag", "Id", "Name" },
-                values: new object[] { "GB", null, 50, "United Kingdom" });
+            //migrationBuilder.InsertData(
+            //    table: "Countries",
+            //    columns: new[] { "Code", "Flag", "Id", "Name" },
+            //    values: new object[] { "GB", null, 50, "United Kingdom" });
 
-            migrationBuilder.InsertData(
-                table: "Destinations",
-                columns: new[] { "Code", "CountryCode", "DestinationName" },
-                values: new object[,]
-                {
-                    { "BAL", "USA", "Baltimore" },
-                    { "LON", "GB", "London" }
-                });
+            //migrationBuilder.InsertData(
+            //    table: "Destinations",
+            //    columns: new[] { "Code", "CountryCode", "DestinationName" },
+            //    values: new object[,]
+            //    {
+            //        { "BAL", "USA", "Baltimore" },
+            //        { "LON", "GB", "London" }
+            //    });
 
             migrationBuilder.CreateIndex(
                 name: "IX_PartShipments_DestinationCode",

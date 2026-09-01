@@ -1,7 +1,10 @@
-﻿using ApparelPro.Data.Models.References;
+﻿using ApparelPro.Data.Configurations.Registration;
+using ApparelPro.Data.Models.References;
 using ApparelPro.Data.ValueGenerators;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Data;
 
 namespace ApparelPro.Data.Configurations.References
 {
@@ -84,7 +87,12 @@ namespace ApparelPro.Data.Configurations.References
                 .IsRequired(false)
                 .HasColumnType("nvarchar");
 
-            entity.HasIndex(p => p.AddressId);
+             // The key file is ApparelProUserConfig.cs — line 16 already uses .HasPrincipalKey(user => user.AddressId),
+             // which tells EF Core to treat AddressId as an alternate key. But for SQL Server to allow a FK reference to it,
+             // it needs a unique constraint.
+
+            //entity.HasIndex(p => p.AddressId);
+            entity.HasIndex(p => p.AddressId).IsUnique();
 
             // Tier 1 relationships audit (2026-08-16): CountryCode was previously enforced only
             // by matching values against Countries, with no real database constraint. Country's

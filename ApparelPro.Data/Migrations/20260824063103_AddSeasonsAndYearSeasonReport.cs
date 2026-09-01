@@ -27,20 +27,20 @@ namespace ApparelPro.Data.Migrations
                     table.UniqueConstraint("AK_Seasons_Code", x => x.Code);
                 });
 
-            migrationBuilder.InsertData(
-                table: "Seasons",
-                columns: new[] { "Id", "Code", "Description" },
-                values: new object[,]
-                {
-                    { 1, "WINTER", "WINTER" },
-                    { 2, "SPRING", "SPRING SEASON" },
-                    { 3, "HOLIDA", "HOLIDAY" },
-                    { 4, "FALL", "FALL" },
-                    { 5, "FA93", "FALL 1993" },
-                    { 6, "FA95", "FALL 1995" },
-                    { 7, "SUMR96", "SUMMER 1996" },
-                    { 8, "SPRI96", "SPRING SEASON 1996" }
-                });
+            //migrationBuilder.InsertData(
+            //    table: "Seasons",
+            //    columns: new[] { "Id", "Code", "Description" },
+            //    values: new object[,]
+            //    {
+            //        { 1, "WINTER", "WINTER" },
+            //        { 2, "SPRING", "SPRING SEASON" },
+            //        { 3, "HOLIDA", "HOLIDAY" },
+            //        { 4, "FALL", "FALL" },
+            //        { 5, "FA93", "FALL 1993" },
+            //        { 6, "FA95", "FALL 1995" },
+            //        { 7, "SUMR96", "SUMMER 1996" },
+            //        { 8, "SPRI96", "SPRING SEASON 1996" }
+            //    });
 
             migrationBuilder.CreateIndex(
                 name: "IX_PurchaseOrders_Season",
