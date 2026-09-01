@@ -138,14 +138,21 @@ builder.Services.AddAuthentication(options =>
 
 const string reactPolicyName = "allowFromReactOrigin";
 const string angularPolicyName = "allowFromAngularOrigin";
+
+string?  coreOrigin  = builder.Configuration["Cors:Origins"];
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(reactPolicyName, builder =>
     {
         builder
         //.WithOrigins("https://localhost:5173", "http://localhost:5174")
-        .WithOrigins("http://localhost:3000") // put react url frm the browser
-                                              //.WithMethods("DELETE","PUT","GET", "POST")    
+        //.WithOrigins("http://localhost:3000") // put react url frm the browser
+
+        .WithOrigins((coreOrigin ?? "http://localhost:3000")
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+)
+
+        //.WithMethods("DELETE","PUT","GET", "POST")    
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials();
