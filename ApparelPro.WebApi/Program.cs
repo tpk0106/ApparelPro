@@ -280,41 +280,48 @@ builder.Services.AddDistributedSqlServerCache(options =>
 var app = builder.Build();
 
 // ── One-time admin seed ─────────────────────────────────────────────
-using (var scope = app.Services.CreateScope())
+try
 {
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApparelProUser>>();
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    using (var scope = app.Services.CreateScope())
+    {
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApparelProUser>>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-    // 1. Seed roles
-    string[] roles = { "Administrator", "Inventory", "Merchandiser", "Merchandiser Manager", "Store Supervisor",
+        // 1. Seed roles
+        string[] roles = { "Administrator", "Inventory", "Merchandiser", "Merchandiser Manager", "Store Supervisor",
                        "Order Entry Operator", "Store Manager", "Production Manager", "Factory Manager", "Board Of Directors" };
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
+        foreach (var role in roles)
         {
-            await roleManager.CreateAsync(new IdentityRole(role));
+            if (!await roleManager.RoleExistsAsync(role))
+            {
+                await roleManager.CreateAsync(new IdentityRole(role));
+            }
+        }
+
+        // 2. Seed admin user
+        string adminEmail = "admin@apparelpro.com";
+        if (await userManager.FindByEmailAsync(adminEmail) == null)
+        {
+            var adminUser = new ApparelProUser
+            {
+                UserName = adminEmail,
+                Email = adminEmail,
+                KnownAs = "System Admin",
+                Gender = Gender.Male,
+                EmailConfirmed = true
+            };
+
+            var result = await userManager.CreateAsync(adminUser, "Admin@apparelpro66");
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(adminUser, "Administrator");
+            }
         }
     }
-
-    // 2. Seed admin user
-    string adminEmail = "admin@apparelpro.com";
-    if (await userManager.FindByEmailAsync(adminEmail) == null)
-    {
-        var adminUser = new ApparelProUser
-        {
-            UserName = adminEmail,
-            Email = adminEmail,
-            KnownAs = "System Admin",
-            Gender =Gender.Male,
-            EmailConfirmed = true
-        };
-
-        var result = await userManager.CreateAsync(adminUser, "Admin@apparelpro66");
-        if (result.Succeeded)
-        {
-            await userManager.AddToRoleAsync(adminUser, "Administrator");
-        }
-    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Seed error: {ex.Message}");
 }
 // ── End seed ────────────────────────────────────────────────────────
 
