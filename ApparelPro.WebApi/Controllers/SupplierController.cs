@@ -44,8 +44,7 @@ namespace ApparelPro.WebApi.Controllers
 
 
         [HttpGet("list")]
-        //  [Authorize(Roles = "Inventory, Merchandiser,Merchandiser Manager,Order Entry Operator")]
-        [Authorize("Merchandising")] // policy applied                                   
+        [Authorize(Policy = "supplier-view")]
         [SwaggerOperation(Tags = new[] { "Supplier Endpoints" },
             Summary = "list all Supplier details with paging and filtering.",
             Description = "Returns 200 - OK with PaginationAPIModel with Supplier list.")
@@ -66,6 +65,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("list/{SupplierCode}", Name = "GetSupplierBySupplierCodeAsync")]
+        [Authorize(Policy = "supplier-view")]
         [ProducesResponseType(typeof(CountryAPIModel), HttpStatusCodes.OK)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [SwaggerOperation(Tags = new[] { "Supplier Endpoints" },
@@ -84,6 +84,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "supplier-manage")]
         [ProducesResponseType(HttpStatusCodes.Created)]
         [SwaggerOperation(Tags = new[] { "Supplier Endpoints" },
             Summary = "Add a Suppler.",
@@ -97,6 +98,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpDelete("{supplierCode}")]
+        [Authorize(Policy = "supplier-manage")]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [SwaggerOperation(Tags = new[] { "Supplier Endpoints" },
@@ -115,6 +117,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpPut()]
+        [Authorize(Policy = "supplier-manage")]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
         [ProducesResponseType(typeof(void), HttpStatusCodes.NoContent)]
         [SwaggerOperation(Tags = new[] { "Supplier Endpoints" },
@@ -137,6 +140,7 @@ namespace ApparelPro.WebApi.Controllers
         }
 
         [HttpGet("suppliers-lookup")]
+        [Authorize(Policy = "supplier-view")]
         [ProducesResponseType(typeof(List<SupplierLookupAPIModel>), HttpStatusCodes.OK)]
         public async Task<IActionResult> GetSuppliersLookup()
         {
