@@ -497,11 +497,26 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 .Where(g => g.BuyerCode == buyerCode && g.Order == orderClean && g.TypeCode == typeCode && g.StyleCode == styleClean)
                 .ToListAsync();
 
+            // FIXED: Buyer Name and Garment Type description were never resolved for this
+            // report - the header only ever had the raw BuyerCode/TypeCode to print. Same
+            // lookup-by-code pattern as TrimSheetReportService.
+            var buyerRow = await _apparelProDbContext.Buyers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(b => b.BuyerCode == buyerCode);
+            var buyerName = buyerRow?.Name ?? "";
+
+            var garmentTypeRow = await _apparelProDbContext.GarmentTypes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Id == typeCode);
+            var typeName = garmentTypeRow?.TypeName ?? "";
+
             var report = new GarmentAdditionalCostReportServiceModel
             {
                 BuyerCode = buyerCode,
+                BuyerName = buyerName,
                 Order = orderClean,
                 TypeCode = typeCode,
+                TypeName = typeName,
                 StyleCode = styleClean
             };
 

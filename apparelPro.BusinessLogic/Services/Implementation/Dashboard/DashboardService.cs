@@ -59,17 +59,37 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Dashboard
 
             if (candidate != null)
             {
+                var (buyerName, typeName) = await ResolveBuyerAndTypeNamesAsync(candidate.BuyerCode, candidate.TypeCode);
                 return new CurrentStyleServiceModel
                 {
                     BuyerCode = candidate.BuyerCode,
+                    BuyerName = buyerName,
                     Order = candidate.Order,
                     TypeCode = candidate.TypeCode,
+                    TypeName = typeName,
                     StyleCode = candidate.StyleCode,
                     Source = "latest-entry"
                 };
             }
 
             return await GetPinnedStyleAsync();
+        }
+
+        // FIXED: the dashboard's "current style" pill was printing raw
+        // BuyerCode/TypeCode integers instead of their descriptions - same
+        // bug, and same lookup-by-code fix, as GarmentAdditionalCostReport's
+        // PDF header (see GarmentAdditionalCostService.GetGarmentAdditionalCostReportAsync).
+        private async Task<(string buyerName, string typeName)> ResolveBuyerAndTypeNamesAsync(int buyerCode, int typeCode)
+        {
+            var buyerRow = await _apparelProDbContext.Buyers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(b => b.BuyerCode == buyerCode);
+
+            var garmentTypeRow = await _apparelProDbContext.GarmentTypes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Id == typeCode);
+
+            return (buyerRow?.Name ?? "", garmentTypeRow?.TypeName ?? "");
         }
 
         public async Task<ProductionProgressServiceModel> GetProductionProgressAsync(
@@ -310,11 +330,15 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Dashboard
                 return null;
             }
 
+            var (buyerName, typeName) = await ResolveBuyerAndTypeNamesAsync(buyerCode, typeCode);
+
             return new CurrentStyleServiceModel
             {
                 BuyerCode = buyerCode,
+                BuyerName = buyerName,
                 Order = order,
                 TypeCode = typeCode,
+                TypeName = typeName,
                 StyleCode = styleCode,
                 Source = "pinned"
             };

@@ -36,9 +36,9 @@ namespace apparelPro.BusinessLogic.Reports.OrderManagement.GarmentAdditionalCost
 
                         column.Item().PaddingTop(6).Row(row =>
                         {
-                            row.RelativeItem().Text(t => { t.Span("Buyer: ").Bold(); t.Span(report.BuyerCode.ToString()); });
+                            row.RelativeItem().Text(t => { t.Span("Buyer: ").Bold(); t.Span(string.IsNullOrEmpty(report.BuyerName) ? report.BuyerCode.ToString() : report.BuyerName); });
                             row.RelativeItem().Text(t => { t.Span("Order: ").Bold(); t.Span(report.Order); });
-                            row.RelativeItem().Text(t => { t.Span("Type: ").Bold(); t.Span(report.TypeCode.ToString()); });
+                            row.RelativeItem().Text(t => { t.Span("Type: ").Bold(); t.Span(string.IsNullOrEmpty(report.TypeName) ? report.TypeCode.ToString() : report.TypeName); });
                             row.RelativeItem().Text(t => { t.Span("Style: ").Bold(); t.Span(report.StyleCode); });
                         });
 
