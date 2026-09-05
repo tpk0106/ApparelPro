@@ -1,4 +1,5 @@
-﻿using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
+﻿using apparelPro.BusinessLogic.Reports.OrderwiseInventory;
+using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
 using AutoMapper;
@@ -122,6 +123,51 @@ namespace ApparelPro.WebApi.Controllers.OrderwiseInventory
             catch (Exception ex)
             {
                 return StatusCode(500, new { Error = $"Failed to load pending STRNs: {ex.Message}" });
+            }
+        }
+
+        // GET: api/orderwise-inventory-gin/print?ginNumber=000123
+        [HttpGet("print")]
+        public async Task<IActionResult> GetGinPrintDetails([FromQuery] string ginNumber)
+        {
+            if (string.IsNullOrWhiteSpace(ginNumber))
+                return BadRequest("Parameter 'ginNumber' is required.");
+
+            try
+            {
+                var details = await _goodsIssueService.GetGinPrintDetailsAsync(ginNumber);
+                return Ok(_mapper.Map<GinPrintDetailsAPIModel>(details));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to load Goods Issue Note: {ex.Message}" });
+            }
+        }
+
+        // GET: api/orderwise-inventory-gin/print/pdf?ginNumber=000123
+        [HttpGet("print/pdf")]
+        public async Task<IActionResult> GetGinPrintPdf([FromQuery] string ginNumber)
+        {
+            if (string.IsNullOrWhiteSpace(ginNumber))
+                return BadRequest("Parameter 'ginNumber' is required.");
+
+            try
+            {
+                var details = await _goodsIssueService.GetGinPrintDetailsAsync(ginNumber);
+                byte[] pdfBytes = GinPrintEngine.GenerateGinPrintPdf(details);
+                return File(pdfBytes, "application/pdf", $"GIN_{ginNumber}.pdf");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to generate Goods Issue Note PDF: {ex.Message}" });
             }
         }
     }

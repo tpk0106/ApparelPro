@@ -14,5 +14,9 @@ namespace apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory
             RtnHeaderServiceModel header,
             List<RtnLineItemServiceModel> lines,
             string username);
+
+        // Fetches one already-committed RTN's header + lines for on-screen preview / PDF print -
+        // same pattern as StoresRequisitionService.GetStrnPrintDetailsAsync.
+        Task<RtnPrintDetailsServiceModel> GetRtnPrintDetailsAsync(string rtnNumber);
     }
 }

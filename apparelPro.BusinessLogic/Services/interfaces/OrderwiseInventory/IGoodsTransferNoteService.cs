@@ -16,5 +16,11 @@ namespace apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory
             GtnHeaderServiceModel header,
             List<GtnLineItemServiceModel> lines,
             string username);
+
+        // Fetches one already-committed GTN's header + lines for on-screen preview / PDF print -
+        // same pattern as StoresRequisitionService.GetStrnPrintDetailsAsync. Reads only the "6T"
+        // (Transfer-Out) leg for the line list - both legs of a GTN share the same DocumentNumber,
+        // ItemCode, Basis and Quantity, so reading just one avoids doubling every row.
+        Task<GtnPrintDetailsServiceModel> GetGtnPrintDetailsAsync(string gtnNumber);
     }
 }

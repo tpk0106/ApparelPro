@@ -17,6 +17,7 @@ namespace ApparelPro.WebApi.APIModels.OrderwiseInventory
         public string Currency { get; set; } = "";
         public string SupplierName { get; set; } = "";
         public int BuyerCode { get; set; }
+        public string BuyerName { get; set; } = "";
         public string Order { get; set; } = null!;
     }
 }

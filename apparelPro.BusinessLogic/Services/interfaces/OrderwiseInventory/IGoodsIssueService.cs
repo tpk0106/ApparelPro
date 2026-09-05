@@ -23,5 +23,9 @@ namespace apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory
         // an alternate entry point to typing the STRN number directly — purely additive,
         // does not change GetIssuableStrnLinesAsync's contract or behavior.
         Task<List<GinPendingStrnServiceModel>> GetPendingStrnsByOrderAsync(int buyerCode, string order);
+
+        // Fetches one already-committed GIN's header + lines for on-screen preview / PDF print -
+        // same pattern as StoresRequisitionService.GetStrnPrintDetailsAsync.
+        Task<GinPrintDetailsServiceModel> GetGinPrintDetailsAsync(string ginNumber);
     }
 }

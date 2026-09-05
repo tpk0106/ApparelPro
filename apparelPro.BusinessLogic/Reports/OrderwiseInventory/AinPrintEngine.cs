@@ -43,29 +43,29 @@ namespace apparelPro.BusinessLogic.Reports.OrderwiseInventory
                             {
                                 columns.ConstantColumn(130);  // Item Code
                                 columns.RelativeColumn(2.4f); // Description
-                                columns.ConstantColumn(50);   // Unit
-                                columns.ConstantColumn(90);   // Qty. Issued
-                                columns.ConstantColumn(70);   // Basis
+                                columns.ConstantColumn(55);   // Unit
+                                columns.ConstantColumn(105);  // Qty. Issued
+                                columns.ConstantColumn(80);   // Basis
                             });
 
                             table.Header(header =>
                             {
-                                header.Cell().Text("Item Code").Bold();
-                                header.Cell().Text("Description").Bold();
-                                header.Cell().Text("Unit").Bold();
-                                header.Cell().AlignRight().Text("Qty. Issued").Bold();
-                                header.Cell().Text("Basis").Bold();
+                                header.Cell().PaddingHorizontal(4).Text("Item Code").Bold();
+                                header.Cell().PaddingHorizontal(4).Text("Description").Bold();
+                                header.Cell().PaddingHorizontal(4).Text("Unit").Bold();
+                                header.Cell().PaddingHorizontal(4).AlignRight().Text("Qty. Issued").Bold();
+                                header.Cell().PaddingHorizontal(4).Text("Basis").Bold();
 
                                 header.Cell().ColumnSpan(5).PaddingTop(2).LineHorizontal(1).LineColor(QuestPDF.Helpers.Colors.Grey.Darken2);
                             });
 
                             foreach (var line in details.Lines)
                             {
-                                table.Cell().PaddingVertical(3).Text(line.ItemCode);
-                                table.Cell().PaddingVertical(3).Text(line.Description);
-                                table.Cell().PaddingVertical(3).Text(line.Unit);
-                                table.Cell().PaddingVertical(3).AlignRight().Text(line.Quantity.ToString("N2"));
-                                table.Cell().PaddingVertical(3).Text(line.StoreCode);
+                                table.Cell().PaddingVertical(3).PaddingHorizontal(4).Text(line.ItemCode);
+                                table.Cell().PaddingVertical(3).PaddingHorizontal(4).Text(line.Description);
+                                table.Cell().PaddingVertical(3).PaddingHorizontal(4).Text(line.Unit);
+                                table.Cell().PaddingVertical(3).PaddingHorizontal(4).AlignRight().Text(line.Quantity.ToString("N2"));
+                                table.Cell().PaddingVertical(3).PaddingHorizontal(4).Text(line.StoreCode);
                             }
                         });
 

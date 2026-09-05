@@ -1,4 +1,5 @@
-﻿using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
+﻿using apparelPro.BusinessLogic.Reports.OrderwiseInventory;
+using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
 using AutoMapper;
@@ -88,6 +89,51 @@ namespace ApparelPro.WebApi.Controllers.OrderwiseInventory
             catch (Exception ex)
             {
                 return StatusCode(500, new { Error = $"Transaction processing failed on the SQL server: {ex.Message}" });
+            }
+        }
+
+        // GET: api/orderwise-inventory-gtn/print?gtnNumber=000123
+        [HttpGet("print")]
+        public async Task<IActionResult> GetGtnPrintDetails([FromQuery] string gtnNumber)
+        {
+            if (string.IsNullOrWhiteSpace(gtnNumber))
+                return BadRequest("Parameter 'gtnNumber' is required.");
+
+            try
+            {
+                var details = await _goodsTransferNoteService.GetGtnPrintDetailsAsync(gtnNumber);
+                return Ok(_mapper.Map<GtnPrintDetailsAPIModel>(details));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to load Goods Transfer Note: {ex.Message}" });
+            }
+        }
+
+        // GET: api/orderwise-inventory-gtn/print/pdf?gtnNumber=000123
+        [HttpGet("print/pdf")]
+        public async Task<IActionResult> GetGtnPrintPdf([FromQuery] string gtnNumber)
+        {
+            if (string.IsNullOrWhiteSpace(gtnNumber))
+                return BadRequest("Parameter 'gtnNumber' is required.");
+
+            try
+            {
+                var details = await _goodsTransferNoteService.GetGtnPrintDetailsAsync(gtnNumber);
+                byte[] pdfBytes = GtnPrintEngine.GenerateGtnPrintPdf(details);
+                return File(pdfBytes, "application/pdf", $"GTN_{gtnNumber}.pdf");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to generate Goods Transfer Note PDF: {ex.Message}" });
             }
         }
     }

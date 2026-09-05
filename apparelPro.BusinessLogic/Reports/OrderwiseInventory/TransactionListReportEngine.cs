@@ -50,7 +50,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderwiseInventory
                             columns.RelativeColumn(1.5f); // Value
                             columns.RelativeColumn(0.8f); // Curr
                             columns.RelativeColumn(2.5f); // Supplier
-                            columns.RelativeColumn(1);   // Buyer
+                            columns.RelativeColumn(2.5f); // Buyer
                             columns.RelativeColumn(1.5f); // Order
                         });
 
@@ -80,7 +80,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderwiseInventory
                             table.Cell().Padding(2).AlignRight().Text($"{line.Value:N2}");
                             table.Cell().Padding(2).Text(line.Currency);
                             table.Cell().Padding(2).Text(line.SupplierName);
-                            table.Cell().Padding(2).Text(line.BuyerCode.ToString());
+                            table.Cell().Padding(2).Text(line.BuyerName);
                             table.Cell().Padding(2).Text(line.Order);
                         }
                     });

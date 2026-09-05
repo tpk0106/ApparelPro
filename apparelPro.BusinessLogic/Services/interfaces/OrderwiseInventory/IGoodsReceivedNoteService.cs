@@ -18,5 +18,9 @@ namespace apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory
         // outstanding balance to receive. Powers a "pick a PO from a list" dropdown as
         // an alternate entry point to typing the PO number directly.
         Task<List<GrnPendingPoServiceModel>> GetPendingPosByOrderAsync(int buyerCode, string order);
+
+        // Fetches one already-committed GRN's header + lines for on-screen preview / PDF print -
+        // same pattern as StoresRequisitionService.GetStrnPrintDetailsAsync.
+        Task<GrnPrintDetailsServiceModel> GetGrnPrintDetailsAsync(string grnNumber);
     }
 }

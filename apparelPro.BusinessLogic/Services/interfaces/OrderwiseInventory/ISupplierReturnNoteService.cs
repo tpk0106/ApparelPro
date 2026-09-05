@@ -15,5 +15,9 @@ namespace apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory
             SrnHeaderServiceModel header,
             List<SrnLineItemServiceModel> lines,
             string username);
+
+        // Fetches one already-committed SRN's header + lines for on-screen preview / PDF print -
+        // same pattern as StoresRequisitionService.GetStrnPrintDetailsAsync.
+        Task<SrnPrintDetailsServiceModel> GetSrnPrintDetailsAsync(string srnNumber);
     }
 }

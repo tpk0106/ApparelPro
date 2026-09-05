@@ -333,5 +333,87 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 }
             }
         }
+
+        public async Task<GtnPrintDetailsServiceModel> GetGtnPrintDetailsAsync(string gtnNumber)
+        {
+            gtnNumber = gtnNumber.Trim();
+
+            // Only the "6T" (Transfer-Out) leg is read for the line list - both legs share the
+            // same DocumentNumber/ItemCode/Basis/Quantity (see CommitGoodsTransferNoteAsync),
+            // so reading both would double every row.
+            var transactionRows = await _apparelProDbContext.OrderwiseStockTransactions
+                .AsNoTracking()
+                .Where(t => t.DocumentNumber == gtnNumber && t.TransactionType == "6T")
+                .OrderBy(t => t.Id)
+                .ToListAsync();
+
+            if (transactionRows.Count == 0)
+                throw new KeyNotFoundException($"GTN No '{gtnNumber}' not found.");
+
+            var firstRow = transactionRows[0];
+
+            var costProfiles = await _apparelProDbContext.StyleMaterialCostProfiles
+                .AsNoTracking()
+                .Where(p => p.BuyerCode == firstRow.BuyerCode && p.Order.Trim() == firstRow.Order.Trim())
+                .ToListAsync();
+            var profileByItemCode = costProfiles.ToDictionary(p => p.ItemCode.Trim(), p => p);
+
+            static string DecomposePart(string fullItemCode, int start, int length) =>
+                fullItemCode.Length >= start + length ? fullItemCode.Substring(start, length).Trim() : string.Empty;
+
+            var baseItemCodes = transactionRows.Select(t => DecomposePart(t.ItemCode, 2, 4)).Distinct().ToList();
+            var catalogDescriptionByItemCode = await _apparelProDbContext.StockItems
+                .AsNoTracking()
+                .Where(c => baseItemCodes.Contains(c.ItemCode.Trim()))
+                .ToDictionaryAsync(c => c.ItemCode.Trim(), c => c.Description);
+
+            var lines = transactionRows.Select(t =>
+            {
+                var itemCode = t.ItemCode.Trim();
+                var baseItemCode = DecomposePart(itemCode, 2, 4);
+
+                profileByItemCode.TryGetValue(itemCode, out var matchingProfile);
+                var description = matchingProfile?.Description?.Trim();
+                if (string.IsNullOrWhiteSpace(description))
+                    catalogDescriptionByItemCode.TryGetValue(baseItemCode, out description);
+
+                return new GtnPrintLineServiceModel
+                {
+                    ItemCode = itemCode,
+                    Description = !string.IsNullOrWhiteSpace(description) ? description!.Trim() : "(No description available)",
+                    Unit = t.Unit,
+                    Quantity = t.Quantity,
+                    StoreCode = t.StoreCode,
+                };
+            }).ToList();
+
+            int toBuyerCode = firstRow.CounterpartyBuyerCode ?? 0;
+            string toOrder = firstRow.CounterpartyOrder ?? "";
+
+            var buyerCodesToLookUp = new List<int> { firstRow.BuyerCode, toBuyerCode };
+            var buyerNames = await _apparelProDbContext.Buyers
+                .AsNoTracking()
+                .Where(b => buyerCodesToLookUp.Contains(b.BuyerCode))
+                .ToDictionaryAsync(b => b.BuyerCode, b => b.Name);
+
+            return new GtnPrintDetailsServiceModel
+            {
+                Header = new GtnPrintHeaderServiceModel
+                {
+                    GtnNumber = gtnNumber,
+                    FromBuyerCode = firstRow.BuyerCode,
+                    FromBuyerName = buyerNames.GetValueOrDefault(firstRow.BuyerCode, firstRow.BuyerCode.ToString()),
+                    FromOrder = firstRow.Order,
+                    ToBuyerCode = toBuyerCode,
+                    ToBuyerName = buyerNames.GetValueOrDefault(toBuyerCode, toBuyerCode.ToString()),
+                    ToOrder = toOrder,
+                    TransactionDate = firstRow.TransactionDate,
+                    // Legacy prints the current system date/time on every print run, not the
+                    // original transaction date - same convention as STRN/GIN's own print.
+                    PrintedOn = DateTime.Now,
+                },
+                Lines = lines,
+            };
+        }
     }
 }

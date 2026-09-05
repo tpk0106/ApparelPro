@@ -241,5 +241,117 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 StoreCode = h.StoreCode
             }).ToList();
         }
+
+        public async Task<GrnPrintDetailsServiceModel> GetGrnPrintDetailsAsync(string grnNumber)
+        {
+            grnNumber = grnNumber.Trim();
+
+            var transactionRows = await _apparelProDbContext.OrderwiseStockTransactions
+                .AsNoTracking()
+                .Where(t => t.DocumentNumber == grnNumber && t.TransactionType == "GR")
+                .OrderBy(t => t.Id)
+                .ToListAsync();
+
+            if (transactionRows.Count == 0)
+                throw new KeyNotFoundException($"GRN No '{grnNumber}' not found.");
+
+            var firstRow = transactionRows[0];
+
+            var costProfiles = await _apparelProDbContext.StyleMaterialCostProfiles
+                .AsNoTracking()
+                .Where(p => p.BuyerCode == firstRow.BuyerCode && p.Order.Trim() == firstRow.Order.Trim())
+                .ToListAsync();
+            var profileByItemCode = costProfiles.ToDictionary(p => p.ItemCode.Trim(), p => p);
+
+            static string DecomposePart(string fullItemCode, int start, int length) =>
+                fullItemCode.Length >= start + length ? fullItemCode.Substring(start, length).Trim() : string.Empty;
+
+            var baseItemCodes = transactionRows.Select(t => DecomposePart(t.ItemCode, 2, 4)).Distinct().ToList();
+            var catalogDescriptionByItemCode = await _apparelProDbContext.StockItems
+                .AsNoTracking()
+                .Where(c => baseItemCodes.Contains(c.ItemCode.Trim()))
+                .ToDictionaryAsync(c => c.ItemCode.Trim(), c => c.Description);
+
+            // GoodsReceivedNoteService reuses SourceDocumentNumber to store the PO Number
+            // (see CommitGoodsReceivedNoteAsync above) - Unit Price isn't snapshotted on the
+            // "GR" transaction row itself, so it's resolved from SupplierPurchaseOrderDetails
+            // instead, matched via PO Number + ItemCode - same convention as GrnListingReportService.
+            string? poNumber = firstRow.SourceDocumentNumber?.Trim();
+            var poDetails = !string.IsNullOrWhiteSpace(poNumber)
+                ? await _apparelProDbContext.SupplierPurchaseOrderDetails.AsNoTracking().Where(d => d.PONumber == poNumber).ToListAsync()
+                : new List<ApparelPro.Data.Models.OrderManagement.SupplierPurchaseOrderDetails>();
+            var poDetailByItemCode = poDetails
+                .GroupBy(d => d.ItemCode.Trim())
+                .ToDictionary(g => g.Key, g => g.First());
+
+            var masters = await _apparelProDbContext.OrderwiseStockMasters
+                .AsNoTracking()
+                .Where(m => m.BuyerCode == firstRow.BuyerCode && m.Order.Trim() == firstRow.Order.Trim())
+                .ToListAsync();
+            var masterByItemCode = masters.GroupBy(m => m.ItemCode.Trim()).ToDictionary(g => g.Key, g => g.First());
+
+            var lines = transactionRows.Select(t =>
+            {
+                var itemCode = t.ItemCode.Trim();
+                var baseItemCode = DecomposePart(itemCode, 2, 4);
+
+                profileByItemCode.TryGetValue(itemCode, out var matchingProfile);
+                var description = matchingProfile?.Description?.Trim();
+                if (string.IsNullOrWhiteSpace(description))
+                    catalogDescriptionByItemCode.TryGetValue(baseItemCode, out description);
+
+                poDetailByItemCode.TryGetValue(itemCode, out var poDetail);
+                masterByItemCode.TryGetValue(itemCode, out var master);
+
+                decimal unitPrice = poDetail?.UnitPrice ?? 0;
+
+                return new GrnPrintLineServiceModel
+                {
+                    ItemCode = itemCode,
+                    Description = !string.IsNullOrWhiteSpace(description) ? description!.Trim() : "(No description available)",
+                    Unit = t.Unit,
+                    Quantity = t.Quantity,
+                    UnitPrice = unitPrice,
+                    Value = t.Quantity * unitPrice,
+                    Currency = master?.Currency ?? "",
+                };
+            }).ToList();
+
+            var buyerName = await _apparelProDbContext.Buyers
+                .AsNoTracking()
+                .Where(b => b.BuyerCode == firstRow.BuyerCode)
+                .Select(b => b.Name)
+                .FirstOrDefaultAsync();
+
+            string? supplierName = null;
+            if (firstRow.SupplierCode.HasValue)
+            {
+                supplierName = await _apparelProDbContext.Suppliers
+                    .AsNoTracking()
+                    .Where(s => s.SupplierCode == firstRow.SupplierCode.Value)
+                    .Select(s => s.Name)
+                    .FirstOrDefaultAsync();
+            }
+
+            return new GrnPrintDetailsServiceModel
+            {
+                Header = new GrnPrintHeaderServiceModel
+                {
+                    GrnNumber = grnNumber,
+                    BuyerCode = firstRow.BuyerCode,
+                    BuyerName = !string.IsNullOrWhiteSpace(buyerName) ? buyerName : firstRow.BuyerCode.ToString(),
+                    Order = firstRow.Order,
+                    SupplierCode = firstRow.SupplierCode,
+                    SupplierName = !string.IsNullOrWhiteSpace(supplierName) ? supplierName! : "",
+                    PoNumber = poNumber ?? "",
+                    StoreCode = firstRow.StoreCode,
+                    TransactionDate = firstRow.TransactionDate,
+                    // Legacy prints the current system date/time on every print run, not the
+                    // original transaction date - same convention as STRN/GIN's own print.
+                    PrintedOn = DateTime.Now,
+                },
+                Lines = lines,
+            };
+        }
     }
 }

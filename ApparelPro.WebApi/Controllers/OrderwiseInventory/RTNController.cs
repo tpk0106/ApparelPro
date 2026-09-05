@@ -1,4 +1,5 @@
-﻿using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
+﻿using apparelPro.BusinessLogic.Reports.OrderwiseInventory;
+using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
 using AutoMapper;
@@ -86,6 +87,51 @@ namespace ApparelPro.WebApi.Controllers.OrderwiseInventory
             catch (Exception ex)
             {
                 return StatusCode(500, new { Error = $"Transaction processing failed on the SQL server: {ex.Message}" });
+            }
+        }
+
+        // GET: api/orderwise-inventory-rtn/print?rtnNumber=000123
+        [HttpGet("print")]
+        public async Task<IActionResult> GetRtnPrintDetails([FromQuery] string rtnNumber)
+        {
+            if (string.IsNullOrWhiteSpace(rtnNumber))
+                return BadRequest("Parameter 'rtnNumber' is required.");
+
+            try
+            {
+                var details = await _goodsReturnNoteService.GetRtnPrintDetailsAsync(rtnNumber);
+                return Ok(_mapper.Map<RtnPrintDetailsAPIModel>(details));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to load Goods Return Note: {ex.Message}" });
+            }
+        }
+
+        // GET: api/orderwise-inventory-rtn/print/pdf?rtnNumber=000123
+        [HttpGet("print/pdf")]
+        public async Task<IActionResult> GetRtnPrintPdf([FromQuery] string rtnNumber)
+        {
+            if (string.IsNullOrWhiteSpace(rtnNumber))
+                return BadRequest("Parameter 'rtnNumber' is required.");
+
+            try
+            {
+                var details = await _goodsReturnNoteService.GetRtnPrintDetailsAsync(rtnNumber);
+                byte[] pdfBytes = RtnPrintEngine.GenerateRtnPrintPdf(details);
+                return File(pdfBytes, "application/pdf", $"RTN_{rtnNumber}.pdf");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to generate Goods Return Note PDF: {ex.Message}" });
             }
         }
     }

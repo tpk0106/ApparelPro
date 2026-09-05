@@ -264,5 +264,84 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
 
             return pendingStrns;
         }
+
+        public async Task<GinPrintDetailsServiceModel> GetGinPrintDetailsAsync(string ginNumber)
+        {
+            ginNumber = ginNumber.Trim();
+
+            // Same pattern as StoresRequisitionService.GetStrnPrintDetailsAsync - every
+            // transaction row sharing this document number and the '4I' (Goods Issue Note)
+            // type is one line of the committed note.
+            var transactionRows = await _apparelProDbContext.OrderwiseStockTransactions
+                .AsNoTracking()
+                .Where(t => t.DocumentNumber == ginNumber && t.TransactionType == "4I")
+                .OrderBy(t => t.Id)
+                .ToListAsync();
+
+            if (transactionRows.Count == 0)
+                throw new KeyNotFoundException($"GIN No '{ginNumber}' not found.");
+
+            var firstRow = transactionRows[0];
+
+            var costProfiles = await _apparelProDbContext.StyleMaterialCostProfiles
+                .AsNoTracking()
+                .Where(p => p.BuyerCode == firstRow.BuyerCode && p.Order.Trim() == firstRow.Order)
+                .ToListAsync();
+            var profileByItemCode = costProfiles.ToDictionary(p => p.ItemCode.Trim(), p => p);
+
+            static string DecomposePart(string fullItemCode, int start, int length) =>
+                fullItemCode.Length >= start + length ? fullItemCode.Substring(start, length).Trim() : string.Empty;
+
+            var baseItemCodes = transactionRows
+                .Select(t => DecomposePart(t.ItemCode, 2, 4))
+                .Distinct()
+                .ToList();
+            var catalogDescriptionByItemCode = await _apparelProDbContext.StockItems
+                .AsNoTracking()
+                .Where(c => baseItemCodes.Contains(c.ItemCode.Trim()))
+                .ToDictionaryAsync(c => c.ItemCode.Trim(), c => c.Description);
+
+            var lines = transactionRows.Select(t =>
+            {
+                var baseItemCode = DecomposePart(t.ItemCode, 2, 4);
+
+                profileByItemCode.TryGetValue(t.ItemCode.Trim(), out var matchingProfile);
+
+                var description = matchingProfile?.Description?.Trim();
+                if (string.IsNullOrWhiteSpace(description))
+                    catalogDescriptionByItemCode.TryGetValue(baseItemCode, out description);
+
+                return new GinPrintLineServiceModel
+                {
+                    ItemCode = t.ItemCode.Trim(),
+                    Description = !string.IsNullOrWhiteSpace(description) ? description!.Trim() : "(No description available)",
+                    Unit = t.Unit,
+                    Quantity = t.Quantity,
+                    StoreCode = t.StoreCode,
+                };
+            }).ToList();
+
+            var buyerName = await _apparelProDbContext.Buyers
+                .AsNoTracking()
+                .Where(b => b.BuyerCode == firstRow.BuyerCode)
+                .Select(b => b.Name)
+                .FirstOrDefaultAsync();
+
+            return new GinPrintDetailsServiceModel
+            {
+                Header = new GinPrintHeaderServiceModel
+                {
+                    GinNumber = ginNumber,
+                    BuyerCode = firstRow.BuyerCode,
+                    BuyerName = !string.IsNullOrWhiteSpace(buyerName) ? buyerName : firstRow.BuyerCode.ToString(),
+                    Order = firstRow.Order,
+                    DepartmentCode = firstRow.DepartmentCode,
+                    SourceStrnNumber = firstRow.SourceDocumentNumber ?? "",
+                    TransactionDate = firstRow.TransactionDate,
+                    PrintedOn = DateTime.Now,
+                },
+                Lines = lines,
+            };
+        }
     }
 }

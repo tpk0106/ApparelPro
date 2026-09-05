@@ -311,6 +311,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
             new("gin", "Goods Issue Note (GIN)", "Orderwise Inventory", "GINController - class-level [Authorize]", OrderwiseInventoryStandardRoles),
             new("grn", "Goods Received Note (GRN)", "Orderwise Inventory", "GRNController - class-level [Authorize]", OrderwiseInventoryStandardRoles),
             new("gtn", "Goods Transfer Note (GTN)", "Orderwise Inventory", "GTNController - class-level [Authorize]", OrderwiseInventoryStandardRoles),
+            new("dtn", "Direct Goods Transfer Note (DTN)", "Orderwise Inventory", "DTNController - class-level [Authorize]. Mirror image of GTN but allows the destination item code to differ from the source (legacy IN_DTN1.PRG/IN_DTN2.PRG).", OrderwiseInventoryStandardRoles),
             new("rtn", "Goods Return Note (RTN)", "Orderwise Inventory", "RTNController - class-level [Authorize]", OrderwiseInventoryStandardRoles),
             new("srn", "Supplier Return Note (SRN)", "Orderwise Inventory", "SRNController - class-level [Authorize]", OrderwiseInventoryStandardRoles),
             new("strn", "Stores Requisition Note (STRN)", "Orderwise Inventory", "STRNController - class-level [Authorize]", OrderwiseInventoryStandardRoles),

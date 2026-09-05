@@ -88,6 +88,12 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 .Where(s => supplierCodes.Contains(s.SupplierCode))
                 .ToDictionaryAsync(s => s.SupplierCode, s => s.Name);
 
+            var buyerCodesInLines = transactions.Select(t => t.BuyerCode).Distinct().ToList();
+            var buyerNames = await _apparelProDbContext.Buyers
+                .AsNoTracking()
+                .Where(b => buyerCodesInLines.Contains(b.BuyerCode))
+                .ToDictionaryAsync(b => b.BuyerCode, b => b.Name);
+
             var lines = transactions.Select(t =>
             {
                 var itemCode = t.ItemCode.Trim();
@@ -115,6 +121,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                     Currency = t.Currency ?? "",
                     SupplierName = t.SupplierCode.HasValue ? supplierNames.GetValueOrDefault(t.SupplierCode.Value, "") : "",
                     BuyerCode = t.BuyerCode,
+                    BuyerName = buyerNames.GetValueOrDefault(t.BuyerCode, ""),
                     Order = order,
                 };
             }).ToList();

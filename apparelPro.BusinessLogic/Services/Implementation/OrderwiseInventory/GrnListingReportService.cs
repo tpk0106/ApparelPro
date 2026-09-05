@@ -109,6 +109,12 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 ? await _apparelProDbContext.Suppliers.AsNoTracking().Where(s => supplierCodesInLines.Contains(s.SupplierCode)).ToDictionaryAsync(s => s.SupplierCode, s => s.Name)
                 : new Dictionary<int, string>();
 
+            var buyerCodesInLines = transactions.Select(t => t.BuyerCode).Distinct().ToList();
+            var buyerNames = await _apparelProDbContext.Buyers
+                .AsNoTracking()
+                .Where(b => buyerCodesInLines.Contains(b.BuyerCode))
+                .ToDictionaryAsync(b => b.BuyerCode, b => b.Name);
+
             var masters = await _apparelProDbContext.OrderwiseStockMasters.AsNoTracking().ToListAsync();
             var masterByKey = masters
                 .GroupBy(m => (m.BuyerCode, Order: m.Order.Trim(), ItemCode: m.ItemCode.Trim()))
@@ -151,6 +157,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                     Currency = currency,
                     SupplierName = t.SupplierCode.HasValue ? supplierNames.GetValueOrDefault(t.SupplierCode.Value, "") : "",
                     BuyerCode = t.BuyerCode,
+                    BuyerName = buyerNames.GetValueOrDefault(t.BuyerCode, ""),
                     Order = ord,
                 };
             }).ToList();
@@ -160,6 +167,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 FromDate = fromDate,
                 ToDate = toDate,
                 BuyerCode = buyerCode,
+                BuyerName = buyerCode.HasValue ? buyerNames.GetValueOrDefault(buyerCode.Value, "") : null,
                 Order = order,
                 StoreCode = storeCode,
                 SupplierName = supplierName,

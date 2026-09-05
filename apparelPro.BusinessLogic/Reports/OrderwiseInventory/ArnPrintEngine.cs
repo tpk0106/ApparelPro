@@ -41,43 +41,43 @@ namespace apparelPro.BusinessLogic.Reports.OrderwiseInventory
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.ConstantColumn(100);  // Item Code
+                                columns.ConstantColumn(105);  // Item Code
                                 columns.RelativeColumn(2.2f); // Description
-                                columns.ConstantColumn(40);   // Unit
-                                columns.ConstantColumn(70);   // Qty Received
-                                columns.ConstantColumn(65);   // Unit Price
-                                columns.ConstantColumn(70);   // Value
-                                columns.ConstantColumn(70);   // Bal. to Receive
-                                columns.ConstantColumn(45);   // Buyer
-                                columns.ConstantColumn(55);   // Order
+                                columns.ConstantColumn(45);   // Unit
+                                columns.ConstantColumn(78);   // Qty Received
+                                columns.ConstantColumn(72);   // Unit Price
+                                columns.ConstantColumn(78);   // Value
+                                columns.ConstantColumn(78);   // Bal. to Receive
+                                columns.ConstantColumn(52);   // Buyer
+                                columns.ConstantColumn(62);   // Order
                             });
 
                             table.Header(header =>
                             {
-                                header.Cell().Text("Item Code").Bold();
-                                header.Cell().Text("Description").Bold();
-                                header.Cell().Text("Unit").Bold();
-                                header.Cell().AlignRight().Text("Qty Rcvd").Bold();
-                                header.Cell().AlignRight().Text("U/Price").Bold();
-                                header.Cell().AlignRight().Text($"Value ({details.Header.Currency})").Bold();
-                                header.Cell().AlignRight().Text("Bal. to Rcv").Bold();
-                                header.Cell().Text("Buyer").Bold();
-                                header.Cell().Text("Order").Bold();
+                                header.Cell().PaddingHorizontal(4).Text("Item Code").Bold();
+                                header.Cell().PaddingHorizontal(4).Text("Description").Bold();
+                                header.Cell().PaddingHorizontal(4).Text("Unit").Bold();
+                                header.Cell().PaddingHorizontal(4).AlignRight().Text("Qty Rcvd").Bold();
+                                header.Cell().PaddingHorizontal(4).AlignRight().Text("U/Price").Bold();
+                                header.Cell().PaddingHorizontal(4).AlignRight().Text($"Value ({details.Header.Currency})").Bold();
+                                header.Cell().PaddingHorizontal(4).AlignRight().Text("Bal. to Rcv").Bold();
+                                header.Cell().PaddingHorizontal(4).Text("Buyer").Bold();
+                                header.Cell().PaddingHorizontal(4).Text("Order").Bold();
 
                                 header.Cell().ColumnSpan(9).PaddingTop(2).LineHorizontal(1).LineColor(QuestPDF.Helpers.Colors.Grey.Darken2);
                             });
 
                             foreach (var line in details.Lines)
                             {
-                                table.Cell().PaddingVertical(3).Text(line.ItemCode);
-                                table.Cell().PaddingVertical(3).Text(line.Description);
-                                table.Cell().PaddingVertical(3).Text(line.Unit);
-                                table.Cell().PaddingVertical(3).AlignRight().Text(line.Quantity.ToString("N2"));
-                                table.Cell().PaddingVertical(3).AlignRight().Text(line.UnitPrice.ToString("N4"));
-                                table.Cell().PaddingVertical(3).AlignRight().Text(line.Value.ToString("N2"));
-                                table.Cell().PaddingVertical(3).AlignRight().Text(line.BalanceToReceive.ToString("N2"));
-                                table.Cell().PaddingVertical(3).Text(line.BuyerCode.ToString());
-                                table.Cell().PaddingVertical(3).Text(line.Order);
+                                table.Cell().PaddingVertical(3).PaddingHorizontal(4).Text(line.ItemCode);
+                                table.Cell().PaddingVertical(3).PaddingHorizontal(4).Text(line.Description);
+                                table.Cell().PaddingVertical(3).PaddingHorizontal(4).Text(line.Unit);
+                                table.Cell().PaddingVertical(3).PaddingHorizontal(4).AlignRight().Text(line.Quantity.ToString("N2"));
+                                table.Cell().PaddingVertical(3).PaddingHorizontal(4).AlignRight().Text(line.UnitPrice.ToString("N4"));
+                                table.Cell().PaddingVertical(3).PaddingHorizontal(4).AlignRight().Text(line.Value.ToString("N2"));
+                                table.Cell().PaddingVertical(3).PaddingHorizontal(4).AlignRight().Text(line.BalanceToReceive.ToString("N2"));
+                                table.Cell().PaddingVertical(3).PaddingHorizontal(4).Text(line.BuyerCode.ToString());
+                                table.Cell().PaddingVertical(3).PaddingHorizontal(4).Text(line.Order);
                             }
                         });
 

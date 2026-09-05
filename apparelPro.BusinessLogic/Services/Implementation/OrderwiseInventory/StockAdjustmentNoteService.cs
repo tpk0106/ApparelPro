@@ -215,5 +215,78 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 }
             }
         }
+
+        public async Task<SanPrintDetailsServiceModel> GetSanPrintDetailsAsync(string sanNumber)
+        {
+            sanNumber = sanNumber.Trim();
+
+            var transactionRows = await _apparelProDbContext.OrderwiseStockTransactions
+                .AsNoTracking()
+                .Where(t => t.DocumentNumber == sanNumber && t.TransactionType == "3A")
+                .OrderBy(t => t.Id)
+                .ToListAsync();
+
+            if (transactionRows.Count == 0)
+                throw new KeyNotFoundException($"SAN No '{sanNumber}' not found.");
+
+            var firstRow = transactionRows[0];
+
+            var costProfiles = await _apparelProDbContext.StyleMaterialCostProfiles
+                .AsNoTracking()
+                .Where(p => p.BuyerCode == firstRow.BuyerCode && p.Order.Trim() == firstRow.Order.Trim())
+                .ToListAsync();
+            var profileByItemCode = costProfiles.ToDictionary(p => p.ItemCode.Trim(), p => p);
+
+            static string DecomposePart(string fullItemCode, int start, int length) =>
+                fullItemCode.Length >= start + length ? fullItemCode.Substring(start, length).Trim() : string.Empty;
+
+            var baseItemCodes = transactionRows.Select(t => DecomposePart(t.ItemCode, 2, 4)).Distinct().ToList();
+            var catalogDescriptionByItemCode = await _apparelProDbContext.StockItems
+                .AsNoTracking()
+                .Where(c => baseItemCodes.Contains(c.ItemCode.Trim()))
+                .ToDictionaryAsync(c => c.ItemCode.Trim(), c => c.Description);
+
+            var lines = transactionRows.Select(t =>
+            {
+                var itemCode = t.ItemCode.Trim();
+                var baseItemCode = DecomposePart(itemCode, 2, 4);
+
+                profileByItemCode.TryGetValue(itemCode, out var matchingProfile);
+                var description = matchingProfile?.Description?.Trim();
+                if (string.IsNullOrWhiteSpace(description))
+                    catalogDescriptionByItemCode.TryGetValue(baseItemCode, out description);
+
+                return new SanPrintLineServiceModel
+                {
+                    ItemCode = itemCode,
+                    Description = !string.IsNullOrWhiteSpace(description) ? description!.Trim() : "(No description available)",
+                    Unit = t.Unit,
+                    AdjustedQuantity = t.Quantity,
+                    StoreCode = t.StoreCode,
+                };
+            }).ToList();
+
+            var buyerName = await _apparelProDbContext.Buyers
+                .AsNoTracking()
+                .Where(b => b.BuyerCode == firstRow.BuyerCode)
+                .Select(b => b.Name)
+                .FirstOrDefaultAsync();
+
+            return new SanPrintDetailsServiceModel
+            {
+                Header = new SanPrintHeaderServiceModel
+                {
+                    SanNumber = sanNumber,
+                    BuyerCode = firstRow.BuyerCode,
+                    BuyerName = !string.IsNullOrWhiteSpace(buyerName) ? buyerName : firstRow.BuyerCode.ToString(),
+                    Order = firstRow.Order,
+                    TransactionDate = firstRow.TransactionDate,
+                    // Legacy prints the current system date/time on every print run, not the
+                    // original transaction date - same convention as STRN/GIN's own print.
+                    PrintedOn = DateTime.Now,
+                },
+                Lines = lines,
+            };
+        }
     }
 }

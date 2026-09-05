@@ -17,5 +17,9 @@ namespace apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory
             SanHeaderServiceModel header,
             List<SanLineItemServiceModel> lines,
             string username);
+
+        // Fetches one already-committed SAN's header + lines for on-screen preview / PDF print -
+        // same pattern as StoresRequisitionService.GetStrnPrintDetailsAsync.
+        Task<SanPrintDetailsServiceModel> GetSanPrintDetailsAsync(string sanNumber);
     }
 }

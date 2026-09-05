@@ -1,4 +1,5 @@
-﻿using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
+﻿using apparelPro.BusinessLogic.Reports.OrderwiseInventory;
+using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
 using AutoMapper;
@@ -88,6 +89,51 @@ namespace ApparelPro.WebApi.Controllers.OrderwiseInventory
             catch (Exception ex)
             {
                 return StatusCode(500, new { Error = $"Transaction processing failed on the SQL server: {ex.Message}" });
+            }
+        }
+
+        // GET: api/orderwise-inventory-dgn/print?dgnNumber=000123
+        [HttpGet("print")]
+        public async Task<IActionResult> GetDgnPrintDetails([FromQuery] string dgnNumber)
+        {
+            if (string.IsNullOrWhiteSpace(dgnNumber))
+                return BadRequest("Parameter 'dgnNumber' is required.");
+
+            try
+            {
+                var details = await _damagedGoodsNoteService.GetDgnPrintDetailsAsync(dgnNumber);
+                return Ok(_mapper.Map<DgnPrintDetailsAPIModel>(details));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to load Damaged Goods Note: {ex.Message}" });
+            }
+        }
+
+        // GET: api/orderwise-inventory-dgn/print/pdf?dgnNumber=000123
+        [HttpGet("print/pdf")]
+        public async Task<IActionResult> GetDgnPrintPdf([FromQuery] string dgnNumber)
+        {
+            if (string.IsNullOrWhiteSpace(dgnNumber))
+                return BadRequest("Parameter 'dgnNumber' is required.");
+
+            try
+            {
+                var details = await _damagedGoodsNoteService.GetDgnPrintDetailsAsync(dgnNumber);
+                byte[] pdfBytes = DgnPrintEngine.GenerateDgnPrintPdf(details);
+                return File(pdfBytes, "application/pdf", $"DGN_{dgnNumber}.pdf");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to generate Damaged Goods Note PDF: {ex.Message}" });
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
+﻿using apparelPro.BusinessLogic.Reports.OrderwiseInventory;
+using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
 using AutoMapper;
@@ -88,6 +89,51 @@ namespace ApparelPro.WebApi.Controllers.OrderwiseInventory
             catch (Exception ex)
             {
                 return StatusCode(500, new { Error = $"Transaction processing failed on the SQL server: {ex.Message}" });
+            }
+        }
+
+        // GET: api/orderwise-inventory-san/print?sanNumber=000123
+        [HttpGet("print")]
+        public async Task<IActionResult> GetSanPrintDetails([FromQuery] string sanNumber)
+        {
+            if (string.IsNullOrWhiteSpace(sanNumber))
+                return BadRequest("Parameter 'sanNumber' is required.");
+
+            try
+            {
+                var details = await _stockAdjustmentNoteService.GetSanPrintDetailsAsync(sanNumber);
+                return Ok(_mapper.Map<SanPrintDetailsAPIModel>(details));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to load Stock Adjustment Note: {ex.Message}" });
+            }
+        }
+
+        // GET: api/orderwise-inventory-san/print/pdf?sanNumber=000123
+        [HttpGet("print/pdf")]
+        public async Task<IActionResult> GetSanPrintPdf([FromQuery] string sanNumber)
+        {
+            if (string.IsNullOrWhiteSpace(sanNumber))
+                return BadRequest("Parameter 'sanNumber' is required.");
+
+            try
+            {
+                var details = await _stockAdjustmentNoteService.GetSanPrintDetailsAsync(sanNumber);
+                byte[] pdfBytes = SanPrintEngine.GenerateSanPrintPdf(details);
+                return File(pdfBytes, "application/pdf", $"SAN_{sanNumber}.pdf");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to generate Stock Adjustment Note PDF: {ex.Message}" });
             }
         }
     }

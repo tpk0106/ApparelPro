@@ -826,6 +826,9 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<GinIssuableStrnLineServiceModel, GinIssuableStrnLineAPIModel>().MaxDepth(2);
             CreateMap<GinStrnLookupResultServiceModel, GinStrnLookupResultAPIModel>().MaxDepth(2);
             CreateMap<GinPendingStrnServiceModel, GinPendingStrnAPIModel>().MaxDepth(2);
+            CreateMap<GinPrintHeaderServiceModel, GinPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GinPrintLineServiceModel, GinPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<GinPrintDetailsServiceModel, GinPrintDetailsAPIModel>().MaxDepth(2);
 
             // orderwise inventory - GRN
             CreateMap<GrnHeaderAPIModel, GrnHeaderServiceModel>().MaxDepth(2);
@@ -833,11 +836,17 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<GrnReceivableLineServiceModel, GrnReceivableLineAPIModel>().MaxDepth(2);
             CreateMap<GrnPoLookupResultServiceModel, GrnPoLookupResultAPIModel>().MaxDepth(2);
             CreateMap<GrnPendingPoServiceModel, GrnPendingPoAPIModel>().MaxDepth(2);
+            CreateMap<GrnPrintHeaderServiceModel, GrnPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GrnPrintLineServiceModel, GrnPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<GrnPrintDetailsServiceModel, GrnPrintDetailsAPIModel>().MaxDepth(2);
 
             // orderwise inventory - RTN (Goods Return Note)
             CreateMap<RtnHeaderAPIModel, RtnHeaderServiceModel>().MaxDepth(2);
             CreateMap<RtnLineItemAPIModel, RtnLineItemServiceModel>().MaxDepth(2);
             CreateMap<RtnReturnableStockRowServiceModel, RtnReturnableStockRowAPIModel>().MaxDepth(2);
+            CreateMap<RtnPrintHeaderServiceModel, RtnPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<RtnPrintLineServiceModel, RtnPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<RtnPrintDetailsServiceModel, RtnPrintDetailsAPIModel>().MaxDepth(2);
 
             // orderwise inventory - SAN (Stock Adjustment Note)
             // FIXED (2026-08-07): all three were missing entirely - same class of bug as the
@@ -848,6 +857,9 @@ namespace ApparelPro.WebApi.Mappings
             // "Failed to load adjustable stock: Error mapping types...". CommitStockAdjustment's
             // two Header/Lines maps were equally unregistered but hadn't been hit yet.
             CreateMap<SanAdjustableStockRowServiceModel, SanAdjustableStockRowAPIModel>().MaxDepth(2);
+            CreateMap<SanPrintHeaderServiceModel, SanPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<SanPrintLineServiceModel, SanPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<SanPrintDetailsServiceModel, SanPrintDetailsAPIModel>().MaxDepth(2);
             CreateMap<SanHeaderAPIModel, SanHeaderServiceModel>().MaxDepth(2);
             CreateMap<SanLineItemAPIModel, SanLineItemServiceModel>().MaxDepth(2);
 
@@ -882,6 +894,9 @@ namespace ApparelPro.WebApi.Mappings
             // FIXED (2026-08-07): found via a full sweep of every controller's _mapper.Map<>
             // call site after the SAN bug above - same class of gap, never registered at all.
             CreateMap<DgnDamageableStockRowServiceModel, DgnDamageableStockRowAPIModel>().MaxDepth(2);
+            CreateMap<DgnPrintHeaderServiceModel, DgnPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<DgnPrintLineServiceModel, DgnPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<DgnPrintDetailsServiceModel, DgnPrintDetailsAPIModel>().MaxDepth(2);
             CreateMap<DgnHeaderAPIModel, DgnHeaderServiceModel>().MaxDepth(2);
             CreateMap<DgnLineItemAPIModel, DgnLineItemServiceModel>().MaxDepth(2);
 
@@ -890,10 +905,25 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<GtnTransferableStockRowServiceModel, GtnTransferableStockRowAPIModel>().MaxDepth(2);
             CreateMap<GtnHeaderAPIModel, GtnHeaderServiceModel>().MaxDepth(2);
             CreateMap<GtnLineItemAPIModel, GtnLineItemServiceModel>().MaxDepth(2);
+            CreateMap<GtnPrintHeaderServiceModel, GtnPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<GtnPrintLineServiceModel, GtnPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<GtnPrintDetailsServiceModel, GtnPrintDetailsAPIModel>().MaxDepth(2);
+
+            // orderwise inventory - DTN (Direct Goods Transfer Note)
+            CreateMap<DtnFromStockRowServiceModel, DtnFromStockRowAPIModel>().MaxDepth(2);
+            CreateMap<DtnToItemServiceModel, DtnToItemAPIModel>().MaxDepth(2);
+            CreateMap<DtnHeaderAPIModel, DtnHeaderServiceModel>().MaxDepth(2);
+            CreateMap<DtnLineItemAPIModel, DtnLineItemServiceModel>().MaxDepth(2);
+            CreateMap<DtnPrintHeaderServiceModel, DtnPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<DtnPrintLineServiceModel, DtnPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<DtnPrintDetailsServiceModel, DtnPrintDetailsAPIModel>().MaxDepth(2);
 
             // orderwise inventory - SRN (Supplier Return Note)
             // FIXED (2026-08-07): same sweep, same gap.
             CreateMap<SrnReturnableStockRowServiceModel, SrnReturnableStockRowAPIModel>().MaxDepth(2);
+            CreateMap<SrnPrintHeaderServiceModel, SrnPrintHeaderAPIModel>().MaxDepth(2);
+            CreateMap<SrnPrintLineServiceModel, SrnPrintLineAPIModel>().MaxDepth(2);
+            CreateMap<SrnPrintDetailsServiceModel, SrnPrintDetailsAPIModel>().MaxDepth(2);
             CreateMap<SrnHeaderAPIModel, SrnHeaderServiceModel>().MaxDepth(2);
             CreateMap<SrnLineItemAPIModel, SrnLineItemServiceModel>().MaxDepth(2);
 

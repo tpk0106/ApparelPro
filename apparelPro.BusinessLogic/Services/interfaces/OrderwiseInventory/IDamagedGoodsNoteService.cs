@@ -15,5 +15,9 @@ namespace apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory
             DgnHeaderServiceModel header,
             List<DgnLineItemServiceModel> lines,
             string username);
+
+        // Fetches one already-committed DGN's header + lines for on-screen preview / PDF print -
+        // same pattern as StoresRequisitionService.GetStrnPrintDetailsAsync.
+        Task<DgnPrintDetailsServiceModel> GetDgnPrintDetailsAsync(string dgnNumber);
     }
 }

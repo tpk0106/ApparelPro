@@ -3,6 +3,7 @@ namespace ApparelPro.WebApi.APIModels.OrderwiseInventory
     public class RawMaterialControlSheetHeaderAPIModel
     {
         public int BuyerCode { get; set; }
+        public string BuyerName { get; set; } = "";
         public string Order { get; set; } = null!;
         public string ItemDescription { get; set; } = "";
         public decimal OrderQuantity { get; set; }

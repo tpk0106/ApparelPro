@@ -1,4 +1,5 @@
-﻿using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
+﻿using apparelPro.BusinessLogic.Reports.OrderwiseInventory;
+using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.WebApi.APIModels.OrderwiseInventory;
 using AutoMapper;
@@ -109,6 +110,51 @@ namespace ApparelPro.WebApi.Controllers.OrderwiseInventory
             catch (Exception ex)
             {
                 return StatusCode(500, new { Error = $"Failed to load pending POs: {ex.Message}" });
+            }
+        }
+
+        // GET: api/orderwise-inventory-grn/print?grnNumber=000123
+        [HttpGet("print")]
+        public async Task<IActionResult> GetGrnPrintDetails([FromQuery] string grnNumber)
+        {
+            if (string.IsNullOrWhiteSpace(grnNumber))
+                return BadRequest("Parameter 'grnNumber' is required.");
+
+            try
+            {
+                var details = await _goodsReceivedNoteService.GetGrnPrintDetailsAsync(grnNumber);
+                return Ok(_mapper.Map<GrnPrintDetailsAPIModel>(details));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to load Goods Received Note: {ex.Message}" });
+            }
+        }
+
+        // GET: api/orderwise-inventory-grn/print/pdf?grnNumber=000123
+        [HttpGet("print/pdf")]
+        public async Task<IActionResult> GetGrnPrintPdf([FromQuery] string grnNumber)
+        {
+            if (string.IsNullOrWhiteSpace(grnNumber))
+                return BadRequest("Parameter 'grnNumber' is required.");
+
+            try
+            {
+                var details = await _goodsReceivedNoteService.GetGrnPrintDetailsAsync(grnNumber);
+                byte[] pdfBytes = GrnPrintEngine.GenerateGrnPrintPdf(details);
+                return File(pdfBytes, "application/pdf", $"GRN_{grnNumber}.pdf");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to generate Goods Received Note PDF: {ex.Message}" });
             }
         }
     }

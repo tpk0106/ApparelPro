@@ -17,7 +17,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderwiseInventory
             using var memoryStream = new MemoryStream();
 
             string title = header.BuyerCode.HasValue
-                ? $"GRN Listing for {header.BuyerCode}/{header.Order}"
+                ? $"GRN Listing for {header.BuyerName}/{header.Order}"
                 : "GRN Listing - Date Wise";
 
             Document.Create(container =>

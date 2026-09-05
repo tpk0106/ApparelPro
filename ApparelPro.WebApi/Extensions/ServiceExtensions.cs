@@ -194,6 +194,7 @@ namespace ApparelPro.WebApi.Extensions
             services.AddScoped<IGoodsReceivedNoteService, GoodsReceivedNoteService>();
             services.AddScoped<IGoodsReturnNoteService, GoodsReturnNoteService>();
             services.AddScoped<IGoodsTransferNoteService, GoodsTransferNoteService>();
+            services.AddScoped<IDirectTransferNoteService, DirectTransferNoteService>();
             services.AddScoped<ISupplierReturnNoteService, SupplierReturnNoteService>();
             services.AddScoped<IDamagedGoodsNoteService, DamagedGoodsNoteService>();
             services.AddScoped<IStockAdjustmentNoteService, StockAdjustmentNoteService>();

@@ -35,6 +35,10 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
             if (purchaseOrder == null)
                 throw new KeyNotFoundException($"Buyer/Order not found in Order Confirmation (Buyer: {buyerCode}, Order: {order}).");
 
+            var buyer = await _apparelProDbContext.Buyers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(b => b.BuyerCode == buyerCode);
+
             var ledgerRows = await _apparelProDbContext.StyleMaterialConsumptionLedgers
                 .AsNoTracking()
                 .Where(l => l.BuyerCode == buyerCode && l.Order == order)
@@ -124,6 +128,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
             var header = new RawMaterialControlSheetHeaderServiceModel
             {
                 BuyerCode = buyerCode,
+                BuyerName = buyer?.Name ?? "",
                 Order = order,
                 ItemDescription = purchaseOrder.Description ?? "",
                 OrderQuantity = purchaseOrder.TotalQuantity,

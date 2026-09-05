@@ -28,7 +28,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderwiseInventory
                     page.Header().Column(column =>
                     {
                         column.Item().AlignCenter().Text("Raw Material Control Sheet").FontSize(13).Bold();
-                        column.Item().PaddingTop(4).Text($"Buyer : {header.BuyerCode}    Order : {header.Order}    Item : {header.ItemDescription}    Qty : {header.OrderQuantity:N2} {header.Unit}");
+                        column.Item().PaddingTop(4).Text($"Buyer : {header.BuyerName}    Order : {header.Order}    Item : {header.ItemDescription}    Qty : {header.OrderQuantity:N2} {header.Unit}");
                         column.Item().PaddingTop(4).LineHorizontal(1.5f).LineColor(Colors.Black);
                     });
 
