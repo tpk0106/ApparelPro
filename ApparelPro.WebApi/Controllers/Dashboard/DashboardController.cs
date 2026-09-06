@@ -81,6 +81,20 @@ namespace ApparelPro.WebApi.Controllers.Dashboard
             return Ok(_mapper.Map<OrderwiseInventorySummaryAPIModel>(serviceModel));
         }
 
+        // GET: api/dashboard/order-pipeline?pageNumber=1&pageSize=20&buyerCode=&stage=&search=
+        [HttpGet("order-pipeline")]
+        [Authorize(Policy = "dashboard-view")]
+        [ProducesResponseType(typeof(OrderPipelineResultAPIModel), HttpStatusCodes.OK)]
+        public async Task<IActionResult> GetOrderPipelineAsync(
+            [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20,
+            [FromQuery] int? buyerCode = null, [FromQuery] int? stage = null,
+            [FromQuery] string? search = null, [FromQuery] bool? overdueOnly = null)
+        {
+            var serviceModel = await _dashboardService.GetOrderPipelineAsync(
+                buyerCode, stage, search, overdueOnly, pageNumber, pageSize);
+            return Ok(_mapper.Map<OrderPipelineResultAPIModel>(serviceModel));
+        }
+
         [HttpGet("daily-trend")]
         [Authorize(Policy = "dashboard-view")]
         [ProducesResponseType(typeof(List<DailyTrendPointAPIModel>), HttpStatusCodes.OK)]

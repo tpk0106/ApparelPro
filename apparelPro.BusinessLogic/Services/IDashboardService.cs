@@ -32,5 +32,12 @@ namespace apparelPro.BusinessLogic.Services
         // IStockMovementReportService itself is scoped).
         Task<OrderwiseInventorySummaryServiceModel?> GetOrderwiseInventorySummaryAsync(
             int buyerCode, string order);
+
+        // Order pipeline: one row per running (BuyerCode, Order, TypeCode,
+        // StyleCode), showing which of 6 lifecycle stages it's at (see
+        // OrderPipelineRowServiceModel for the stage numbering and each
+        // stage's "done" logic). pageNumber is 1-based.
+        Task<OrderPipelineResultServiceModel> GetOrderPipelineAsync(
+            int? buyerCode, int? stage, string? search, bool? overdueOnly, int pageNumber, int pageSize);
     }
 }

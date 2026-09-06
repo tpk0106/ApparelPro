@@ -1027,6 +1027,14 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<OrderManagementSummaryServiceModel, OrderManagementSummaryAPIModel>().MaxDepth(2);
             CreateMap<StockItemMovementServiceModel, StockItemMovementAPIModel>().MaxDepth(2);
             CreateMap<OrderwiseInventorySummaryServiceModel, OrderwiseInventorySummaryAPIModel>().MaxDepth(2);
+            CreateMap<MerchandisingStageDetailServiceModel, MerchandisingStageDetailAPIModel>().MaxDepth(2);
+            CreateMap<ApprovalStageDetailServiceModel, ApprovalStageDetailAPIModel>().MaxDepth(2);
+            CreateMap<SupplierPoStageDetailServiceModel, SupplierPoStageDetailAPIModel>().MaxDepth(2);
+            CreateMap<GrnStageDetailServiceModel, GrnStageDetailAPIModel>().MaxDepth(2);
+            CreateMap<ProductionStageDetailServiceModel, ProductionStageDetailAPIModel>().MaxDepth(2);
+            CreateMap<ShipmentStageDetailServiceModel, ShipmentStageDetailAPIModel>().MaxDepth(2);
+            CreateMap<OrderPipelineRowServiceModel, OrderPipelineRowAPIModel>().MaxDepth(2);
+            CreateMap<OrderPipelineResultServiceModel, OrderPipelineResultAPIModel>().MaxDepth(2);
 
             CreateMap<ProductionSummaryDailySectionTotalServiceModel, ProductionSummaryDailySectionTotalAPIModel>().MaxDepth(2);
             CreateMap<ProductionSummaryDailyLineServiceModel, ProductionSummaryDailyLineAPIModel>().MaxDepth(2);

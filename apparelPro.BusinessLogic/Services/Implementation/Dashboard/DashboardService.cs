@@ -3,6 +3,9 @@ using apparelPro.BusinessLogic.Services.Models.Dashboard.IDashboardService;
 using apparelPro.BusinessLogic.Services.Models.Production.IProductionLineAllocationService;
 using apparelPro.BusinessLogic.SystemConfiguration;
 using ApparelPro.Data;
+using ApparelPro.Data.Models.Dashboard;
+using ApparelPro.Data.Models.OrderManagement;
+using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,6 +18,17 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Dashboard
     // this class only reads.
     public class DashboardService : IDashboardService
     {
+        // Threshold for the Order pipeline's "overdue" flag/banner - a style
+        // sitting in the same stage longer than this is flagged. No system
+        // parameter for this yet (matches this file's own precedent of a few
+        // other hardcoded thresholds) - revisit as a configurable
+        // SystemParameter if the business wants it tunable per-buyer/season.
+        // TEMP (2026-09-06): dropped to -1 so the user can visually confirm
+        // the overdue banner/chip/filter actually work, since the audit table
+        // was just created and every style's DaysInStage is genuinely ~0
+        // right now. -1 means "always overdue" - SET BACK TO 7 once confirmed.
+        private const int OrderPipelineOverdueThresholdDays = -1;
+
         private readonly IMapper _mapper;
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly ISystemParameterLookupService _systemParameterLookupService;
@@ -341,6 +355,261 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Dashboard
                 TypeName = typeName,
                 StyleCode = styleCode,
                 Source = "pinned"
+            };
+        }
+
+        // Order pipeline (2026-09-06): one row per (BuyerCode, Order, TypeCode,
+        // StyleCode), showing which of 6 lifecycle stages it's currently at -
+        // Merchandising, Approval, Supplier PO, GRN, Production, Shipment,
+        // or 6 (Complete/fully shipped). Every stage's "done" test is derived
+        // from data that already exists elsewhere in the schema (see each
+        // *StageDetailServiceModel's own comment for the specific fields and
+        // why) - no new tables, no new columns. Deliberately does NOT include
+        // "days in stage"/overdue flags from the original mockup - there is no
+        // stored transition timestamp anywhere to compute that from.
+        //
+        // Bulk-loads each source table once and computes every style's stage
+        // in memory, the same "load the whole table, join in C#" pattern
+        // ItemWiseStockBalanceService and others already use for reports at
+        // this scale - simpler and safer than hand-rolling 6+ separate
+        // correlated-subquery joins in LINQ-to-SQL for a first version.
+        public async Task<OrderPipelineResultServiceModel> GetOrderPipelineAsync(
+            int? buyerCode, int? stage, string? search, bool? overdueOnly, int pageNumber, int pageSize)
+        {
+            var styles = await _apparelProDbContext.Styles
+                .AsNoTracking()
+                .Where(s => s.Exported != true)
+                .ToListAsync();
+
+            if (styles.Count == 0)
+            {
+                return new OrderPipelineResultServiceModel();
+            }
+
+            var buyerCodesInScope = styles.Select(s => s.BuyerCode).Distinct().ToList();
+            var buyerNames = await _apparelProDbContext.Buyers
+                .AsNoTracking()
+                .Where(b => buyerCodesInScope.Contains(b.BuyerCode))
+                .ToDictionaryAsync(b => b.BuyerCode, b => b.Name);
+
+            var breakdownCounts = (await _apparelProDbContext.ColorSizeDetails.AsNoTracking().ToListAsync())
+                .GroupBy(c => (c.BuyerCode, Order: c.Order.Trim(), c.TypeCode, StyleCode: c.StyleCode.Trim()))
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var consumptionCounts = (await _apparelProDbContext.StyleMaterialConsumptionLedgers.AsNoTracking().ToListAsync())
+                .GroupBy(c => (c.BuyerCode, Order: c.Order.Trim(), c.TypeCode, StyleCode: c.StyleCode.Trim()))
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var costProfilesByStyle = (await _apparelProDbContext.StyleMaterialCostProfiles.AsNoTracking().ToListAsync())
+                .GroupBy(c => (c.BuyerCode, Order: c.Order.Trim(), c.TypeCode, StyleCode: c.StyleCode.Trim()))
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            var poDetailsByStyle = (await _apparelProDbContext.SupplierPurchaseOrderDetails.AsNoTracking().ToListAsync())
+                .GroupBy(p => (BuyerCode: p.Buyer, Order: p.Order.Trim(), TypeCode: p.Type, StyleCode: p.Style.Trim()))
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            var stockMasterByBuyerOrderItem = (await _apparelProDbContext.OrderwiseStockMasters.AsNoTracking().ToListAsync())
+                .GroupBy(m => (m.BuyerCode, Order: m.Order.Trim(), ItemCode: m.ItemCode.Trim()))
+                .ToDictionary(g => g.Key, g => g.First());
+
+            var productionSumByStyle = (await _apparelProDbContext.DailyProductionEntries.AsNoTracking().ToListAsync())
+                .GroupBy(d => (d.BuyerCode, Order: d.Order.Trim(), d.TypeCode, StyleCode: d.StyleCode.Trim()))
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
+
+            var lineAllocTargetByStyle = (await _apparelProDbContext.ProductionLineAllocations.AsNoTracking().ToListAsync())
+                .GroupBy(l => (l.BuyerCode, Order: l.Order.Trim(), l.TypeCode, StyleCode: l.StyleCode.Trim()))
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.TotalQuantity));
+
+            var shipmentSumByStyle = (await _apparelProDbContext.PartShipments.AsNoTracking().ToListAsync())
+                .GroupBy(p => (p.BuyerCode, Order: p.Order.Trim(), p.TypeCode, StyleCode: p.StyleCode.Trim()))
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
+
+            // Reconcile-on-read against OrderPipelineStageHistory: the first
+            // time this endpoint ever sees a style at a given computed stage,
+            // it stamps a row here - there is nowhere else in the schema this
+            // "when did it get here" timestamp could come from. Never updates
+            // an existing row (first-reached date is kept even if a style
+            // somehow revisits a stage), and only ever writes NEW rows in one
+            // batch after every style's stage is known, not per-style.
+            var stageEnteredAtByStyle = (await _apparelProDbContext.OrderPipelineStageHistories.AsNoTracking().ToListAsync())
+                .GroupBy(h => (h.BuyerCode, Order: h.Order.Trim(), h.TypeCode, StyleCode: h.StyleCode.Trim()))
+                .ToDictionary(g => g.Key, g => g.ToDictionary(h => h.Stage, h => h.EnteredAt));
+
+            var nowUtc = DateTime.UtcNow;
+            var newHistoryRows = new List<OrderPipelineStageHistory>();
+
+            var rows = new List<OrderPipelineRowServiceModel>();
+
+            foreach (var style in styles)
+            {
+                (int BuyerCode, string Order, int TypeCode, string StyleCode) key =
+                    (style.BuyerCode, style.Order.Trim(), style.TypeCode, style.StyleCode.Trim());
+
+                var breakdownDone = breakdownCounts.GetValueOrDefault(key, 0) > 0;
+                var consumptionDone = consumptionCounts.GetValueOrDefault(key, 0) > 0;
+                var merchandising = new MerchandisingStageDetailServiceModel
+                {
+                    StyleSaved = true,
+                    BreakdownDone = breakdownDone,
+                    ConsumptionDone = consumptionDone,
+                };
+
+                var isApproved = style.ApprovedDate.HasValue;
+                var approval = new ApprovalStageDetailServiceModel
+                {
+                    IsApproved = isApproved,
+                    ApprovedBy = style.Username,
+                    ApprovedDate = style.ApprovedDate,
+                };
+
+                var costProfiles = costProfilesByStyle.TryGetValue(key, out var cp) ? cp : new List<StyleMaterialCostProfile>();
+                var outstandingLines = costProfiles.Where(c => c.BalanceQuantity > 0).ToList();
+                var poDetails = poDetailsByStyle.TryGetValue(key, out var pd) ? pd : new List<SupplierPurchaseOrderDetails>();
+                var supplierPo = new SupplierPoStageDetailServiceModel
+                {
+                    RaisedQuantity = poDetails.Sum(p => p.OrderQuantity),
+                    RaisedValue = poDetails.Sum(p => p.OrderQuantity * p.UnitPrice),
+                    OutstandingQuantity = outstandingLines.Sum(c => c.BalanceQuantity),
+                    OutstandingValue = outstandingLines.Sum(c => c.BalanceQuantity * c.UnitPrice),
+                    Currency = costProfiles.FirstOrDefault()?.Currency ?? "",
+                };
+                var poDone = costProfiles.Count == 0 || outstandingLines.Count == 0;
+
+                decimal orderedQty = 0, receivedQty = 0, orderedValue = 0, receivedValue = 0;
+                foreach (var poLine in poDetails)
+                {
+                    var stockKey = (style.BuyerCode, Order: key.Order, ItemCode: poLine.ItemCode.Trim());
+                    if (stockMasterByBuyerOrderItem.TryGetValue(stockKey, out var master))
+                    {
+                        orderedQty += master.OrderedQuantity;
+                        receivedQty += master.ReceivedQuantity;
+                        orderedValue += master.OrderedQuantity * master.Price;
+                        receivedValue += master.ReceivedQuantity * master.Price;
+                    }
+                }
+                var grn = new GrnStageDetailServiceModel
+                {
+                    OrderedQuantity = orderedQty,
+                    ReceivedQuantity = receivedQty,
+                    OrderedValue = orderedValue,
+                    ReceivedValue = receivedValue,
+                };
+                var grnDone = orderedQty <= 0 || receivedQty >= orderedQty;
+
+                var actualProduction = productionSumByStyle.GetValueOrDefault(key, 0);
+                var lineAllocTarget = lineAllocTargetByStyle.GetValueOrDefault(key, 0);
+                var productionTarget = lineAllocTarget > 0 ? lineAllocTarget : (style.Quantity ?? 0);
+                var production = new ProductionStageDetailServiceModel
+                {
+                    TargetQuantity = productionTarget,
+                    ActualQuantity = actualProduction,
+                };
+                var productionDone = productionTarget <= 0 || actualProduction >= productionTarget;
+
+                var scheduledShipment = shipmentSumByStyle.GetValueOrDefault(key, 0);
+                var shipmentTarget = style.Quantity ?? 0;
+                var unitPrice = style.UnitPrice ?? 0;
+                var shipment = new ShipmentStageDetailServiceModel
+                {
+                    TargetQuantity = shipmentTarget,
+                    ScheduledQuantity = scheduledShipment,
+                    TargetValue = shipmentTarget * unitPrice,
+                    ScheduledValue = scheduledShipment * unitPrice,
+                };
+                var shipmentDone = shipmentTarget <= 0 || scheduledShipment >= shipmentTarget;
+
+                int computedStage;
+                if (!(breakdownDone && consumptionDone)) computedStage = 0;
+                else if (!isApproved) computedStage = 1;
+                else if (!poDone) computedStage = 2;
+                else if (!grnDone) computedStage = 3;
+                else if (!productionDone) computedStage = 4;
+                else if (!shipmentDone) computedStage = 5;
+                else computedStage = 6;
+
+                DateTime enteredAt;
+                if (stageEnteredAtByStyle.TryGetValue(key, out var stageDates) &&
+                    stageDates.TryGetValue(computedStage, out var existingEnteredAt))
+                {
+                    enteredAt = existingEnteredAt;
+                }
+                else
+                {
+                    enteredAt = nowUtc;
+                    newHistoryRows.Add(new OrderPipelineStageHistory
+                    {
+                        BuyerCode = key.BuyerCode,
+                        Order = key.Order,
+                        TypeCode = key.TypeCode,
+                        StyleCode = key.StyleCode,
+                        Stage = computedStage,
+                        EnteredAt = nowUtc,
+                    });
+                }
+                var daysInStage = Math.Max(0, (int)(nowUtc - enteredAt).TotalDays);
+                var isOverdue = computedStage < 6 && daysInStage > OrderPipelineOverdueThresholdDays;
+
+                rows.Add(new OrderPipelineRowServiceModel
+                {
+                    BuyerCode = style.BuyerCode,
+                    BuyerName = buyerNames.GetValueOrDefault(style.BuyerCode, style.BuyerCode.ToString()),
+                    Order = key.Order,
+                    TypeCode = style.TypeCode,
+                    StyleCode = key.StyleCode,
+                    Quantity = style.Quantity,
+                    Unit = style.Unit,
+                    Stage = computedStage,
+                    DaysInStage = daysInStage,
+                    IsOverdue = isOverdue,
+                    Merchandising = merchandising,
+                    Approval = approval,
+                    SupplierPo = supplierPo,
+                    Grn = grn,
+                    Production = production,
+                    Shipment = shipment,
+                });
+            }
+
+            if (newHistoryRows.Count > 0)
+            {
+                _apparelProDbContext.OrderPipelineStageHistories.AddRange(newHistoryRows);
+                await _apparelProDbContext.SaveChangesAsync();
+            }
+
+            var stageCounts = new int[7];
+            foreach (var row in rows) stageCounts[row.Stage]++;
+            var overdueCount = rows.Count(r => r.IsOverdue);
+
+            IEnumerable<OrderPipelineRowServiceModel> filtered = rows;
+            if (buyerCode.HasValue) filtered = filtered.Where(r => r.BuyerCode == buyerCode.Value);
+            if (stage.HasValue) filtered = filtered.Where(r => r.Stage == stage.Value);
+            if (overdueOnly == true) filtered = filtered.Where(r => r.IsOverdue);
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim().ToUpperInvariant();
+                filtered = filtered.Where(r =>
+                    r.BuyerName.ToUpperInvariant().Contains(term) ||
+                    r.Order.ToUpperInvariant().Contains(term) ||
+                    r.StyleCode.ToUpperInvariant().Contains(term));
+            }
+
+            var filteredList = filtered
+                .OrderBy(r => r.Stage)
+                .ThenBy(r => r.BuyerName)
+                .ThenBy(r => r.Order)
+                .ToList();
+
+            var paged = filteredList
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return new OrderPipelineResultServiceModel
+            {
+                Items = paged,
+                TotalItems = filteredList.Count,
+                StageCounts = stageCounts,
+                OverdueCount = overdueCount,
             };
         }
     }
