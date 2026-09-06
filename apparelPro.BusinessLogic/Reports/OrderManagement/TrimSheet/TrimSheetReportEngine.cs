@@ -102,7 +102,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderManagement.TrimSheet
                                     table.Cell().PaddingVertical(2).Text($"{line.TotalConsumption:#,##0.00} {line.ItemUnit}").FontSize(8);
                                     table.Cell().PaddingVertical(2).Text(line.ConvertedUnitPrice.ToString("#,##0.000")).FontSize(8);
                                     table.Cell().PaddingVertical(2).Text(line.Value.ToString("#,##0.000")).FontSize(8);
-                                    table.Cell().PaddingVertical(2).Text(line.SupplierCode).FontSize(8);
+                                    table.Cell().PaddingVertical(2).Text(line.SupplierName).FontSize(8);
                                 }
                             });
 
