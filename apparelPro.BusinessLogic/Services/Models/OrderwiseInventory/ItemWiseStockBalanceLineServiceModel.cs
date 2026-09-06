@@ -9,6 +9,7 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderwiseInventory
 
         // Blank on a subtotal/grand-total row.
         public int BuyerCode { get; set; }
+        public string BuyerName { get; set; } = "";
         public string Order { get; set; } = "";
         public string ItemCode { get; set; } = "";
         public string Description { get; set; } = "";

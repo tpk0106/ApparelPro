@@ -7,6 +7,7 @@ namespace ApparelPro.WebApi.APIModels.OrderwiseInventory
         public string ItemGroupCode { get; set; } = "";
         public string ItemGroupDescription { get; set; } = "";
         public int BuyerCode { get; set; }
+        public string BuyerName { get; set; } = "";
         public string Order { get; set; } = "";
         public string ItemCode { get; set; } = "";
         public string Description { get; set; } = "";

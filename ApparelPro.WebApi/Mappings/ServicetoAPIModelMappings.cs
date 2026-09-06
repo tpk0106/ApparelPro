@@ -883,6 +883,7 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<TransactionListReportLineServiceModel, TransactionListReportLineAPIModel>().MaxDepth(2);
             CreateMap<ItemWiseStockBalanceHeaderServiceModel, ItemWiseStockBalanceHeaderAPIModel>().MaxDepth(2);
             CreateMap<ItemWiseStockBalanceLineServiceModel, ItemWiseStockBalanceLineAPIModel>().MaxDepth(2);
+            CreateMap<ItemCodeSearchResultServiceModel, ItemCodeSearchResultAPIModel>().MaxDepth(2);
             CreateMap<RawMaterialControlSheetHeaderServiceModel, RawMaterialControlSheetHeaderAPIModel>().MaxDepth(2);
             CreateMap<RawMaterialControlSheetLineServiceModel, RawMaterialControlSheetLineAPIModel>().MaxDepth(2);
             CreateMap<StockSummaryReportHeaderServiceModel, StockSummaryReportHeaderAPIModel>().MaxDepth(2);

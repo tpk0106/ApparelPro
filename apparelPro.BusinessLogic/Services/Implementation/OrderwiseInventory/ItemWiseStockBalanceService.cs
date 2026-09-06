@@ -75,6 +75,12 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                 .Where(c => itemGroupCodes.Contains(c.ItemCode.Trim()))
                 .ToDictionaryAsync(c => c.ItemCode.Trim(), c => c.Description);
 
+            var buyerCodesInRange = inRange.Select(m => m.BuyerCode).Distinct().ToList();
+            var buyerNames = await _apparelProDbContext.Buyers
+                .AsNoTracking()
+                .Where(b => buyerCodesInRange.Contains(b.BuyerCode))
+                .ToDictionaryAsync(b => b.BuyerCode, b => b.Name);
+
             var stockTypeCodes = inRange.Select(m => DecomposePart(m.ItemCode, 0, 2)).Distinct().ToList();
             var stockTypeDescriptions = await _apparelProDbContext.Stocks
                 .AsNoTracking()
@@ -129,6 +135,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
                             ItemGroupCode = entry.ItemGroupCode,
                             ItemGroupDescription = itemGroupDescriptions.GetValueOrDefault(entry.ItemGroupCode, ""),
                             BuyerCode = master.BuyerCode,
+                            BuyerName = buyerNames.GetValueOrDefault(master.BuyerCode, master.BuyerCode.ToString()),
                             Order = order,
                             ItemCode = itemCode,
                             Description = !string.IsNullOrWhiteSpace(description) ? description!.Trim() : "(No description available)",
@@ -210,6 +217,52 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
         {
             var (_, lines) = await BuildAsync(fromRange, toRange);
             return lines;
+        }
+
+        // Server-side type-ahead search backing the From/To Item range pickers on the
+        // frontend (previously two free-text 6-char inputs, prone to typos - see
+        // project_item_stock_balance_autocomplete_todo memory). Returns distinct 6-char
+        // Stock+Item composite codes whose prefix matches the typed query, each paired
+        // with the best description available (item group catalog entry, falling back
+        // to the 2-char Stock Type's own description) - same lookup sources BuildAsync
+        // already uses above, just without the full balance computation.
+        public async Task<List<ItemCodeSearchResultServiceModel>> SearchItemCodesAsync(string query)
+        {
+            query = (query ?? string.Empty).Trim().ToUpper();
+
+            var allItemCodes = await _apparelProDbContext.OrderwiseStockMasters
+                .AsNoTracking()
+                .Select(m => m.ItemCode)
+                .ToListAsync();
+
+            var matchingCodes = allItemCodes
+                .Select(SixCharRange)
+                .Distinct()
+                .Where(code => string.IsNullOrEmpty(query) || code.StartsWith(query, StringComparison.Ordinal))
+                .OrderBy(code => code, StringComparer.Ordinal)
+                .Take(20)
+                .ToList();
+
+            var stockTypeCodes = matchingCodes.Select(c => c.Substring(0, 2)).Distinct().ToList();
+            var stockTypeDescriptions = await _apparelProDbContext.Stocks
+                .AsNoTracking()
+                .Where(s => stockTypeCodes.Contains(s.StockCode))
+                .ToDictionaryAsync(s => s.StockCode, s => s.Description);
+
+            var itemGroupDescriptions = await _apparelProDbContext.StockItems
+                .AsNoTracking()
+                .Where(c => matchingCodes.Contains(c.ItemCode.Trim()))
+                .ToDictionaryAsync(c => c.ItemCode.Trim(), c => c.Description);
+
+            return matchingCodes
+                .Select(code => new ItemCodeSearchResultServiceModel
+                {
+                    Code = code,
+                    Description = itemGroupDescriptions.TryGetValue(code, out var groupDescription) && !string.IsNullOrWhiteSpace(groupDescription)
+                        ? groupDescription.Trim()
+                        : stockTypeDescriptions.GetValueOrDefault(code.Substring(0, 2), ""),
+                })
+                .ToList();
         }
     }
 }

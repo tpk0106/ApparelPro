@@ -65,7 +65,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderwiseInventory
                             switch (line.RowType)
                             {
                                 case "Item":
-                                    table.Cell().Padding(2).Text(line.BuyerCode.ToString());
+                                    table.Cell().Padding(2).Text(line.BuyerName);
                                     table.Cell().Padding(2).Text(line.Order);
                                     table.Cell().Padding(2).Text(line.ItemCode);
                                     table.Cell().Padding(2).Text(line.Description);

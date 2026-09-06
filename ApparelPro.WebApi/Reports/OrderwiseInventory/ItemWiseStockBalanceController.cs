@@ -21,6 +21,16 @@ namespace ApparelPro.WebApi.Reports.OrderwiseInventory
             _mapper = mapper;
         }
 
+        // GET: api/item-wise-stock-balance-reports/item-search?query=02TI
+        // Type-ahead search for the From/To Item range pickers - returns up to 20
+        // matching 6-char Stock+Item composite codes with a description each.
+        [HttpGet("item-search")]
+        public async Task<IActionResult> SearchItemCodes([FromQuery] string query)
+        {
+            var results = await _itemWiseStockBalanceService.SearchItemCodesAsync(query ?? string.Empty);
+            return Ok(_mapper.Map<List<ItemCodeSearchResultAPIModel>>(results));
+        }
+
         // GET: api/item-wise-stock-balance-reports/header?fromRange=02TISS&toRange=02TISS
         [HttpGet("header")]
         public async Task<IActionResult> GetHeader([FromQuery] string fromRange, [FromQuery] string toRange)

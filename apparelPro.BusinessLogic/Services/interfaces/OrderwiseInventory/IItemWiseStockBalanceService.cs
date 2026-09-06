@@ -6,5 +6,6 @@ namespace apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory
     {
         Task<ItemWiseStockBalanceHeaderServiceModel> GetHeaderAsync(string fromRange, string toRange);
         Task<List<ItemWiseStockBalanceLineServiceModel>> GetLinesAsync(string fromRange, string toRange);
+        Task<List<ItemCodeSearchResultServiceModel>> SearchItemCodesAsync(string query);
     }
 }
