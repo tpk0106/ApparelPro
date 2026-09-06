@@ -70,6 +70,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
             return new ScheduledShipmentsReportServiceModel
             {
                 BuyerCode = buyerCode,
+                BuyerName = buyerCode.HasValue ? buyerNames.GetValueOrDefault(buyerCode.Value, buyerCode.Value.ToString()) : null,
                 Order = order,
                 Rows = rows,
             };

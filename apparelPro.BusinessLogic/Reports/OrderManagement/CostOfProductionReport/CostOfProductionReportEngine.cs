@@ -34,7 +34,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderManagement.CostOfProductionRepor
                         });
                         column.Item().PaddingTop(6).Text(t =>
                         {
-                            t.Span("Buyer: ").Bold(); t.Span($"{report.BuyerName} ({report.BuyerCode})    ");
+                            t.Span("Buyer: ").Bold(); t.Span($"{report.BuyerName}    ");
                             t.Span("Order: ").Bold(); t.Span($"{report.Order}    ");
                             t.Span("Total Order Qty: ").Bold(); t.Span($"{report.TotalOrderQuantity:N2} {report.Unit}    ");
                             t.Span("Currency: ").Bold(); t.Span(report.CurrencyCode);

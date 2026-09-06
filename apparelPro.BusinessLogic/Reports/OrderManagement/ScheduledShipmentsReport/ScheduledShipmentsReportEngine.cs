@@ -34,7 +34,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderManagement.ScheduledShipmentsRep
                         {
                             column.Item().PaddingTop(6).Text(t =>
                             {
-                                if (report.BuyerCode.HasValue) { t.Span("Buyer: ").Bold(); t.Span(report.BuyerCode.Value.ToString() + "   "); }
+                                if (report.BuyerCode.HasValue) { t.Span("Buyer: ").Bold(); t.Span((report.BuyerName ?? report.BuyerCode.Value.ToString()) + "   "); }
                                 if (!string.IsNullOrEmpty(report.Order)) { t.Span("Order: ").Bold(); t.Span(report.Order); }
                             });
                         }

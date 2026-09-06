@@ -35,7 +35,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderManagement.ShipmentStatusReport
                         });
                         column.Item().PaddingTop(6).Text(t =>
                         {
-                            t.Span("Buyer: ").Bold(); t.Span($"{report.BuyerName} ({report.BuyerCode})   ");
+                            t.Span("Buyer: ").Bold(); t.Span($"{report.BuyerName}   ");
                             t.Span("Order: ").Bold(); t.Span(report.Order);
                         });
                         column.Item().PaddingTop(6).LineHorizontal(1.5f).LineColor(Colors.Blue.Darken4);

@@ -49,7 +49,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderManagement.PendingEventsReport
                             {
                                 groupCol.Item().Background(Colors.Grey.Lighten4).Padding(4).Text(t =>
                                 {
-                                    t.Span("Buyer: ").SemiBold(); t.Span($"{group.BuyerName} ({group.BuyerCode})    ");
+                                    t.Span("Buyer: ").SemiBold(); t.Span($"{group.BuyerName}    ");
                                     t.Span("Order: ").SemiBold(); t.Span($"{group.Order}    ");
                                     t.Span("Type: ").SemiBold(); t.Span($"{group.TypeName}    ");
                                     t.Span("Style: ").SemiBold(); t.Span(group.StyleCode);

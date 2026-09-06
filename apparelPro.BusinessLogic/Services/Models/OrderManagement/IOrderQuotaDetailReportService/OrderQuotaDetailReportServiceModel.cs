@@ -26,6 +26,7 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.IOrderQuotaDe
     public class OrderQuotaDetailReportServiceModel
     {
         public int? BuyerCode { get; set; }
+        public string? BuyerName { get; set; }
         public string? Order { get; set; }
         public List<OrderQuotaDetailRowServiceModel> Rows { get; set; } = new();
     }

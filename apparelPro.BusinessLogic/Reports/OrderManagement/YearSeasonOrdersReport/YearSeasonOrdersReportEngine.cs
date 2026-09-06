@@ -55,7 +55,7 @@ namespace apparelPro.BusinessLogic.Reports.OrderManagement.YearSeasonOrdersRepor
                                 {
                                     headerCol.Item().Row(r =>
                                     {
-                                        r.RelativeItem(1.2f).Text(t => { t.Span("Buyer: ").SemiBold(); t.Span($"{row.BuyerName} ({row.BuyerCode})"); });
+                                        r.RelativeItem(1.2f).Text(t => { t.Span("Buyer: ").SemiBold(); t.Span(row.BuyerName); });
                                         r.RelativeItem(1f).Text(t => { t.Span("Order: ").SemiBold(); t.Span(row.Order); });
                                         r.RelativeItem(1f).Text(t => { t.Span("Date: ").SemiBold(); t.Span($"{row.OrderDate:dd/MM/yyyy}"); });
                                         r.RelativeItem(1f).Text(t => { t.Span("Season: ").SemiBold(); t.Span(row.SeasonDescription); });

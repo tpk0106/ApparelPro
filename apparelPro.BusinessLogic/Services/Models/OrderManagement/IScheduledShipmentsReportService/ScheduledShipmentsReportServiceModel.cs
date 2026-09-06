@@ -27,6 +27,7 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.IScheduledShi
     public class ScheduledShipmentsReportServiceModel
     {
         public int? BuyerCode { get; set; }
+        public string? BuyerName { get; set; }
         public string? Order { get; set; }
         public List<ScheduledShipmentRowServiceModel> Rows { get; set; } = new();
     }

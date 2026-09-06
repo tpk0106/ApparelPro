@@ -18,6 +18,7 @@ namespace ApparelPro.WebApi.Reports.Models
     public class ScheduledShipmentsReportAPIModel
     {
         public int? BuyerCode { get; set; }
+        public string? BuyerName { get; set; }
         public string? Order { get; set; }
         public List<ScheduledShipmentRowAPIModel> Rows { get; set; } = new();
     }

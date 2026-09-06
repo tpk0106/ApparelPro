@@ -21,6 +21,7 @@ namespace ApparelPro.WebApi.Reports.Models
     public class OrderQuotaDetailReportAPIModel
     {
         public int? BuyerCode { get; set; }
+        public string? BuyerName { get; set; }
         public string? Order { get; set; }
         public List<OrderQuotaDetailRowAPIModel> Rows { get; set; } = new();
     }
