@@ -11,7 +11,9 @@ using ApparelPro.Data.Configurations.Production;
 using ApparelPro.Data.Configurations.References;
 using ApparelPro.Data.Configurations.Registration;
 using ApparelPro.Data.Configurations.SystemConfiguration;
+using ApparelPro.Data.Configurations.Toolbar;
 using ApparelPro.Data.Models.Dashboard;
+using ApparelPro.Data.Models.Toolbar;
 using ApparelPro.Data.Models.OrderManagement;
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Models.OrderManagement.Shipments;
@@ -101,6 +103,8 @@ namespace ApparelPro.Data
         public virtual DbSet<PartShipment> PartShipments { get; set; } = null!;
 
         public virtual DbSet<OrderPipelineStageHistory> OrderPipelineStageHistories { get; set; } = null!;
+        public virtual DbSet<ToolbarPreference> ToolbarPreferences { get; set; } = null!;
+        public virtual DbSet<ToolbarPin> ToolbarPins { get; set; } = null!;
         public virtual DbSet<QuotaTransaction> QuotaTransactions { get; set; } = null!;
         public virtual DbSet<CommercialInvoiceHeader> CommercialInvoiceHeaders { get; set; } = null!;
         public virtual DbSet<CommercialInvoiceLine> CommercialInvoiceLines { get; set; } = null!;
@@ -200,6 +204,8 @@ namespace ApparelPro.Data
             // shipments
             modelBuilder.ApplyConfiguration(new PartShipmentConfig());
             modelBuilder.ApplyConfiguration(new OrderPipelineStageHistoryConfig());
+            modelBuilder.ApplyConfiguration(new ToolbarPreferenceConfig());
+            modelBuilder.ApplyConfiguration(new ToolbarPinConfig());
             modelBuilder.ApplyConfiguration(new QuotaTransactionConfig());
             modelBuilder.ApplyConfiguration(new CommercialInvoiceHeaderConfig());
             modelBuilder.ApplyConfiguration(new CommercialInvoiceLineConfig());

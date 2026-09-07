@@ -253,6 +253,7 @@ namespace ApparelPro.WebApi.Extensions
             services.AddScoped<ISectionService, SectionService>();
             services.AddScoped<ISystemParameterLookupService, SystemParameterLookupService>();
             services.AddScoped<IDashboardService, DashboardService>();
+            services.AddScoped<IToolbarService, apparelPro.BusinessLogic.Services.Implementation.Toolbar.ToolbarService>();
             services.AddScoped<IProductionSummaryDailyReportService, ProductionSummaryDailyReportService>();
             services.AddScoped<IProductionScheduleReportService, ProductionScheduleReportService>();
             services.AddScoped<IProductionSummaryMonthlyReportService, ProductionSummaryMonthlyReportService>();

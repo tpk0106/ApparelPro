@@ -51,6 +51,8 @@ using ApparelPro.Data.Models.Production;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Data.Models.Registration;
 using ApparelPro.Data.Models.SystemConfiguration;
+using ApparelPro.Data.Models.Toolbar;
+using apparelPro.BusinessLogic.Services.Models.Toolbar.IToolbarService;
 using ApparelPro.WebApi.APIModels.OrderManagement;
 using AutoMapper;
 
@@ -60,6 +62,9 @@ namespace apparelPro.BusinessLogic.Services.Mappings
     {
         public DatabaseToServiceMappings()
         {
+            // toolbar
+            CreateMap<ToolbarPin, ToolbarPinServiceModel>().MaxDepth(2);
+
             // currency
             CreateMap<Currency, CurrencyServiceModel>().MaxDepth(2)
                 .ForMember(src => src.Code, opt => opt.MapFrom(src => src.Code))

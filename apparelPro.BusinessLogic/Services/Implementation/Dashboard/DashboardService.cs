@@ -23,11 +23,10 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Dashboard
         // parameter for this yet (matches this file's own precedent of a few
         // other hardcoded thresholds) - revisit as a configurable
         // SystemParameter if the business wants it tunable per-buyer/season.
-        // TEMP (2026-09-06): dropped to -1 so the user can visually confirm
-        // the overdue banner/chip/filter actually work, since the audit table
-        // was just created and every style's DaysInStage is genuinely ~0
-        // right now. -1 means "always overdue" - SET BACK TO 7 once confirmed.
-        private const int OrderPipelineOverdueThresholdDays = -1;
+        // Was temporarily -1 (2026-09-06) so the user could visually confirm
+        // the banner/chip/filter actually work before real overdue data
+        // existed - confirmed working, restored to the real 7-day threshold.
+        private const int OrderPipelineOverdueThresholdDays = 7;
 
         private readonly IMapper _mapper;
         private readonly ApparelProDbContext _apparelProDbContext;
