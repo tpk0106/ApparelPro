@@ -53,6 +53,10 @@ using ApparelPro.Data.Models.Registration;
 using ApparelPro.Data.Models.SystemConfiguration;
 using ApparelPro.Data.Models.Toolbar;
 using apparelPro.BusinessLogic.Services.Models.Toolbar.IToolbarService;
+using ApparelPro.Data.Models.ImportExport;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.ICompanyAddressService;
+using ApparelPro.Data.Models.OrderManagement.Shipments;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.ICommercialInvoiceService;
 using ApparelPro.WebApi.APIModels.OrderManagement;
 using AutoMapper;
 
@@ -64,6 +68,11 @@ namespace apparelPro.BusinessLogic.Services.Mappings
         {
             // toolbar
             CreateMap<ToolbarPin, ToolbarPinServiceModel>().MaxDepth(2);
+
+            // import/export documentation
+            CreateMap<CompanyAddress, CompanyAddressServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CommercialInvoiceHeader, CommercialInvoiceHeaderServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CommercialInvoiceLine, CommercialInvoiceLineServiceModel>().MaxDepth(2).ReverseMap();
 
             // currency
             CreateMap<Currency, CurrencyServiceModel>().MaxDepth(2)

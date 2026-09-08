@@ -97,6 +97,22 @@ namespace ApparelPro.WebApi.Controllers
                 return StatusCode(500, new { Error = $"Failed to execute manifest line deletion loop: {ex.Message}" });
             }
         }
+
+        // 5. GET: api/part-shipment/open-by-buyer/2 - a buyer's open part shipment
+        // balances across every order/style, backing the Commercial Invoice line picker.
+        [HttpGet("open-by-buyer/{buyerCode}")]
+        public async Task<IActionResult> GetOpenPartShipmentsByBuyer([FromRoute] int buyerCode)
+        {
+            try
+            {
+                var openShipments = await _partShipmentService.GetOpenPartShipmentsByBuyerAsync(buyerCode);
+                return Ok(openShipments);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Failed to retrieve open part shipment balances: {ex.Message}" });
+            }
+        }
     }
 }
 

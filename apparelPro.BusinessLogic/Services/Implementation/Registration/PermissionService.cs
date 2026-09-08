@@ -256,6 +256,12 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
         private static readonly string[] ProductionViewRoles = { "Production Manager", "Production Entry Operator", "Factory Manager", "Merchandiser", "Merchandiser Manager", "Administrator" };
         private static readonly string[] ProductionManageRoles = { "Production Manager", "Factory Manager", "Merchandiser Manager" };
 
+        // Import/Export Documentation module (Commercial Invoice, Company Address
+        // Setup, and future document types e.g. Certificate of Origin/GSP) - a
+        // merchandising/shipping function in legacy (IE_MENU.PRG), not touched by
+        // Inventory or Order Entry Operator roles, so no separate wider -view set.
+        private static readonly string[] ImportExportRoles = { "Merchandiser", "Merchandiser Manager", "Administrator" };
+
         // Home dashboard spans Order Management + Orderwise Inventory +
         // Production Progress, so its role set is the union of the roles
         // that can already see each of those areas individually - anyone
@@ -508,6 +514,12 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
             // production control (End of Production Confirmation, PR_ENDPR.PRG)
             new("end-of-production-confirmation-view", "End of Production Confirmation - View", "Production Control", "EndOfProductionConfirmationController GET endpoint - migrated from PR_ENDPR.PRG", ProductionViewRoles),
             new("end-of-production-confirmation-manage", "End of Production Confirmation - Confirm", "Production Control", "EndOfProductionConfirmationController confirm endpoint - sets Style.ProductionEndDate", ProductionManageRoles),
+
+            // import/export documentation
+            new("company-address-view", "Company Address Setup - View", "Import / Export Documentation", "CompanyAddressController GET endpoint - migrated from ie_setup", ImportExportRoles),
+            new("company-address-manage", "Company Address Setup - Add / Update / Delete", "Import / Export Documentation", "CompanyAddressController PUT/DELETE endpoints", ImportExportRoles),
+            new("commercial-invoice-view", "Commercial Invoice - View", "Import / Export Documentation", "CommercialInvoiceController GET endpoints (list, detail, print/pdf) - migrated from IE_COIN1.PRG", ImportExportRoles),
+            new("commercial-invoice-manage", "Commercial Invoice - Add / Update / Delete", "Import / Export Documentation", "CommercialInvoiceController PUT/DELETE endpoints", ImportExportRoles),
         };
 
         private sealed record PermissionCatalogEntry(string Key, string DisplayName, string Category, string? Description, string[] DefaultRoleNames);

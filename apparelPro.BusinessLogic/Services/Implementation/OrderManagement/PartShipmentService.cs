@@ -245,5 +245,14 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
             }
         }
 
+        public async Task<List<PartShipment>> GetOpenPartShipmentsByBuyerAsync(int buyerCode)
+        {
+            return await _apparelProDbContext.PartShipments
+                .AsNoTracking()
+                .Where(p => p.BuyerCode == buyerCode && p.Balance > 0)
+                .OrderBy(p => p.Order).ThenBy(p => p.StyleCode)
+                .ToListAsync();
+        }
+
     }
 }

@@ -18,5 +18,9 @@ namespace apparelPro.BusinessLogic.Services
 
         // 4. Safely drops a partial shipment manifest line, fully refunding allocated quotas to reference tables
         Task<bool> DeletePartShipmentLineAsync(int id);
+
+        // 5. All of a buyer's open (undelivered) part shipment balances, across every order/style -
+        // backs the Commercial Invoice line picker (legacy ie_coin1's od_part selection list).
+        Task<List<PartShipment>> GetOpenPartShipmentsByBuyerAsync(int buyerCode);
     }
 }

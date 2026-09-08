@@ -485,7 +485,7 @@ try
     //    await apparelContext.Database.EnsureCreatedAsync();
     //}
 
-    // migartion 
+    // migration 
 
     // Apply pending EF Core migrations on startup
     using (var scope = app.Services.CreateScope())
@@ -493,7 +493,7 @@ try
         var dbContext = scope.ServiceProvider.GetRequiredService<ApparelProDbContext>();
         try
         {
-            var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync(); 
+            var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
             if (pendingMigrations.Any())
             {
                 Console.WriteLine($"Applying {pendingMigrations.Count()} " + "pending migration(s)...");
