@@ -520,6 +520,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
             new("company-address-manage", "Company Address Setup - Add / Update / Delete", "Import / Export Documentation", "CompanyAddressController PUT/DELETE endpoints", ImportExportRoles),
             new("commercial-invoice-view", "Commercial Invoice - View", "Import / Export Documentation", "CommercialInvoiceController GET endpoints (list, detail, print/pdf) - migrated from IE_COIN1.PRG", ImportExportRoles),
             new("commercial-invoice-manage", "Commercial Invoice - Add / Update / Delete", "Import / Export Documentation", "CommercialInvoiceController PUT/DELETE endpoints", ImportExportRoles),
+            new("certificate-of-origin-view", "Certificate of Origin - View", "Import / Export Documentation", "CertificateOfOriginController GET endpoint - matches the real Ceylon Chamber of Commerce EXP 5 form, not legacy ie_co", ImportExportRoles),
+            new("certificate-of-origin-manage", "Certificate of Origin - Add / Update / Delete", "Import / Export Documentation", "CertificateOfOriginController PUT/DELETE endpoints", ImportExportRoles),
         };
 
         private sealed record PermissionCatalogEntry(string Key, string DisplayName, string Category, string? Description, string[] DefaultRoleNames);

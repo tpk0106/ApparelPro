@@ -85,6 +85,7 @@ using apparelPro.BusinessLogic.Services.Models.Toolbar.IToolbarService;
 using ApparelPro.WebApi.APIModels.Toolbar;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICompanyAddressService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICommercialInvoiceService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.ICertificateOfOriginService;
 using ApparelPro.WebApi.APIModels.ImportExport;
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Models.References;
@@ -1051,6 +1052,11 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<CommercialInvoiceLineServiceModel, CommercialInvoiceLineAPIModel>().MaxDepth(2).ReverseMap();
             CreateMap<CommercialInvoiceDetailServiceModel, CommercialInvoiceDetailAPIModel>().MaxDepth(2);
             CreateMap<SaveCommercialInvoiceAPIModel, SaveCommercialInvoiceServiceModel>().MaxDepth(2);
+
+            CreateMap<CertificateOfOriginHeaderServiceModel, CertificateOfOriginHeaderAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CertificateOfOriginLineServiceModel, CertificateOfOriginLineAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CertificateOfOriginDetailServiceModel, CertificateOfOriginDetailAPIModel>().MaxDepth(2);
+            CreateMap<SaveCertificateOfOriginAPIModel, SaveCertificateOfOriginServiceModel>().MaxDepth(2);
 
             CreateMap<ProductionSummaryDailySectionTotalServiceModel, ProductionSummaryDailySectionTotalAPIModel>().MaxDepth(2);
             CreateMap<ProductionSummaryDailyLineServiceModel, ProductionSummaryDailyLineAPIModel>().MaxDepth(2);

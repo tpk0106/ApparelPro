@@ -111,6 +111,8 @@ namespace ApparelPro.Data
         public virtual DbSet<QuotaTransaction> QuotaTransactions { get; set; } = null!;
         public virtual DbSet<CommercialInvoiceHeader> CommercialInvoiceHeaders { get; set; } = null!;
         public virtual DbSet<CommercialInvoiceLine> CommercialInvoiceLines { get; set; } = null!;
+        public virtual DbSet<CertificateOfOriginHeader> CertificateOfOriginHeaders { get; set; } = null!;
+        public virtual DbSet<CertificateOfOriginLine> CertificateOfOriginLines { get; set; } = null!;
 
         // general inventory
         public virtual DbSet<GeneralStockMaster> GeneralStockMasters { get; set; } = null!;
@@ -213,6 +215,8 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new QuotaTransactionConfig());
             modelBuilder.ApplyConfiguration(new CommercialInvoiceHeaderConfig());
             modelBuilder.ApplyConfiguration(new CommercialInvoiceLineConfig());
+            modelBuilder.ApplyConfiguration(new CertificateOfOriginHeaderConfig());
+            modelBuilder.ApplyConfiguration(new CertificateOfOriginLineConfig());
 
             // general inventory
             modelBuilder.ApplyConfiguration(new GeneralStockMasterConfig());

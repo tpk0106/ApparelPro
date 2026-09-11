@@ -57,6 +57,7 @@ using ApparelPro.Data.Models.ImportExport;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICompanyAddressService;
 using ApparelPro.Data.Models.OrderManagement.Shipments;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICommercialInvoiceService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.ICertificateOfOriginService;
 using ApparelPro.WebApi.APIModels.OrderManagement;
 using AutoMapper;
 
@@ -73,6 +74,8 @@ namespace apparelPro.BusinessLogic.Services.Mappings
             CreateMap<CompanyAddress, CompanyAddressServiceModel>().MaxDepth(2).ReverseMap();
             CreateMap<CommercialInvoiceHeader, CommercialInvoiceHeaderServiceModel>().MaxDepth(2).ReverseMap();
             CreateMap<CommercialInvoiceLine, CommercialInvoiceLineServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CertificateOfOriginHeader, CertificateOfOriginHeaderServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CertificateOfOriginLine, CertificateOfOriginLineServiceModel>().MaxDepth(2).ReverseMap();
 
             // currency
             CreateMap<Currency, CurrencyServiceModel>().MaxDepth(2)
