@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.9.34607.119
+# Visual Studio Version 18
+VisualStudioVersion = 18.10.12201.205 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApparelPro.Data", "ApparelPro.Data\ApparelPro.Data.csproj", "{D00FAAEE-5F6A-49D2-8D38-80083D98A08D}"
 EndProject
@@ -11,9 +11,65 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libraries", "libraries", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApparelPro.Shared", "ApparelPro.Shared\ApparelPro.Shared.csproj", "{39BA3CD5-9F97-42B7-8A76-2B5188FCEA3C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{D71C8CB2-41C4-4D45-9AED-0F9AD37724A3}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "apparelPro.BusinessLogic", "apparelPro.BusinessLogic\apparelPro.BusinessLogic.csproj", "{C69DDFE2-4DCD-486F-9988-0D4306B4251B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sample Reports and Screen Shots", "Sample Reports and Screen Shots", "{6B893E73-3890-4E0C-AF9E-341C47F259E0}"
+	ProjectSection(SolutionItems) = preProject
+		..\AppPro-Claude\reports\AdditionalCostsPerGarment_ANCHORAGE (1).pdf = ..\AppPro-Claude\reports\AdditionalCostsPerGarment_ANCHORAGE (1).pdf
+		..\AppPro-Claude\reports\ColorSizeReport_1017-18.pdf = ..\AppPro-Claude\reports\ColorSizeReport_1017-18.pdf
+		..\AppPro-Claude\reports\CriticalPathReport_ANCHORAGE_20260903.pdf = ..\AppPro-Claude\reports\CriticalPathReport_ANCHORAGE_20260903.pdf
+		..\AppPro-Claude\reports\DGN_000001.pdf = ..\AppPro-Claude\reports\DGN_000001.pdf
+		..\AppPro-Claude\reports\General_GRN_Listing_1995-01-01_1995-12-30.pdf = ..\AppPro-Claude\reports\General_GRN_Listing_1995-01-01_1995-12-30.pdf
+		..\AppPro-Claude\reports\General_PO_000001.pdf = ..\AppPro-Claude\reports\General_PO_000001.pdf
+		..\AppPro-Claude\reports\General_Purchase_Order_List_1995-12-01_1995-12-30.pdf = ..\AppPro-Claude\reports\General_Purchase_Order_List_1995-12-01_1995-12-30.pdf
+		..\AppPro-Claude\reports\General_Stock_Movement_M-S_0206TPGUM#TAPE1_##WATE_199412.pdf = ..\AppPro-Claude\reports\General_Stock_Movement_M-S_0206TPGUM#TAPE1_##WATE_199412.pdf
+		..\AppPro-Claude\reports\General_Stock_Reorder_M-S.pdf = ..\AppPro-Claude\reports\General_Stock_Reorder_M-S.pdf
+		..\AppPro-Claude\reports\General_Stock_Status_M-S_199412 (1).pdf = ..\AppPro-Claude\reports\General_Stock_Status_M-S_199412 (1).pdf
+		..\AppPro-Claude\reports\General_Stock_Status_M-S_199412.pdf = ..\AppPro-Claude\reports\General_Stock_Status_M-S_199412.pdf
+		..\AppPro-Claude\reports\General_Stock_Status_M-S_199512 (1).pdf = ..\AppPro-Claude\reports\General_Stock_Status_M-S_199512 (1).pdf
+		..\AppPro-Claude\reports\General_Stock_Status_M-S_199512.pdf = ..\AppPro-Claude\reports\General_Stock_Status_M-S_199512.pdf
+		..\AppPro-Claude\reports\General_Stock_Summary_199512.pdf = ..\AppPro-Claude\reports\General_Stock_Summary_199512.pdf
+		..\AppPro-Claude\reports\General_Stock_Summary_199602.pdf = ..\AppPro-Claude\reports\General_Stock_Summary_199602.pdf
+		..\AppPro-Claude\reports\General_Stock_Valuation_M-S.pdf = ..\AppPro-Claude\reports\General_Stock_Valuation_M-S.pdf
+		..\AppPro-Claude\reports\General_Transaction_List_1995-12-01_1995-12-30 (1).pdf = ..\AppPro-Claude\reports\General_Transaction_List_1995-12-01_1995-12-30 (1).pdf
+		..\AppPro-Claude\reports\General_Transaction_List_1995-12-01_1995-12-30.pdf = ..\AppPro-Claude\reports\General_Transaction_List_1995-12-01_1995-12-30.pdf
+		..\AppPro-Claude\reports\General_Transaction_List_1996-01-01_1996-12-25.pdf = ..\AppPro-Claude\reports\General_Transaction_List_1996-01-01_1996-12-25.pdf
+		..\AppPro-Claude\reports\GIN_000002 (1).pdf = ..\AppPro-Claude\reports\GIN_000002 (1).pdf
+		..\AppPro-Claude\reports\GIN_000002 (2).pdf = ..\AppPro-Claude\reports\GIN_000002 (2).pdf
+		..\AppPro-Claude\reports\GIN_000002.pdf = ..\AppPro-Claude\reports\GIN_000002.pdf
+		..\AppPro-Claude\reports\GRN_000002.pdf = ..\AppPro-Claude\reports\GRN_000002.pdf
+		..\AppPro-Claude\reports\GTN_000001.pdf = ..\AppPro-Claude\reports\GTN_000001.pdf
+		..\AppPro-Claude\reports\International_CommercialInvoice_EE.pdf = ..\AppPro-Claude\reports\International_CommercialInvoice_EE.pdf
+		..\AppPro-Claude\reports\Item_Wise_Stock_Balances_0101FB_0101FB.pdf = ..\AppPro-Claude\reports\Item_Wise_Stock_Balances_0101FB_0101FB.pdf
+		..\AppPro-Claude\reports\Item_Wise_Stock_Balances_01_0101FB.pdf = ..\AppPro-Claude\reports\Item_Wise_Stock_Balances_01_0101FB.pdf
+		..\AppPro-Claude\reports\OrderDetail_1017-18.pdf = ..\AppPro-Claude\reports\OrderDetail_1017-18.pdf
+		..\AppPro-Claude\reports\OrderQuotaDetailReport.pdf = ..\AppPro-Claude\reports\OrderQuotaDetailReport.pdf
+		..\AppPro-Claude\reports\Orderwise_Stock_Status_1_1017-18.pdf = ..\AppPro-Claude\reports\Orderwise_Stock_Status_1_1017-18.pdf
+		..\AppPro-Claude\reports\Orderwise_Stock_Summary_USD_LKR.pdf = ..\AppPro-Claude\reports\Orderwise_Stock_Summary_USD_LKR.pdf
+		..\AppPro-Claude\reports\Orderwise_Transaction_List_2026-07-20_2026-09-05 (1).pdf = ..\AppPro-Claude\reports\Orderwise_Transaction_List_2026-07-20_2026-09-05 (1).pdf
+		..\AppPro-Claude\reports\Orderwise_Transaction_List_2026-07-20_2026-09-05.pdf = ..\AppPro-Claude\reports\Orderwise_Transaction_List_2026-07-20_2026-09-05.pdf
+		..\AppPro-Claude\reports\PendingEventsReport.pdf = ..\AppPro-Claude\reports\PendingEventsReport.pdf
+		..\AppPro-Claude\reports\PostOrderCostSheetReport.pdf = ..\AppPro-Claude\reports\PostOrderCostSheetReport.pdf
+		..\AppPro-Claude\reports\PurchaseOrderList_000001.pdf = ..\AppPro-Claude\reports\PurchaseOrderList_000001.pdf
+		..\AppPro-Claude\reports\Raw_Material_Control_Sheet_1_1017-18.pdf = ..\AppPro-Claude\reports\Raw_Material_Control_Sheet_1_1017-18.pdf
+		..\AppPro-Claude\reports\RTN_000001 (1).pdf = ..\AppPro-Claude\reports\RTN_000001 (1).pdf
+		..\AppPro-Claude\reports\RTN_000001 (2).pdf = ..\AppPro-Claude\reports\RTN_000001 (2).pdf
+		..\AppPro-Claude\reports\RTN_000001.pdf = ..\AppPro-Claude\reports\RTN_000001.pdf
+		..\AppPro-Claude\reports\ScheduledShipmentsReport (1).pdf = ..\AppPro-Claude\reports\ScheduledShipmentsReport (1).pdf
+		..\AppPro-Claude\reports\ShipmentStatusReport (1).pdf = ..\AppPro-Claude\reports\ShipmentStatusReport (1).pdf
+		..\AppPro-Claude\reports\ShipmentStatusReport.pdf = ..\AppPro-Claude\reports\ShipmentStatusReport.pdf
+		..\AppPro-Claude\reports\SriLanka_CommercialInvoice_38-GC-LG-94.pdf = ..\AppPro-Claude\reports\SriLanka_CommercialInvoice_38-GC-LG-94.pdf
+		..\AppPro-Claude\reports\SriLanka_CommercialInvoice_EE.pdf = ..\AppPro-Claude\reports\SriLanka_CommercialInvoice_EE.pdf
+		..\AppPro-Claude\reports\SRN_000001.pdf = ..\AppPro-Claude\reports\SRN_000001.pdf
+		..\AppPro-Claude\reports\StockArrivalStatusReport.pdf = ..\AppPro-Claude\reports\StockArrivalStatusReport.pdf
+		..\AppPro-Claude\reports\StockMovementItemReport_2_100_0101FBPIQUKNIT5860____.pdf = ..\AppPro-Claude\reports\StockMovementItemReport_2_100_0101FBPIQUKNIT5860____.pdf
+		..\AppPro-Claude\reports\StockMovementReport_1_1017-18.pdf = ..\AppPro-Claude\reports\StockMovementReport_1_1017-18.pdf
+		..\AppPro-Claude\reports\Stock_Valuation_1_1017-18.pdf = ..\AppPro-Claude\reports\Stock_Valuation_1_1017-18.pdf
+		..\AppPro-Claude\reports\Stock_Valuation_Monthly_2026-07-01_2026-08-30.pdf = ..\AppPro-Claude\reports\Stock_Valuation_Monthly_2026-07-01_2026-08-30.pdf
+		..\AppPro-Claude\reports\STRN_000001.pdf = ..\AppPro-Claude\reports\STRN_000001.pdf
+		..\AppPro-Claude\reports\TrimSheet_ANCHORAGE.pdf = ..\AppPro-Claude\reports\TrimSheet_ANCHORAGE.pdf
+		..\AppPro-Claude\reports\YearSeasonOrdersReport.pdf = ..\AppPro-Claude\reports\YearSeasonOrdersReport.pdf
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
