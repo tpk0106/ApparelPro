@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
+using System.Threading.Channels;
 
 #nullable disable
 
@@ -10,8 +11,21 @@ namespace ApparelPro.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "CompanyAddressSetups");
+            //To your question — yes, it's perfectly safe to run that SQL in SSMS.
+            //The __EFMigrationsHistory entry tells EF "this migration is already done, skip it."
+            //If you ever need to reset the database and re-run all migrations from scratch
+            //(like a fresh dotnet ef database update), EF will replay every migration in order
+            //including the first one, and since a fresh DB won't have CompanyAddressSetups
+            //either, it'll hit the same DROP TABLE error again.
+
+            //To future-proof that, you can add a guard to the migration.
+            //In your 20260908121653_ReplaceCompanyAddressSetupWithCompanyAddress.cs, change the Up method:
+
+            // Guard: only drop if it exists (table may not exist on fresh DBs)
+            migrationBuilder.Sql(
+                "IF OBJECT_ID(N'[CompanyAddressSetups]', N'U') IS NOT NULL DROP TABLE [CompanyAddressSetups];");
+            //migrationBuilder.DropTable(
+            //    name: "CompanyAddressSetups");
 
             migrationBuilder.CreateTable(
                 name: "CompanyAddresses",

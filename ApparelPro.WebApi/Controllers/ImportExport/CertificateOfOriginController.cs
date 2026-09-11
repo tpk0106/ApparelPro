@@ -1,3 +1,4 @@
+using apparelPro.BusinessLogic.Reports.ImportExport;
 using apparelPro.BusinessLogic.Services;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICertificateOfOriginService;
 using ApparelPro.WebApi.APIModels.ImportExport;
@@ -55,6 +56,29 @@ namespace ApparelPro.WebApi.Controllers.ImportExport
             var deleted = await _certificateOfOriginService.DeleteAsync(invoiceNumber);
             if (!deleted) return NotFound();
             return NoContent();
+        }
+
+        // GET: api/certificate-of-origin/print/pdf?invoiceNumber=34/GC/LG/94&format=full|chamber
+        [HttpGet("print/pdf")]
+        [Authorize(Policy = "certificate-of-origin-view")]
+        [ProducesResponseType(HttpStatusCodes.OK)]
+        [ProducesResponseType(HttpStatusCodes.NotFound)]
+        [ProducesResponseType(HttpStatusCodes.BadRequest)]
+        public async Task<IActionResult> GetPrintPdfAsync([FromQuery] string invoiceNumber, [FromQuery] string format = "full")
+        {
+            if (format is not ("full" or "chamber"))
+                return BadRequest($"Unknown print format '{format}'. Expected 'full' or 'chamber'.");
+
+            var details = await _certificateOfOriginService.GetPrintDetailsAsync(invoiceNumber);
+            if (details == null) return NotFound();
+
+            byte[] pdfBytes = format == "chamber"
+                ? CertificateOfOriginPrintEngine.GenerateChamberFormatPdf(details)
+                : CertificateOfOriginPrintEngine.GenerateFullFormatPdf(details);
+
+            var safeFileName = invoiceNumber.Replace('/', '-');
+            var fileNamePrefix = format == "chamber" ? "Chamber_CertificateOfOrigin" : "CertificateOfOrigin";
+            return File(pdfBytes, "application/pdf", $"{fileNamePrefix}_{safeFileName}.pdf");
         }
     }
 }
