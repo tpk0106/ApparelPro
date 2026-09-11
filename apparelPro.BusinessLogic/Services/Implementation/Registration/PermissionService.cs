@@ -522,6 +522,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
             new("commercial-invoice-manage", "Commercial Invoice - Add / Update / Delete", "Import / Export Documentation", "CommercialInvoiceController PUT/DELETE endpoints", ImportExportRoles),
             new("certificate-of-origin-view", "Certificate of Origin - View", "Import / Export Documentation", "CertificateOfOriginController GET endpoint - matches the real Ceylon Chamber of Commerce EXP 5 form, not legacy ie_co", ImportExportRoles),
             new("certificate-of-origin-manage", "Certificate of Origin - Add / Update / Delete", "Import / Export Documentation", "CertificateOfOriginController PUT/DELETE endpoints", ImportExportRoles),
+            new("letter-of-credit-view", "L/C Form - View", "Import / Export Documentation", "LetterOfCreditController GET endpoint - matches legacy ie_lc/ie_lc2 (IE_LCBC1.PRG), one flat schema shared across BOC/SCB/Peoples Bank formats", ImportExportRoles),
+            new("letter-of-credit-manage", "L/C Form - Add / Update / Delete", "Import / Export Documentation", "LetterOfCreditController PUT/DELETE endpoints", ImportExportRoles),
         };
 
         private sealed record PermissionCatalogEntry(string Key, string DisplayName, string Category, string? Description, string[] DefaultRoleNames);
