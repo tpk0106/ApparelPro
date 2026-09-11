@@ -19,6 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Reports\ImportExport\Assets\ceylon-chamber-logo.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Reports\GeneralInventory\" />
     <Folder Include="Services\Implementation\GeneralInventory\" />
     <Folder Include="Services\Implementation\Reports\OrderManagement\" />

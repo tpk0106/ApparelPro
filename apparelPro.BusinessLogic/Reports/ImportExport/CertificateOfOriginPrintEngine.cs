@@ -1,3 +1,4 @@
+using System.Reflection;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICertificateOfOriginService;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -18,6 +19,20 @@ namespace apparelPro.BusinessLogic.Reports.ImportExport
         private const string TextWhite = "#F4F6F8";
         private const string TextMuted = "#8B93A1";
         private const string Copper = "#C9803D";
+
+        // Cropped from the chamber's own EXP 5 PDF (white background made
+        // transparent) and embedded as a resource so the print engine has no
+        // runtime file-path dependency. See Reports/ImportExport/Assets/.
+        private static readonly Lazy<byte[]> ChamberLogoBytes = new(() =>
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            const string resourceName = "apparelPro.BusinessLogic.Reports.ImportExport.Assets.ceylon-chamber-logo.png";
+            using var stream = assembly.GetManifestResourceStream(resourceName)
+                ?? throw new InvalidOperationException($"Embedded resource '{resourceName}' not found.");
+            using var memoryStream = new MemoryStream();
+            stream.CopyTo(memoryStream);
+            return memoryStream.ToArray();
+        });
 
         private static void ConfigureDarkPage(PageDescriptor page)
         {
@@ -217,7 +232,13 @@ namespace apparelPro.BusinessLogic.Reports.ImportExport
                                     cc.Item().Text(header.RefNo);
                                 });
                                 c.Item().PaddingVertical(4).AlignCenter().Text("Certificate of Origin").Bold().FontColor(Copper).FontSize(14);
-                                c.Item().AlignCenter().Text("The Ceylon Chamber of Commerce").FontSize(8).FontColor(TextMuted);
+                                // Supplied logo is a wide lockup (emblem + "The Ceylon Chamber of
+                                // Commerce" wordmark side by side, transparent background) - sized
+                                // by width so it isn't stretched, no separate text line needed.
+                                c.Item().AlignCenter().Width(180).Image(ChamberLogoBytes.Value).FitWidth();
+                                c.Item().PaddingTop(2).AlignCenter().Text("50, Navam Mawatha, Colombo 02, Sri Lanka.").FontSize(7).FontColor(TextMuted);
+                                c.Item().AlignCenter().Text("Tel. (+94)11-5588800  |  Fax. (+94)11-2449352  |  Email. eco@chamber.lk").FontSize(7).FontColor(TextMuted);
+                                c.Item().AlignCenter().Text("Web. www.edocs.lk").FontSize(7).FontColor(TextMuted);
                                 c.Item().Border(1).BorderColor(Copper).Padding(6).Column(cc =>
                                 {
                                     BoxHeader(cc, "4. Country of Origin");
