@@ -544,6 +544,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
             new("commodity-code-manage", "Commodity Code - Add / Update / Delete", "Import / Export Documentation", "CommodityCodeController PUT/DELETE endpoints", ImportExportRoles),
             new("customs-procedure-code-view", "Customs Procedure Code (CPC) - View", "Import / Export Documentation", "CustomsProcedureCodeController GET endpoint - migrated from ie_cpro", ImportExportRoles),
             new("customs-procedure-code-manage", "Customs Procedure Code (CPC) - Add / Update / Delete", "Import / Export Documentation", "CustomsProcedureCodeController PUT/DELETE endpoints", ImportExportRoles),
+            new("packing-list-view", "Packing List - View", "Import / Export Documentation", "PackingListController GET endpoint - migrated from ie_pack1/ie_pack2/ie_pack3 (IE_PACK1.PRG)", ImportExportRoles),
+            new("packing-list-manage", "Packing List - Add / Update", "Import / Export Documentation", "PackingListController PUT endpoint", ImportExportRoles),
         };
 
         private sealed record PermissionCatalogEntry(string Key, string DisplayName, string Category, string? Description, string[] DefaultRoleNames);

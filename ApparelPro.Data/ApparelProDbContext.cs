@@ -129,6 +129,9 @@ namespace ApparelPro.Data
         public virtual DbSet<CustomsDeclarationLine> CustomsDeclarationLines { get; set; } = null!;
         public virtual DbSet<CustomsDeclarationLineTax> CustomsDeclarationLineTaxes { get; set; } = null!;
         public virtual DbSet<CustomsDeclarationAttachedDocument> CustomsDeclarationAttachedDocuments { get; set; } = null!;
+        public virtual DbSet<PackingListLine> PackingListLines { get; set; } = null!;
+        public virtual DbSet<PackingListCartonDetail> PackingListCartonDetails { get; set; } = null!;
+        public virtual DbSet<PackingListStringDetail> PackingListStringDetails { get; set; } = null!;
 
         // general inventory
         public virtual DbSet<GeneralStockMaster> GeneralStockMasters { get; set; } = null!;
@@ -249,6 +252,9 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new CustomsDeclarationLineConfig());
             modelBuilder.ApplyConfiguration(new CustomsDeclarationLineTaxConfig());
             modelBuilder.ApplyConfiguration(new CustomsDeclarationAttachedDocumentConfig());
+            modelBuilder.ApplyConfiguration(new PackingListLineConfig());
+            modelBuilder.ApplyConfiguration(new PackingListCartonDetailConfig());
+            modelBuilder.ApplyConfiguration(new PackingListStringDetailConfig());
 
             // general inventory
             modelBuilder.ApplyConfiguration(new GeneralStockMasterConfig());

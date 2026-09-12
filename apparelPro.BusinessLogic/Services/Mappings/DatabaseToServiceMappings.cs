@@ -61,6 +61,7 @@ using apparelPro.BusinessLogic.Services.Models.ImportExport.ICertificateOfOrigin
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ILetterOfCreditService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ILetterOfCreditCoveringLetterService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICustomsDeclarationService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.IPackingListService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.IClearanceOfficeService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.IPaymentTermService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ITransportModeService;
@@ -95,6 +96,8 @@ namespace apparelPro.BusinessLogic.Services.Mappings
             CreateMap<CustomsDeclarationLine, CustomsDeclarationLineServiceModel>().MaxDepth(2).ReverseMap();
             CreateMap<CustomsDeclarationLineTax, CustomsDeclarationLineTaxServiceModel>().MaxDepth(2).ReverseMap();
             CreateMap<CustomsDeclarationAttachedDocument, CustomsDeclarationAttachedDocumentServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<PackingListCartonDetail, PackingListCartonDetailServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<PackingListStringDetail, PackingListStringDetailServiceModel>().MaxDepth(2).ReverseMap();
 
             // import/export reference code masters (CUSDEC I/II)
             CreateMap<ClearanceOffice, ClearanceOfficeServiceModel>().MaxDepth(2);

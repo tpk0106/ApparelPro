@@ -258,6 +258,7 @@ namespace ApparelPro.WebApi.Extensions
             services.AddScoped<ICertificateOfOriginService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.CertificateOfOriginService>();
             services.AddScoped<ILetterOfCreditService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.LetterOfCreditService>();
             services.AddScoped<ICustomsDeclarationService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.CustomsDeclarationService>();
+            services.AddScoped<IPackingListService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.PackingListService>();
             services.AddScoped<ILetterOfCreditCoveringLetterService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.LetterOfCreditCoveringLetterService>();
             services.AddScoped<ICommercialInvoiceService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.CommercialInvoiceService>();
             services.AddScoped<IClearanceOfficeService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.ClearanceOfficeService>();
