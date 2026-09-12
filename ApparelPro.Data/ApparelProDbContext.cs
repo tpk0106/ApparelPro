@@ -116,6 +116,19 @@ namespace ApparelPro.Data
         public virtual DbSet<LetterOfCreditHeader> LetterOfCreditHeaders { get; set; } = null!;
         public virtual DbSet<LetterOfCreditLine> LetterOfCreditLines { get; set; } = null!;
         public virtual DbSet<LetterOfCreditCoveringLetter> LetterOfCreditCoveringLetters { get; set; } = null!;
+        public virtual DbSet<ClearanceOffice> ClearanceOffices { get; set; } = null!;
+        public virtual DbSet<PaymentTerm> PaymentTerms { get; set; } = null!;
+        public virtual DbSet<TransportMode> TransportModes { get; set; } = null!;
+        public virtual DbSet<DocumentType> DocumentTypes { get; set; } = null!;
+        public virtual DbSet<DutyTaxCode> DutyTaxCodes { get; set; } = null!;
+        public virtual DbSet<TaxBaseCode> TaxBaseCodes { get; set; } = null!;
+        public virtual DbSet<AgreementCode> AgreementCodes { get; set; } = null!;
+        public virtual DbSet<CommodityCode> CommodityCodes { get; set; } = null!;
+        public virtual DbSet<CustomsProcedureCode> CustomsProcedureCodes { get; set; } = null!;
+        public virtual DbSet<CustomsDeclarationHeader> CustomsDeclarationHeaders { get; set; } = null!;
+        public virtual DbSet<CustomsDeclarationLine> CustomsDeclarationLines { get; set; } = null!;
+        public virtual DbSet<CustomsDeclarationLineTax> CustomsDeclarationLineTaxes { get; set; } = null!;
+        public virtual DbSet<CustomsDeclarationAttachedDocument> CustomsDeclarationAttachedDocuments { get; set; } = null!;
 
         // general inventory
         public virtual DbSet<GeneralStockMaster> GeneralStockMasters { get; set; } = null!;
@@ -223,6 +236,19 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new LetterOfCreditHeaderConfig());
             modelBuilder.ApplyConfiguration(new LetterOfCreditLineConfig());
             modelBuilder.ApplyConfiguration(new LetterOfCreditCoveringLetterConfig());
+            modelBuilder.ApplyConfiguration(new ClearanceOfficeConfig());
+            modelBuilder.ApplyConfiguration(new PaymentTermConfig());
+            modelBuilder.ApplyConfiguration(new TransportModeConfig());
+            modelBuilder.ApplyConfiguration(new DocumentTypeConfig());
+            modelBuilder.ApplyConfiguration(new DutyTaxCodeConfig());
+            modelBuilder.ApplyConfiguration(new TaxBaseCodeConfig());
+            modelBuilder.ApplyConfiguration(new AgreementCodeConfig());
+            modelBuilder.ApplyConfiguration(new CommodityCodeConfig());
+            modelBuilder.ApplyConfiguration(new CustomsProcedureCodeConfig());
+            modelBuilder.ApplyConfiguration(new CustomsDeclarationHeaderConfig());
+            modelBuilder.ApplyConfiguration(new CustomsDeclarationLineConfig());
+            modelBuilder.ApplyConfiguration(new CustomsDeclarationLineTaxConfig());
+            modelBuilder.ApplyConfiguration(new CustomsDeclarationAttachedDocumentConfig());
 
             // general inventory
             modelBuilder.ApplyConfiguration(new GeneralStockMasterConfig());

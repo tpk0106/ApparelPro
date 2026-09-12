@@ -60,6 +60,16 @@ using apparelPro.BusinessLogic.Services.Models.ImportExport.ICommercialInvoiceSe
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICertificateOfOriginService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ILetterOfCreditService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ILetterOfCreditCoveringLetterService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.ICustomsDeclarationService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.IClearanceOfficeService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.IPaymentTermService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.ITransportModeService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.IDutyTaxCodeService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.ITaxBaseCodeService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.IAgreementCodeService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.ICommodityCodeService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.ICustomsProcedureCodeService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.IDocumentTypeService;
 using ApparelPro.WebApi.APIModels.OrderManagement;
 using AutoMapper;
 
@@ -81,6 +91,47 @@ namespace apparelPro.BusinessLogic.Services.Mappings
             CreateMap<LetterOfCreditHeader, LetterOfCreditHeaderServiceModel>().MaxDepth(2).ReverseMap();
             CreateMap<LetterOfCreditLine, LetterOfCreditLineServiceModel>().MaxDepth(2).ReverseMap();
             CreateMap<LetterOfCreditCoveringLetter, LetterOfCreditCoveringLetterServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CustomsDeclarationHeader, CustomsDeclarationHeaderServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CustomsDeclarationLine, CustomsDeclarationLineServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CustomsDeclarationLineTax, CustomsDeclarationLineTaxServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CustomsDeclarationAttachedDocument, CustomsDeclarationAttachedDocumentServiceModel>().MaxDepth(2).ReverseMap();
+
+            // import/export reference code masters (CUSDEC I/II)
+            CreateMap<ClearanceOffice, ClearanceOfficeServiceModel>().MaxDepth(2);
+            CreateMap<CreateClearanceOfficeServiceModel, ClearanceOffice>().MaxDepth(2);
+            CreateMap<UpdateClearanceOfficeServiceModel, ClearanceOffice>().MaxDepth(2);
+
+            CreateMap<PaymentTerm, PaymentTermServiceModel>().MaxDepth(2);
+            CreateMap<CreatePaymentTermServiceModel, PaymentTerm>().MaxDepth(2);
+            CreateMap<UpdatePaymentTermServiceModel, PaymentTerm>().MaxDepth(2);
+
+            CreateMap<TransportMode, TransportModeServiceModel>().MaxDepth(2);
+            CreateMap<CreateTransportModeServiceModel, TransportMode>().MaxDepth(2);
+            CreateMap<UpdateTransportModeServiceModel, TransportMode>().MaxDepth(2);
+
+            CreateMap<DutyTaxCode, DutyTaxCodeServiceModel>().MaxDepth(2);
+            CreateMap<CreateDutyTaxCodeServiceModel, DutyTaxCode>().MaxDepth(2);
+            CreateMap<UpdateDutyTaxCodeServiceModel, DutyTaxCode>().MaxDepth(2);
+
+            CreateMap<TaxBaseCode, TaxBaseCodeServiceModel>().MaxDepth(2);
+            CreateMap<CreateTaxBaseCodeServiceModel, TaxBaseCode>().MaxDepth(2);
+            CreateMap<UpdateTaxBaseCodeServiceModel, TaxBaseCode>().MaxDepth(2);
+
+            CreateMap<AgreementCode, AgreementCodeServiceModel>().MaxDepth(2);
+            CreateMap<CreateAgreementCodeServiceModel, AgreementCode>().MaxDepth(2);
+            CreateMap<UpdateAgreementCodeServiceModel, AgreementCode>().MaxDepth(2);
+
+            CreateMap<CommodityCode, CommodityCodeServiceModel>().MaxDepth(2);
+            CreateMap<CreateCommodityCodeServiceModel, CommodityCode>().MaxDepth(2);
+            CreateMap<UpdateCommodityCodeServiceModel, CommodityCode>().MaxDepth(2);
+
+            CreateMap<CustomsProcedureCode, CustomsProcedureCodeServiceModel>().MaxDepth(2);
+            CreateMap<CreateCustomsProcedureCodeServiceModel, CustomsProcedureCode>().MaxDepth(2);
+            CreateMap<UpdateCustomsProcedureCodeServiceModel, CustomsProcedureCode>().MaxDepth(2);
+
+            CreateMap<DocumentType, DocumentTypeServiceModel>().MaxDepth(2);
+            CreateMap<CreateDocumentTypeServiceModel, DocumentType>().MaxDepth(2);
+            CreateMap<UpdateDocumentTypeServiceModel, DocumentType>().MaxDepth(2);
 
             // currency
             CreateMap<Currency, CurrencyServiceModel>().MaxDepth(2)

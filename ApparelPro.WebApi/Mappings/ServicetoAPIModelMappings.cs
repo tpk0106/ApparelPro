@@ -88,6 +88,16 @@ using apparelPro.BusinessLogic.Services.Models.ImportExport.ICommercialInvoiceSe
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICertificateOfOriginService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ILetterOfCreditService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ILetterOfCreditCoveringLetterService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.ICustomsDeclarationService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.IClearanceOfficeService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.IPaymentTermService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.ITransportModeService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.IDutyTaxCodeService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.ITaxBaseCodeService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.IAgreementCodeService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.ICommodityCodeService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.ICustomsProcedureCodeService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.IDocumentTypeService;
 using ApparelPro.WebApi.APIModels.ImportExport;
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Models.References;
@@ -1065,6 +1075,58 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<LetterOfCreditDetailServiceModel, LetterOfCreditDetailAPIModel>().MaxDepth(2);
             CreateMap<SaveLetterOfCreditAPIModel, SaveLetterOfCreditServiceModel>().MaxDepth(2);
             CreateMap<LetterOfCreditCoveringLetterServiceModel, LetterOfCreditCoveringLetterAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CustomsDeclarationHeaderServiceModel, CustomsDeclarationHeaderAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CustomsDeclarationLineServiceModel, CustomsDeclarationLineAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CustomsDeclarationLineTaxServiceModel, CustomsDeclarationLineTaxAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CustomsDeclarationAttachedDocumentServiceModel, CustomsDeclarationAttachedDocumentAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CustomsDeclarationDetailServiceModel, CustomsDeclarationDetailAPIModel>().MaxDepth(2);
+            CreateMap<SaveCustomsDeclarationAPIModel, SaveCustomsDeclarationServiceModel>().MaxDepth(2);
+
+            // import/export reference code masters (CUSDEC I/II)
+            CreateMap<ClearanceOfficeServiceModel, ClearanceOfficeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateClearanceOfficeServiceModel, CreateClearanceOfficeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<ClearanceOfficeServiceModel, CreateClearanceOfficeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<UpdateClearanceOfficeAPIModel, UpdateClearanceOfficeServiceModel>().MaxDepth(2);
+
+            CreateMap<PaymentTermServiceModel, PaymentTermAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreatePaymentTermServiceModel, CreatePaymentTermAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<PaymentTermServiceModel, CreatePaymentTermAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<UpdatePaymentTermAPIModel, UpdatePaymentTermServiceModel>().MaxDepth(2);
+
+            CreateMap<TransportModeServiceModel, TransportModeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateTransportModeServiceModel, CreateTransportModeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<TransportModeServiceModel, CreateTransportModeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<UpdateTransportModeAPIModel, UpdateTransportModeServiceModel>().MaxDepth(2);
+
+            CreateMap<DutyTaxCodeServiceModel, DutyTaxCodeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateDutyTaxCodeServiceModel, CreateDutyTaxCodeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<DutyTaxCodeServiceModel, CreateDutyTaxCodeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<UpdateDutyTaxCodeAPIModel, UpdateDutyTaxCodeServiceModel>().MaxDepth(2);
+
+            CreateMap<TaxBaseCodeServiceModel, TaxBaseCodeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateTaxBaseCodeServiceModel, CreateTaxBaseCodeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<TaxBaseCodeServiceModel, CreateTaxBaseCodeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<UpdateTaxBaseCodeAPIModel, UpdateTaxBaseCodeServiceModel>().MaxDepth(2);
+
+            CreateMap<AgreementCodeServiceModel, AgreementCodeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateAgreementCodeServiceModel, CreateAgreementCodeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<AgreementCodeServiceModel, CreateAgreementCodeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<UpdateAgreementCodeAPIModel, UpdateAgreementCodeServiceModel>().MaxDepth(2);
+
+            CreateMap<CommodityCodeServiceModel, CommodityCodeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateCommodityCodeServiceModel, CreateCommodityCodeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CommodityCodeServiceModel, CreateCommodityCodeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<UpdateCommodityCodeAPIModel, UpdateCommodityCodeServiceModel>().MaxDepth(2);
+
+            CreateMap<CustomsProcedureCodeServiceModel, CustomsProcedureCodeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateCustomsProcedureCodeServiceModel, CreateCustomsProcedureCodeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CustomsProcedureCodeServiceModel, CreateCustomsProcedureCodeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<UpdateCustomsProcedureCodeAPIModel, UpdateCustomsProcedureCodeServiceModel>().MaxDepth(2);
+
+            CreateMap<DocumentTypeServiceModel, DocumentTypeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateDocumentTypeServiceModel, CreateDocumentTypeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<DocumentTypeServiceModel, CreateDocumentTypeAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<UpdateDocumentTypeAPIModel, UpdateDocumentTypeServiceModel>().MaxDepth(2);
 
             CreateMap<ProductionSummaryDailySectionTotalServiceModel, ProductionSummaryDailySectionTotalAPIModel>().MaxDepth(2);
             CreateMap<ProductionSummaryDailyLineServiceModel, ProductionSummaryDailyLineAPIModel>().MaxDepth(2);

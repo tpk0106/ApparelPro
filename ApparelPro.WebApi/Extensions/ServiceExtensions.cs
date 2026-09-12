@@ -257,8 +257,18 @@ namespace ApparelPro.WebApi.Extensions
             services.AddScoped<ICompanyAddressService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.CompanyAddressService>();
             services.AddScoped<ICertificateOfOriginService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.CertificateOfOriginService>();
             services.AddScoped<ILetterOfCreditService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.LetterOfCreditService>();
+            services.AddScoped<ICustomsDeclarationService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.CustomsDeclarationService>();
             services.AddScoped<ILetterOfCreditCoveringLetterService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.LetterOfCreditCoveringLetterService>();
             services.AddScoped<ICommercialInvoiceService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.CommercialInvoiceService>();
+            services.AddScoped<IClearanceOfficeService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.ClearanceOfficeService>();
+            services.AddScoped<IPaymentTermService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.PaymentTermService>();
+            services.AddScoped<ITransportModeService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.TransportModeService>();
+            services.AddScoped<IDutyTaxCodeService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.DutyTaxCodeService>();
+            services.AddScoped<ITaxBaseCodeService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.TaxBaseCodeService>();
+            services.AddScoped<IAgreementCodeService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.AgreementCodeService>();
+            services.AddScoped<ICommodityCodeService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.CommodityCodeService>();
+            services.AddScoped<ICustomsProcedureCodeService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.CustomsProcedureCodeService>();
+            services.AddScoped<IDocumentTypeService, apparelPro.BusinessLogic.Services.Implementation.ImportExport.DocumentTypeService>();
             services.AddScoped<IProductionSummaryDailyReportService, ProductionSummaryDailyReportService>();
             services.AddScoped<IProductionScheduleReportService, ProductionScheduleReportService>();
             services.AddScoped<IProductionSummaryMonthlyReportService, ProductionSummaryMonthlyReportService>();
