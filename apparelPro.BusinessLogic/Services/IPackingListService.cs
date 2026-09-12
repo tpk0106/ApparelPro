@@ -7,5 +7,7 @@ namespace apparelPro.BusinessLogic.Services
         Task<PackingListDetailServiceModel> GetByLineKeyAsync(
             string invoiceNumber, int buyerCode, string order, int typeCode, string styleCode, string newOrder);
         Task<PackingListDetailServiceModel> SaveAsync(SavePackingListServiceModel serviceModel);
+        Task<PackingListPrintDetailsServiceModel?> GetPrintDetailsAsync(
+            string invoiceNumber, int buyerCode, string order, int typeCode, string styleCode, string newOrder);
     }
 }

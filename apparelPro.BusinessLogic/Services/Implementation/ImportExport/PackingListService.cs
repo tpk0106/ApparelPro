@@ -3,6 +3,9 @@ using ApparelPro.Data;
 using ApparelPro.Data.Models.ImportExport;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+// ICommercialInvoiceService lives in apparelPro.BusinessLogic.Services -
+// not implicitly visible from this Implementation.ImportExport namespace.
+using apparelPro.BusinessLogic.Services;
 
 namespace apparelPro.BusinessLogic.Services.Implementation.ImportExport
 {
@@ -16,11 +19,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.ImportExport
     {
         private readonly IMapper _mapper;
         private readonly ApparelProDbContext _apparelProDbContext;
+        private readonly ICommercialInvoiceService _commercialInvoiceService;
 
-        public PackingListService(IMapper mapper, ApparelProDbContext apparelProDbContext)
+        public PackingListService(IMapper mapper, ApparelProDbContext apparelProDbContext, ICommercialInvoiceService commercialInvoiceService)
         {
             _mapper = mapper;
             _apparelProDbContext = apparelProDbContext;
+            _commercialInvoiceService = commercialInvoiceService;
         }
 
         public async Task<PackingListDetailServiceModel> GetByLineKeyAsync(
@@ -120,6 +125,78 @@ namespace apparelPro.BusinessLogic.Services.Implementation.ImportExport
 
             return await GetByLineKeyAsync(serviceModel.InvoiceNumber, serviceModel.BuyerCode, serviceModel.Order,
                 serviceModel.TypeCode, serviceModel.StyleCode, serviceModel.NewOrder);
+        }
+
+        public async Task<PackingListPrintDetailsServiceModel?> GetPrintDetailsAsync(
+            string invoiceNumber, int buyerCode, string order, int typeCode, string styleCode, string newOrder)
+        {
+            var invoicePrintDetails = await _commercialInvoiceService.GetPrintDetailsAsync(invoiceNumber);
+            if (invoicePrintDetails == null) return null;
+            var header = invoicePrintDetails.Header;
+
+            var line = await _apparelProDbContext.PackingListLines.AsNoTracking().FirstOrDefaultAsync(l =>
+                l.InvoiceNumber == invoiceNumber && l.BuyerCode == buyerCode && l.Order == order &&
+                l.TypeCode == typeCode && l.StyleCode == styleCode && l.NewOrder == newOrder);
+
+            var cartonRows = await _apparelProDbContext.PackingListCartonDetails.AsNoTracking().Where(c =>
+                c.InvoiceNumber == invoiceNumber && c.BuyerCode == buyerCode && c.Order == order &&
+                c.TypeCode == typeCode && c.StyleCode == styleCode && c.NewOrder == newOrder).ToListAsync();
+
+            var stringRows = await _apparelProDbContext.PackingListStringDetails.AsNoTracking().Where(s =>
+                s.InvoiceNumber == invoiceNumber && s.BuyerCode == buyerCode && s.Order == order &&
+                s.TypeCode == typeCode && s.StyleCode == styleCode && s.NewOrder == newOrder).ToListAsync();
+
+            var sizes = await _apparelProDbContext.ColorSizeDetails.AsNoTracking()
+                .Where(d => d.BuyerCode == buyerCode && d.Order == order && d.TypeCode == typeCode && d.StyleCode == styleCode)
+                .Select(d => d.Size).Distinct().ToListAsync();
+
+            var cartonGroups = cartonRows
+                .GroupBy(r => new { r.FromCartonNo, r.ToCartonNo, r.Color, r.NoOfCartons })
+                .Select(g => new PackingListCartonGroupServiceModel
+                {
+                    FromCartonNo = g.Key.FromCartonNo,
+                    ToCartonNo = g.Key.ToCartonNo,
+                    Color = g.Key.Color,
+                    NoOfCartons = g.Key.NoOfCartons,
+                    QtyBySize = g.ToDictionary(r => r.Size, r => r.Qty),
+                }).ToList();
+
+            var stringGroups = stringRows
+                .GroupBy(r => new { r.BarNo, r.FromStringNo, r.ToStringNo, r.Color })
+                .Select(g => new PackingListStringGroupServiceModel
+                {
+                    BarNo = g.Key.BarNo,
+                    FromStringNo = g.Key.FromStringNo,
+                    ToStringNo = g.Key.ToStringNo,
+                    Color = g.Key.Color,
+                    QtyBySize = g.ToDictionary(r => r.Size, r => r.Qty),
+                }).ToList();
+
+            return new PackingListPrintDetailsServiceModel
+            {
+                InvoiceNumber = invoiceNumber,
+                InvoiceDate = header.InvoiceDate.ToString("dd/MM/yyyy"),
+                StyleCode = styleCode,
+                NewOrder = newOrder,
+                CarrierCode = header.CarrierCode,
+                ShipDate = header.ShipDate?.ToString("dd/MM/yyyy"),
+                LcNumber = header.LcNumber,
+                LcDate = header.LcDate?.ToString("dd/MM/yyyy"),
+                ConsigneeName = invoicePrintDetails.ConsigneeName,
+                ConsigneeAddressLines = invoicePrintDetails.ConsigneeAddressLines,
+                NotifyPartyName = invoicePrintDetails.NotifyPartyName,
+                NotifyPartyAddressLines = invoicePrintDetails.NotifyPartyAddressLines,
+                IssuingBankName = invoicePrintDetails.IssuingBankName,
+                LoadPortDescription = invoicePrintDetails.LoadPortDescription,
+                DestinationDescription = invoicePrintDetails.DestinationDescription,
+                Remark1 = header.Remark1,
+                Remark2 = header.Remark2,
+                Remark3 = header.Remark3,
+                Detail = line?.Detail,
+                Sizes = sizes,
+                CartonGroups = cartonGroups,
+                StringGroups = stringGroups,
+            };
         }
     }
 }
