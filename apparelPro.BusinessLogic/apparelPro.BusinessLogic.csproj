@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Reports\ImportExport\Assets\ceylon-chamber-logo.png" />
+    <EmbeddedResource Include="Reports\ImportExport\Assets\sri-lanka-customs-logo.png" />
   </ItemGroup>
 
   <ItemGroup>

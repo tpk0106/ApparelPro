@@ -1,3 +1,4 @@
+using apparelPro.BusinessLogic.Reports.ImportExport;
 using apparelPro.BusinessLogic.Services;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICustomsDeclarationService;
 using ApparelPro.WebApi.APIModels.ImportExport;
@@ -53,6 +54,21 @@ namespace ApparelPro.WebApi.Controllers.ImportExport
             var deleted = await _customsDeclarationService.DeleteAsync(cusNo);
             if (!deleted) return NotFound();
             return NoContent();
+        }
+
+        // GET: api/customs-declaration/print/pdf?cusNo=...
+        [HttpGet("print/pdf")]
+        [Authorize(Policy = "customs-declaration-view")]
+        [ProducesResponseType(HttpStatusCodes.OK)]
+        [ProducesResponseType(HttpStatusCodes.NotFound)]
+        public async Task<IActionResult> GetPrintPdfAsync([FromQuery] string cusNo)
+        {
+            var details = await _customsDeclarationService.GetPrintDetailsAsync(cusNo);
+            if (details == null) return NotFound();
+
+            var pdfBytes = CustomsDeclarationPrintEngine.GenerateCusdecPdf(details);
+            var safeFileName = cusNo.Replace('/', '-');
+            return File(pdfBytes, "application/pdf", $"CUSDEC_{safeFileName}.pdf");
         }
     }
 }

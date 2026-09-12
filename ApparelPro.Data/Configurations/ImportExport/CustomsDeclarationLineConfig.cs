@@ -26,7 +26,7 @@ namespace ApparelPro.Data.Configurations.ImportExport
             entity.Property(e => e.Insurance).HasColumnType("decimal(11,2)");
             entity.Property(e => e.Other).HasColumnType("decimal(11,2)");
             entity.Property(e => e.ExchangeRate).HasColumnType("decimal(12,4)");
-            entity.Property(e => e.CountryCode).HasColumnType("varchar(2)");
+            entity.Property(e => e.CountryCode).HasColumnType("varchar(3)");
             entity.Property(e => e.LicenceNo).HasColumnType("varchar(15)");
             entity.Property(e => e.AgreementCode).HasColumnType("varchar(2)");
             entity.Property(e => e.QtyDeducted).HasColumnType("decimal(10,2)");

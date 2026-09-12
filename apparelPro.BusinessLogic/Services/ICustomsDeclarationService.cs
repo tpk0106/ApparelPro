@@ -7,5 +7,6 @@ namespace apparelPro.BusinessLogic.Services
         Task<CustomsDeclarationDetailServiceModel?> GetByCusNoAsync(string cusNo);
         Task<CustomsDeclarationDetailServiceModel> SaveAsync(SaveCustomsDeclarationServiceModel serviceModel);
         Task<bool> DeleteAsync(string cusNo);
+        Task<CustomsDeclarationPrintDetailsServiceModel?> GetPrintDetailsAsync(string cusNo);
     }
 }
