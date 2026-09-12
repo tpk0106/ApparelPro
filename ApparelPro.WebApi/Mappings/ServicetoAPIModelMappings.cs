@@ -87,6 +87,7 @@ using apparelPro.BusinessLogic.Services.Models.ImportExport.ICompanyAddressServi
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICommercialInvoiceService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICertificateOfOriginService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ILetterOfCreditService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.ILetterOfCreditCoveringLetterService;
 using ApparelPro.WebApi.APIModels.ImportExport;
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Models.References;
@@ -1063,6 +1064,7 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<LetterOfCreditLineServiceModel, LetterOfCreditLineAPIModel>().MaxDepth(2).ReverseMap();
             CreateMap<LetterOfCreditDetailServiceModel, LetterOfCreditDetailAPIModel>().MaxDepth(2);
             CreateMap<SaveLetterOfCreditAPIModel, SaveLetterOfCreditServiceModel>().MaxDepth(2);
+            CreateMap<LetterOfCreditCoveringLetterServiceModel, LetterOfCreditCoveringLetterAPIModel>().MaxDepth(2).ReverseMap();
 
             CreateMap<ProductionSummaryDailySectionTotalServiceModel, ProductionSummaryDailySectionTotalAPIModel>().MaxDepth(2);
             CreateMap<ProductionSummaryDailyLineServiceModel, ProductionSummaryDailyLineAPIModel>().MaxDepth(2);

@@ -115,6 +115,7 @@ namespace ApparelPro.Data
         public virtual DbSet<CertificateOfOriginLine> CertificateOfOriginLines { get; set; } = null!;
         public virtual DbSet<LetterOfCreditHeader> LetterOfCreditHeaders { get; set; } = null!;
         public virtual DbSet<LetterOfCreditLine> LetterOfCreditLines { get; set; } = null!;
+        public virtual DbSet<LetterOfCreditCoveringLetter> LetterOfCreditCoveringLetters { get; set; } = null!;
 
         // general inventory
         public virtual DbSet<GeneralStockMaster> GeneralStockMasters { get; set; } = null!;
@@ -221,6 +222,7 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new CertificateOfOriginLineConfig());
             modelBuilder.ApplyConfiguration(new LetterOfCreditHeaderConfig());
             modelBuilder.ApplyConfiguration(new LetterOfCreditLineConfig());
+            modelBuilder.ApplyConfiguration(new LetterOfCreditCoveringLetterConfig());
 
             // general inventory
             modelBuilder.ApplyConfiguration(new GeneralStockMasterConfig());
