@@ -86,6 +86,7 @@ using ApparelPro.WebApi.APIModels.Toolbar;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICompanyAddressService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICommercialInvoiceService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICertificateOfOriginService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.IBoatNoteService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ILetterOfCreditService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ILetterOfCreditCoveringLetterService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICustomsDeclarationService;
@@ -1070,6 +1071,10 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<CertificateOfOriginLineServiceModel, CertificateOfOriginLineAPIModel>().MaxDepth(2).ReverseMap();
             CreateMap<CertificateOfOriginDetailServiceModel, CertificateOfOriginDetailAPIModel>().MaxDepth(2);
             CreateMap<SaveCertificateOfOriginAPIModel, SaveCertificateOfOriginServiceModel>().MaxDepth(2);
+            CreateMap<BoatNoteHeaderServiceModel, BoatNoteHeaderAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<BoatNoteCargoLineServiceModel, BoatNoteCargoLineAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<BoatNoteDetailServiceModel, BoatNoteDetailAPIModel>().MaxDepth(2);
+            CreateMap<SaveBoatNoteAPIModel, SaveBoatNoteServiceModel>().MaxDepth(2);
 
             CreateMap<LetterOfCreditHeaderServiceModel, LetterOfCreditHeaderAPIModel>().MaxDepth(2).ReverseMap();
             CreateMap<LetterOfCreditLineServiceModel, LetterOfCreditLineAPIModel>().MaxDepth(2).ReverseMap();

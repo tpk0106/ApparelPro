@@ -546,6 +546,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
             new("customs-procedure-code-manage", "Customs Procedure Code (CPC) - Add / Update / Delete", "Import / Export Documentation", "CustomsProcedureCodeController PUT/DELETE endpoints", ImportExportRoles),
             new("packing-list-view", "Packing List - View", "Import / Export Documentation", "PackingListController GET endpoint - migrated from ie_pack1/ie_pack2/ie_pack3 (IE_PACK1.PRG)", ImportExportRoles),
             new("packing-list-manage", "Packing List - Add / Update", "Import / Export Documentation", "PackingListController PUT endpoint", ImportExportRoles),
+            new("boat-note-view", "Boat Note - View", "Import / Export Documentation", "BoatNoteController GET endpoint - matches the real Sri Lanka Customs e-CDN Boat Note sample, not legacy ie_shp (IE_SHPN1-3.PRG)", ImportExportRoles),
+            new("boat-note-manage", "Boat Note - Add / Update / Delete", "Import / Export Documentation", "BoatNoteController PUT/DELETE endpoints", ImportExportRoles),
         };
 
         private sealed record PermissionCatalogEntry(string Key, string DisplayName, string Category, string? Description, string[] DefaultRoleNames);
