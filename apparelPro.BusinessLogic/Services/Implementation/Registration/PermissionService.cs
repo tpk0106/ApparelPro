@@ -548,6 +548,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
             new("packing-list-manage", "Packing List - Add / Update", "Import / Export Documentation", "PackingListController PUT endpoint", ImportExportRoles),
             new("boat-note-view", "Boat Note - View", "Import / Export Documentation", "BoatNoteController GET endpoint - matches the real Sri Lanka Customs e-CDN Boat Note sample, not legacy ie_shp (IE_SHPN1-3.PRG)", ImportExportRoles),
             new("boat-note-manage", "Boat Note - Add / Update / Delete", "Import / Export Documentation", "BoatNoteController PUT/DELETE endpoints", ImportExportRoles),
+            new("value-declaration-view", "Value Declaration Form - View", "Import / Export Documentation", "ValueDeclarationController GET endpoints - matches the real Sri Lanka Customs 308A Value Declaration form, not legacy ie_dec (a Country-of-Origin declaration, different document entirely)", ImportExportRoles),
+            new("value-declaration-manage", "Value Declaration Form - Add / Update / Delete", "Import / Export Documentation", "ValueDeclarationController PUT/DELETE endpoints", ImportExportRoles),
         };
 
         private sealed record PermissionCatalogEntry(string Key, string DisplayName, string Category, string? Description, string[] DefaultRoleNames);

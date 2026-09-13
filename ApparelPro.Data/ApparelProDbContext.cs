@@ -115,6 +115,8 @@ namespace ApparelPro.Data
         public virtual DbSet<CertificateOfOriginLine> CertificateOfOriginLines { get; set; } = null!;
         public virtual DbSet<BoatNoteHeader> BoatNoteHeaders { get; set; } = null!;
         public virtual DbSet<BoatNoteCargoLine> BoatNoteCargoLines { get; set; } = null!;
+        public virtual DbSet<ValueDeclarationHeader> ValueDeclarationHeaders { get; set; } = null!;
+        public virtual DbSet<ValueDeclarationLine> ValueDeclarationLines { get; set; } = null!;
         public virtual DbSet<LetterOfCreditHeader> LetterOfCreditHeaders { get; set; } = null!;
         public virtual DbSet<LetterOfCreditLine> LetterOfCreditLines { get; set; } = null!;
         public virtual DbSet<LetterOfCreditCoveringLetter> LetterOfCreditCoveringLetters { get; set; } = null!;
@@ -240,6 +242,8 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new CertificateOfOriginLineConfig());
             modelBuilder.ApplyConfiguration(new BoatNoteHeaderConfig());
             modelBuilder.ApplyConfiguration(new BoatNoteCargoLineConfig());
+            modelBuilder.ApplyConfiguration(new ValueDeclarationHeaderConfig());
+            modelBuilder.ApplyConfiguration(new ValueDeclarationLineConfig());
             modelBuilder.ApplyConfiguration(new LetterOfCreditHeaderConfig());
             modelBuilder.ApplyConfiguration(new LetterOfCreditLineConfig());
             modelBuilder.ApplyConfiguration(new LetterOfCreditCoveringLetterConfig());
