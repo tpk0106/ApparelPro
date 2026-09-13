@@ -550,6 +550,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
             new("boat-note-manage", "Boat Note - Add / Update / Delete", "Import / Export Documentation", "BoatNoteController PUT/DELETE endpoints", ImportExportRoles),
             new("value-declaration-view", "Value Declaration Form - View", "Import / Export Documentation", "ValueDeclarationController GET endpoints - matches the real Sri Lanka Customs 308A Value Declaration form, not legacy ie_dec (a Country-of-Origin declaration, different document entirely)", ImportExportRoles),
             new("value-declaration-manage", "Value Declaration Form - Add / Update / Delete", "Import / Export Documentation", "ValueDeclarationController PUT/DELETE endpoints", ImportExportRoles),
+            new("export-license-view", "Export License - View", "Import / Export Documentation", "ExportLicenseController GET endpoints - matches the real Sri Lanka Import & Export Control Department application form, not legacy ie_elic2 (a quota-based print artifact for the old MFA quota system)", ImportExportRoles),
+            new("export-license-manage", "Export License - Add / Update / Delete", "Import / Export Documentation", "ExportLicenseController PUT/DELETE endpoints", ImportExportRoles),
         };
 
         private sealed record PermissionCatalogEntry(string Key, string DisplayName, string Category, string? Description, string[] DefaultRoleNames);

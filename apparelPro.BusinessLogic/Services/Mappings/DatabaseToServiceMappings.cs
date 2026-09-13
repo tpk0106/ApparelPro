@@ -60,6 +60,7 @@ using apparelPro.BusinessLogic.Services.Models.ImportExport.ICommercialInvoiceSe
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICertificateOfOriginService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.IBoatNoteService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.IValueDeclarationService;
+using apparelPro.BusinessLogic.Services.Models.ImportExport.IExportLicenseService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ILetterOfCreditService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ILetterOfCreditCoveringLetterService;
 using apparelPro.BusinessLogic.Services.Models.ImportExport.ICustomsDeclarationService;
@@ -96,6 +97,8 @@ namespace apparelPro.BusinessLogic.Services.Mappings
             CreateMap<ValueDeclarationHeader, ValueDeclarationHeaderServiceModel>().MaxDepth(2).ReverseMap();
             CreateMap<ValueDeclarationLine, ValueDeclarationLineServiceModel>().MaxDepth(2).ReverseMap();
             CreateMap<ValueDeclarationLineServiceModel, ValueDeclarationLinePrintServiceModel>().MaxDepth(2);
+            CreateMap<ExportLicenseHeader, ExportLicenseHeaderServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<ExportLicenseLine, ExportLicenseLineServiceModel>().MaxDepth(2).ReverseMap();
             CreateMap<LetterOfCreditHeader, LetterOfCreditHeaderServiceModel>().MaxDepth(2).ReverseMap();
             CreateMap<LetterOfCreditLine, LetterOfCreditLineServiceModel>().MaxDepth(2).ReverseMap();
             CreateMap<LetterOfCreditCoveringLetter, LetterOfCreditCoveringLetterServiceModel>().MaxDepth(2).ReverseMap();
