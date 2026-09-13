@@ -12,10 +12,6 @@ namespace ApparelPro.WebApi.APIModels.ImportExport
         public string Unit { get; set; } = null!;
         public decimal Quantity { get; set; }
         public decimal Balance { get; set; }
-        public string QuotaCategory { get; set; } = "";
-        public string FromYearMonth { get; set; } = "";
-        public string ToYearMonth { get; set; } = "";
-        public string QuotaCountry { get; set; } = "";
         public string PackingMedia { get; set; } = "";
     }
 }

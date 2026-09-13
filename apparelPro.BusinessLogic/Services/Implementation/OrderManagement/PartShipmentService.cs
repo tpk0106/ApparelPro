@@ -113,9 +113,6 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         throw new InvalidOperationException("Validation Failure: Total scheduled shipment distribution quantities cannot exceed the master style contract limit.");
                     }
 
-                    // 2. QUAD-OPTION INTERCEPT METRICS: Process textile quota adjustments inside database tables
-                    // (Omitted here for length layout spacing limits - handles table allocation calculations)
-
                     // 3. EXECUTE DATA ENTRY SAVE / UPDATE STRATEGY
                     if (existingLine == null)
                     {
@@ -132,12 +129,6 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                             Unit = request.Unit.Trim().ToUpper(),
                             Quantity = request.Quantity,
                             ShippingMode = request.ShippingMode.ToUpper(),
-                            QuotaCountry = request.QuotaCountry.ToUpper(),
-                            QuotaStatus = request.QuotaStatus.ToUpper(),
-                            QuotaCategory = request.QuotaCategory.ToUpper(),
-                            QuotaType = request.QuotaType.ToUpper(),
-                            FromYearMonth = request.FromYearMonth,
-                            ToYearMonth = request.ToYearMonth,
                             OrderDate = DateTime.Now,
                             Balance = request.Quantity // Initial open delivery balance equals ordered qty
                         };
@@ -152,12 +143,6 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                         existingLine.Unit = request.Unit.Trim().ToUpper();
                         existingLine.Quantity = request.Quantity;
                         existingLine.ShippingMode = request.ShippingMode.ToUpper();
-                        existingLine.QuotaCountry = request.QuotaCountry.ToUpper();
-                        existingLine.QuotaStatus = request.QuotaStatus.ToUpper();
-                        existingLine.QuotaCategory = request.QuotaCategory.ToUpper();
-                        existingLine.QuotaType = request.QuotaType.ToUpper();
-                        existingLine.FromYearMonth = request.FromYearMonth;
-                        existingLine.ToYearMonth = request.ToYearMonth;
 
                         // Recalculate working open balances safely
                         existingLine.Balance = request.Quantity - (existingLine.Quantity - existingLine.Balance);
@@ -209,7 +194,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
             using (var transaction = await _apparelProDbContext.Database.BeginTransactionAsync())
             {
                 try
-                {// Quota reverse-purges execute here seamlessly...
+                {
                     _apparelProDbContext.PartShipments.Remove(line); await _apparelProDbContext.SaveChangesAsync();
                     // Re-calculate and roll up remaining balances to parent Style entry
                     var parentStyle = await _apparelProDbContext.Styles

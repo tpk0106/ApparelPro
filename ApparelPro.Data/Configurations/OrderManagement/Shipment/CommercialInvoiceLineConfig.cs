@@ -28,10 +28,6 @@ namespace ApparelPro.Data.Configurations.OrderManagement.Shipment
             entity.Property(e => e.Quantity).HasColumnType("decimal(12,2)").IsRequired();
             entity.Property(e => e.Balance).HasColumnType("decimal(12,2)").IsRequired();
 
-            entity.Property(e => e.QuotaCategory).HasColumnType("varchar(6)");
-            entity.Property(e => e.FromYearMonth).HasColumnType("varchar(5)");
-            entity.Property(e => e.ToYearMonth).HasColumnType("varchar(5)");
-            entity.Property(e => e.QuotaCountry).HasColumnType("varchar(10)");
             entity.Property(e => e.PackingMedia).HasColumnType("varchar(1)");
 
             entity.HasOne<CommercialInvoiceHeader>()

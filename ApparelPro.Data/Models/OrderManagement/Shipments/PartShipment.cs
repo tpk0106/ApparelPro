@@ -22,14 +22,6 @@ namespace ApparelPro.Data.Models.OrderManagement.Shipments
         public decimal Quantity { get; set; }
         public string ShippingMode { get; set; } = null!; // shp_mode ('SEA'/'AIR')
 
-        // Quota Context Sub-Block Reference Variables
-        public string QuotaCountry { get; set; } = ""; // qta_cont
-        public string QuotaStatus { get; set; } = "N"; // qta_stat ('Q'/'N')
-        public string QuotaCategory { get; set; } = ""; // qta_cat
-        public string QuotaType { get; set; } = ""; // qta_type
-        public string FromYearMonth { get; set; } = ""; // f_yymm
-        public string ToYearMonth { get; set; } = ""; // t_yymm
-
         public DateTime OrderDate { get; set; } // odate
         public decimal Balance { get; set; } // balance (Open delivery balance remaining)
 

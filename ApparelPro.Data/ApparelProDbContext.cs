@@ -108,7 +108,6 @@ namespace ApparelPro.Data
         public virtual DbSet<ToolbarPreference> ToolbarPreferences { get; set; } = null!;
         public virtual DbSet<ToolbarPin> ToolbarPins { get; set; } = null!;
         public virtual DbSet<CompanyAddress> CompanyAddresses { get; set; } = null!;
-        public virtual DbSet<QuotaTransaction> QuotaTransactions { get; set; } = null!;
         public virtual DbSet<CommercialInvoiceHeader> CommercialInvoiceHeaders { get; set; } = null!;
         public virtual DbSet<CommercialInvoiceLine> CommercialInvoiceLines { get; set; } = null!;
         public virtual DbSet<CertificateOfOriginHeader> CertificateOfOriginHeaders { get; set; } = null!;
@@ -237,7 +236,6 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new ToolbarPreferenceConfig());
             modelBuilder.ApplyConfiguration(new ToolbarPinConfig());
             modelBuilder.ApplyConfiguration(new CompanyAddressConfig());
-            modelBuilder.ApplyConfiguration(new QuotaTransactionConfig());
             modelBuilder.ApplyConfiguration(new CommercialInvoiceHeaderConfig());
             modelBuilder.ApplyConfiguration(new CommercialInvoiceLineConfig());
             modelBuilder.ApplyConfiguration(new CertificateOfOriginHeaderConfig());

@@ -19,12 +19,6 @@ namespace ApparelPro.Data.Models.OrderManagement.Shipments
         public decimal Quantity { get; set; } // qty - quantity invoiced on this line
         public decimal Balance { get; set; } // balance - remaining balance as of this invoice
 
-        // Quota context - same sub-block shape as PartShipment's quota fields
-        public string QuotaCategory { get; set; } = ""; // qta_cat
-        public string FromYearMonth { get; set; } = ""; // f_yymm
-        public string ToYearMonth { get; set; } = ""; // t_yymm
-        public string QuotaCountry { get; set; } = ""; // qta_cont
-
         public string PackingMedia { get; set; } = ""; // pk_media
     }
 }

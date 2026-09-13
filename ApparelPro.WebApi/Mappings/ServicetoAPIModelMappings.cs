@@ -17,7 +17,6 @@ using apparelPro.BusinessLogic.Services.Models.OrderManagement.IYearSeasonOrders
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPendingEventsReportService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IStockArrivalStatusReportService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.ICostOfProductionReportService;
-using apparelPro.BusinessLogic.Services.Models.OrderManagement.IOrderQuotaDetailReportService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPostOrderCostSheetReportService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IMonthlyActualShipmentsReportService;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
@@ -679,8 +678,6 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<ScheduledShipmentsReportServiceModel, ScheduledShipmentsReportAPIModel>().MaxDepth(2);
 
             // Order/Quota Detail Report
-            CreateMap<OrderQuotaDetailRowServiceModel, OrderQuotaDetailRowAPIModel>().MaxDepth(2);
-            CreateMap<OrderQuotaDetailReportServiceModel, OrderQuotaDetailReportAPIModel>().MaxDepth(2);
 
             // Post Order Cost Sheet Report
             CreateMap<PostOrderCostSheetStyleServiceModel, PostOrderCostSheetStyleAPIModel>().MaxDepth(2);

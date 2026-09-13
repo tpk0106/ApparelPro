@@ -20,12 +20,5 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.IPartShipment
         public string Unit { get; set; } = null!;
         public decimal Quantity { get; set; }
         public string ShippingMode { get; set; } = null!;
-
-        public string QuotaCountry { get; set; } = "";
-        public string QuotaStatus { get; set; } = "N";
-        public string QuotaCategory { get; set; } = "";
-        public string QuotaType { get; set; } = "";
-        public string FromYearMonth { get; set; } = "";
-        public string ToYearMonth { get; set; } = "";
     }
 }

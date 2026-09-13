@@ -174,7 +174,6 @@ namespace ApparelPro.WebApi.Extensions
             services.AddScoped<ICostOfProductionReportService, CostOfProductionReportService>();
 
             // Order/Quota Detail Report (Reports -> Order Management -> Order/Quota Detail)
-            services.AddScoped<IOrderQuotaDetailReportService, OrderQuotaDetailReportService>();
 
             // Post Order Cost Sheet Report (Reports -> Order Management -> Post Order Cost Sheet)
             services.AddScoped<IPostOrderCostSheetReportService, PostOrderCostSheetReportService>();
