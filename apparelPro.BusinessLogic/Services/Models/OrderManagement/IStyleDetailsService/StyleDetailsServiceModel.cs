@@ -17,6 +17,7 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.IStyleDetails
         public decimal? UnitPrice { get; set; }
         public string? ColorRatio { get; set; } = null;
         public string? SizeRatio { get; set; } = null;
+        public bool HasSupplierPurchaseOrder { get; set; }
 
         //public decimal? ExportBalance { get; set; }
         //public bool? SupplierReturn { get; set; }

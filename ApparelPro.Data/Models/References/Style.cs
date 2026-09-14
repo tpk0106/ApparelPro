@@ -38,5 +38,11 @@ namespace ApparelPro.Data.Models.References
 
         public string? EstimateApprovalUserName { get; set; }
         public bool? Exported { get; set; }
+
+        // Computed at query time (SupplierPurchaseOrderDetails.Any for this
+        // Buyer+Order) - not a real column. Once true, this style can no
+        // longer be deleted (see StyleDetailsService.DeleteStyleDetailsAsync).
+        [NotMapped]
+        public bool HasSupplierPurchaseOrder { get; set; }
     }
 }

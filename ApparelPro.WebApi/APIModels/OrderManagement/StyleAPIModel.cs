@@ -24,5 +24,6 @@
         public DateTime EstimateApprovalDate { get; set; }
         public string? EstimateApprovalUserName { get; set; }
         public bool? Exported { get; set; }
+        public bool HasSupplierPurchaseOrder { get; set; }
     }
 }

@@ -223,6 +223,7 @@ namespace ApparelPro.WebApi.Controllers
         [HttpDelete()]
         [ProducesResponseType(HttpStatusCodes.NoContent)]
         [ProducesResponseType(typeof(UnprocessableEntityResult), HttpStatusCodes.UnprocessableEntity)]
+        [ProducesResponseType(HttpStatusCodes.BadRequest)]
         public async Task<IActionResult> DeleteCountryAsync(int buyer, string order, int type, string _style)
         {
             var style = await _styleDetailsService.GetStyleDetailsByBuyerOrderTypeStyleAsync(buyer, order,type, _style);
@@ -230,7 +231,16 @@ namespace ApparelPro.WebApi.Controllers
             {
                 return UnprocessableEntity("Style is not available for code :" + _style);
             }
-            await _styleDetailsService.DeleteStyleDetailsAsync(buyer, order, type, _style);
+
+            try
+            {
+                await _styleDetailsService.DeleteStyleDetailsAsync(buyer, order, type, _style);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+
             return NoContent();
         }
     }

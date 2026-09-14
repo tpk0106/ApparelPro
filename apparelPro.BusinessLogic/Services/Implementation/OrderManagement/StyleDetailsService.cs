@@ -225,7 +225,10 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                  ProductionEndDate = result.style.style.ProductionEndDate,
                  SupplierReturn = result.style.style.SupplierReturn,
                  StyleCode = result.style.style.StyleCode,
-                 Username = result.style.style.Username
+                 Username = result.style.style.Username,
+                 HasSupplierPurchaseOrder = _apparelProDbContext.SupplierPurchaseOrderDetails
+                     .Any(po => po.Buyer == result.style.style.BuyerCode && po.Order == result.style.style.Order
+                         && po.Type == result.style.style.TypeCode && po.Style == result.style.style.StyleCode)
              });
 
             FilterResult fr = new();
@@ -404,7 +407,10 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                  ProductionEndDate = result.style.style.ProductionEndDate,
                  SupplierReturn = result.style.style.SupplierReturn,
                  StyleCode = result.style.style.StyleCode,
-                 Username = result.style.style.Username                 
+                 Username = result.style.style.Username,
+                 HasSupplierPurchaseOrder = _apparelProDbContext.SupplierPurchaseOrderDetails
+                     .Any(po => po.Buyer == result.style.style.BuyerCode && po.Order == result.style.style.Order
+                         && po.Type == result.style.style.TypeCode && po.Style == result.style.style.StyleCode)
              });
 
             FilterResult fr = new();
@@ -453,6 +459,21 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
         public async Task DeleteStyleDetailsAsync(int buyer, string order, int type, string style)
         {
+            // Deliberately scoped to this exact style (unlike ValidateStyleQuantityAsync's
+            // Buyer+Order-wide lock) - a style with no Supplier Purchase Order of its own was
+            // never actually committed to a supplier, so deleting it doesn't invalidate anything
+            // a PO already relied on, even if sibling styles in the same order have POs raised.
+            var hasSupplierPurchaseOrder = await _apparelProDbContext.SupplierPurchaseOrderDetails
+                .AsNoTracking()
+                .AnyAsync(poDetail => poDetail.Buyer == buyer && poDetail.Order == order
+                    && poDetail.Type == type && poDetail.Style == style);
+
+            if (hasSupplierPurchaseOrder)
+            {
+                throw new InvalidOperationException(
+                    $"Style '{style}' cannot be deleted - a Supplier Purchase Order has already been raised against it.");
+            }
+
             var dbStyle = _apparelProDbContext.Styles
                 .Where(_style=>_style.BuyerCode == buyer && _style.Order == order && _style.TypeCode == type && _style.StyleCode == style)
                 .FirstOrDefault();
