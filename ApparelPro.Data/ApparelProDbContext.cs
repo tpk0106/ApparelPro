@@ -26,18 +26,52 @@ using ApparelPro.Data.Models.Production;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Data.Models.Registration;
 using ApparelPro.Data.Models.SystemConfiguration;
+using ApparelPro.Data.DomainEvents;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApparelPro.Data
 {
     public class ApparelProDbContext:DbContext
     {
+        // No-op fallback for the parameterless constructor (used by EF Core's
+        // design-time tooling for migrations) - there's no DI container there
+        // to resolve a real dispatcher from, and no real save happens either.
+        private sealed class NullDomainEventDispatcher : IDomainEventDispatcher
+        {
+            public Task DispatchAsync(IDomainEvent domainEvent, CancellationToken ct = default) => Task.CompletedTask;
+        }
+
+        private readonly IDomainEventDispatcher _dispatcher;
+
         // Add this temporary block inside your ApparelProDbContext class:
         public ApparelProDbContext()
         {
+            _dispatcher = new NullDomainEventDispatcher();
         }
-        public ApparelProDbContext(DbContextOptions<ApparelProDbContext> options):base(options)
+        public ApparelProDbContext(DbContextOptions<ApparelProDbContext> options, IDomainEventDispatcher dispatcher):base(options)
         {
+            _dispatcher = dispatcher;
+        }
+
+        // Watches every save for entities carrying domain events and fires
+        // them once the save actually succeeds - see ApparelPro.Data/DomainEvents
+        // for the full explanation of this mechanism and why it exists.
+        public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
+        {
+            var entitiesWithEvents = ChangeTracker.Entries<IHasDomainEvents>()
+                .Select(e => e.Entity)
+                .Where(e => e.DomainEvents.Count > 0)
+                .ToList();
+
+            var result = await base.SaveChangesAsync(ct);
+
+            var events = entitiesWithEvents.SelectMany(e => e.DomainEvents).ToList();
+            entitiesWithEvents.ForEach(e => e.ClearDomainEvents());
+
+            foreach (var domainEvent in events)
+                await _dispatcher.DispatchAsync(domainEvent, ct);
+
+            return result;
         }
 
         // this entry is used to bypass program.cs in case of connection issues, instead offline via this

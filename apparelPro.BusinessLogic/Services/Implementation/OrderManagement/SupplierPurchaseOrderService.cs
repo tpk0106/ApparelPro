@@ -1,6 +1,7 @@
 ﻿using apparelPro.BusinessLogic.Services.interfaces.ISharedService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPurchaseOrderService;
 using ApparelPro.Data;
+using ApparelPro.Data.DomainEvents;
 using ApparelPro.Data.Models.OrderManagement;
 using ApparelPro.Data.Models.OrderwiseInventory;
 using ApparelPro.Shared.LookupConstants;
@@ -19,16 +20,19 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
         private readonly ILookupConstants _lookupConstants;
         private readonly ISharedService _sharedService;
         private readonly IStyleApprovalService _styleApprovalService;
+        private readonly IDomainEventDispatcher _dispatcher;
         public SupplierPurchaseOrderService(IMapper mapper, ApparelProDbContext apparelProDbContext,
             ILookupConstants lookupConstants,
             ISharedService sharedService,
-            IStyleApprovalService styleApprovalService)
+            IStyleApprovalService styleApprovalService,
+            IDomainEventDispatcher dispatcher)
         {
             _mapper = mapper;
             _apparelProDbContext = apparelProDbContext;
             _lookupConstants = lookupConstants;
             _sharedService = sharedService;
             _styleApprovalService = styleApprovalService;
+            _dispatcher = dispatcher;
         }
         public async Task<List<AvailableBudgetLineServiceModel>> GetUnfulfilledBudgetLinesAsync(int buyerCode, string order)
         {
@@ -417,6 +421,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 // 3. ATOMIC ENFORCEMENT: A single SaveChangesAsync call processes all track adjustments cleanly
                 await _apparelProDbContext.SaveChangesAsync();
                 await dbTransaction.CommitAsync();
+
+                // Dispatched only after commit succeeds - never before, so a
+                // rollback earlier in this transaction can never leave a
+                // "PO raised" event fired for something that didn't happen.
+                await _dispatcher.DispatchAsync(new SupplierPurchaseOrderRaisedEvent(
+                    header.BuyerCode, header.OrderNumber, header.TypeCode, header.StyleCode));
+
                 return poNoSanitized;
                 }
                 catch (Exception)

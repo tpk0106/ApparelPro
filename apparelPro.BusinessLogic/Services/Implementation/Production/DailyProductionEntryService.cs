@@ -2,6 +2,7 @@ using apparelPro.BusinessLogic.Production;
 using apparelPro.BusinessLogic.Services.Models.Production.IDailyProductionEntryService;
 using apparelPro.BusinessLogic.SystemConfiguration;
 using ApparelPro.Data;
+using ApparelPro.Data.DomainEvents;
 using ApparelPro.Data.Models.Production;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -20,15 +21,17 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Production
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly IHolidayService _holidayService;
         private readonly ISystemParameterLookupService _systemParameterLookupService;
+        private readonly IDomainEventDispatcher _dispatcher;
 
         public DailyProductionEntryService(
             IMapper mapper, ApparelProDbContext apparelProDbContext, IHolidayService holidayService,
-            ISystemParameterLookupService systemParameterLookupService)
+            ISystemParameterLookupService systemParameterLookupService, IDomainEventDispatcher dispatcher)
         {
             _mapper = mapper;
             _apparelProDbContext = apparelProDbContext;
             _holidayService = holidayService;
             _systemParameterLookupService = systemParameterLookupService;
+            _dispatcher = dispatcher;
         }
 
         public async Task<List<DailyProductionEntryServiceModel>> GetByDateAsync(
@@ -161,6 +164,12 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Production
 
                 await _apparelProDbContext.SaveChangesAsync();
                 await dbTransaction.CommitAsync();
+
+                // Dispatched only after commit succeeds - never before, so a
+                // rollback earlier in this transaction can never leave a
+                // "production recorded" event fired for something that
+                // didn't happen.
+                await _dispatcher.DispatchAsync(new ProductionRecordedEvent(buyerCode, order, typeCode, styleCode));
 
                 return await GetByDateAsync(date, buyerCode, order, typeCode, styleCode, lineCode);
             }

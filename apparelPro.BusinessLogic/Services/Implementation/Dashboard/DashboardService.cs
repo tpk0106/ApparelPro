@@ -453,7 +453,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Dashboard
                     ConsumptionDone = consumptionDone,
                 };
 
-                var isApproved = style.ApprovedDate.HasValue;
+                // ApprovedDate uses 0001-01-01 (not NULL) as the "not yet
+                // approved" sentinel across this app - see
+                // StyleApprovalService.GetStyleApprovalDetailsAsync for the
+                // same check. .HasValue alone is true even for that sentinel,
+                // which was falsely marking never-approved styles as approved.
+                var isApproved = style.ApprovedDate.HasValue
+                    && style.ApprovedDate.Value != DateOnly.FromDateTime(DateTime.MinValue);
                 var approval = new ApprovalStageDetailServiceModel
                 {
                     IsApproved = isApproved,
@@ -464,13 +470,51 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Dashboard
                 var costProfiles = costProfilesByStyle.TryGetValue(key, out var cp) ? cp : new List<StyleMaterialCostProfile>();
                 var outstandingLines = costProfiles.Where(c => c.BalanceQuantity > 0).ToList();
                 var poDetails = poDetailsByStyle.TryGetValue(key, out var pd) ? pd : new List<SupplierPurchaseOrderDetails>();
+
+                // Value-weighted coverage, not a raw quantity sum - a style's
+                // material lines mix units (GRS for buttons, YDS for fabric,
+                // PCS for bags, ...) so summing quantities across lines is
+                // meaningless. Coverage as a ratio is unit-agnostic by
+                // construction: each line's own (required - outstanding) /
+                // required is dimensionless, and weighting the rollup by
+                // value means a mostly-covered cheap trim doesn't hide a
+                // barely-covered, expensive fabric line.
+                var requiredValueTotal = costProfiles.Sum(c => c.TotalConsumption * c.UnitPrice);
+                var outstandingValueTotal = outstandingLines.Sum(c => c.BalanceQuantity * c.UnitPrice);
+                var raisedValueTotal = requiredValueTotal - outstandingValueTotal;
+                var coveragePercent = requiredValueTotal > 0
+                    ? Math.Max(0, Math.Min(100, (raisedValueTotal / requiredValueTotal) * 100))
+                    : 100; // nothing required at all counts as fully covered, not "0% of nothing"
+
+                var materialLines = outstandingLines
+                    .Select(c => new MaterialLineServiceModel
+                    {
+                        ItemCode = c.ItemCode,
+                        Description = c.Description,
+                        Unit = c.ItemUnit,
+                        RequiredQuantity = c.TotalConsumption,
+                        RaisedQuantity = c.TotalConsumption - c.BalanceQuantity,
+                        OutstandingQuantity = c.BalanceQuantity,
+                        OutstandingValue = c.BalanceQuantity * c.UnitPrice,
+                        CoveredPercent = c.TotalConsumption > 0
+                            ? Math.Max(0, Math.Min(100, ((c.TotalConsumption - c.BalanceQuantity) / c.TotalConsumption) * 100))
+                            : 100,
+                    })
+                    // Highest financial exposure first - this ordering is what
+                    // makes "Bottleneck" below meaningful (the single line a
+                    // merchandiser should chase first), not just "first in
+                    // the list".
+                    .OrderByDescending(l => l.OutstandingValue)
+                    .ToList();
+
                 var supplierPo = new SupplierPoStageDetailServiceModel
                 {
-                    RaisedQuantity = poDetails.Sum(p => p.OrderQuantity),
-                    RaisedValue = poDetails.Sum(p => p.OrderQuantity * p.UnitPrice),
-                    OutstandingQuantity = outstandingLines.Sum(c => c.BalanceQuantity),
-                    OutstandingValue = outstandingLines.Sum(c => c.BalanceQuantity * c.UnitPrice),
+                    CoveragePercent = coveragePercent,
+                    RaisedValue = raisedValueTotal,
+                    OutstandingValue = outstandingValueTotal,
                     Currency = costProfiles.FirstOrDefault()?.Currency ?? "",
+                    Bottleneck = materialLines.FirstOrDefault(),
+                    OutstandingLines = materialLines,
                 };
                 var poDone = costProfiles.Count == 0 || outstandingLines.Count == 0;
 

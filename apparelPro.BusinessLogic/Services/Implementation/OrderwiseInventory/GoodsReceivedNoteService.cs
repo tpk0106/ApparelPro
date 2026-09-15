@@ -2,6 +2,7 @@ using apparelPro.BusinessLogic.Services.interfaces.ISharedService;
 using apparelPro.BusinessLogic.Services.interfaces.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Models.OrderwiseInventory;
 using ApparelPro.Data;
+using ApparelPro.Data.DomainEvents;
 using ApparelPro.Data.Models.OrderManagement;
 using ApparelPro.Data.Models.OrderwiseInventory;
 using Microsoft.EntityFrameworkCore;
@@ -12,13 +13,16 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
     {
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly ISharedService _sharedService;
+        private readonly IDomainEventDispatcher _dispatcher;
 
         public GoodsReceivedNoteService(
             ApparelProDbContext apparelProDbContext,
-            ISharedService sharedService)
+            ISharedService sharedService,
+            IDomainEventDispatcher dispatcher)
         {
             _apparelProDbContext = apparelProDbContext;
             _sharedService = sharedService;
+            _dispatcher = dispatcher;
         }
 
         public async Task<GrnPoLookupResultServiceModel> GetReceivableLinesByPoAsync(string purchaseOrderNumber)
@@ -203,6 +207,20 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory
 
                     await _apparelProDbContext.SaveChangesAsync();
                     await dbTransaction.CommitAsync();
+
+                    // Dispatched only after commit succeeds - never before, so
+                    // a rollback earlier in this transaction can never leave a
+                    // "goods received" event fired for something that didn't
+                    // happen. One event per distinct style - a single GRN can
+                    // receive against several styles at once.
+                    var distinctStyles = lines
+                        .Select(l => (l.Buyer, l.Order, l.Type, l.Style))
+                        .Distinct();
+                    foreach (var (buyer, order, type, style) in distinctStyles)
+                    {
+                        await _dispatcher.DispatchAsync(new GoodsReceivedEvent(buyer, order, type, style));
+                    }
+
                     return true;
                 }
                 catch (Exception)

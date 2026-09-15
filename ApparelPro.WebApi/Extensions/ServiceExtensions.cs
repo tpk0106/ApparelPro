@@ -1,5 +1,11 @@
 using apparelPro.BusinessLogic.Configuration;
+using apparelPro.BusinessLogic.DomainEventHandlers;
 using apparelPro.BusinessLogic.Services;
+using ApparelPro.Data.DomainEvents;
+using ApparelPro.Data.Models.OrderManagement;
+using ApparelPro.Data.Models.OrderManagement.Shipments;
+using ApparelPro.Data.Models.OrderwiseInventory;
+using ApparelPro.Data.Models.Production;
 using apparelPro.BusinessLogic.Services.Implementation.OrderManagement;
 using apparelPro.BusinessLogic.Services.Implementation.OrderwiseInventory;
 using apparelPro.BusinessLogic.Services.Implementation.GeneralInventory;
@@ -136,6 +142,23 @@ namespace ApparelPro.WebApi.Extensions
             services.AddTransient<IGarmentAdditionalCostService, GarmentAdditionalCostService>();
             services.AddTransient<ISubContractService, SubContractService>();
             services.AddTransient(typeof(ISupplierPurchaseOrderService), typeof(SupplierPurchaseOrderService));
+
+            // Domain events - see ApparelPro.Data/DomainEvents for the mechanism.
+            // AddScoped to match ApparelProDbContext's own lifetime (handlers
+            // depend on it directly).
+            services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+            services.AddScoped<
+                IDomainEventHandler<SupplierPurchaseOrderRaisedEvent>,
+                AdvancePipelineOnSupplierPurchaseOrderRaised>();
+            services.AddScoped<
+                IDomainEventHandler<GoodsReceivedEvent>,
+                AdvancePipelineOnGoodsReceived>();
+            services.AddScoped<
+                IDomainEventHandler<ProductionRecordedEvent>,
+                AdvancePipelineOnProductionRecorded>();
+            services.AddScoped<
+                IDomainEventHandler<PartShipmentRecordedEvent>,
+                AdvancePipelineOnPartShipmentRecorded>();
 
             // Register the Style-wise critical path tracking service loop lifecycle handler
             services.AddScoped<IStylewiseEventService, StylewiseEventService>();

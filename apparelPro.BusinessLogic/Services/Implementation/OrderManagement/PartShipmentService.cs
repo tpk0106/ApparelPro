@@ -1,6 +1,7 @@
 ﻿using apparelPro.BusinessLogic.Services.interfaces.ISharedService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IPartShipmentService;
 using ApparelPro.Data;
+using ApparelPro.Data.DomainEvents;
 using ApparelPro.Data.Models.OrderManagement.Shipments;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -12,14 +13,16 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly IMapper _mapper;
         private readonly ISharedService _sharedService;
+        private readonly IDomainEventDispatcher _dispatcher;
 
         public PartShipmentService(
             ApparelProDbContext apparelProDbContext,
-            IMapper mapper, ISharedService sharedService)
+            IMapper mapper, ISharedService sharedService, IDomainEventDispatcher dispatcher)
         {
             _apparelProDbContext = apparelProDbContext;
             _mapper = mapper;
             _sharedService = sharedService;
+            _dispatcher = dispatcher;
         }
 
         public async Task<StyleShippingSummaryServiceModel> GetStyleShippingSummaryAsync(int buyerCode,
@@ -175,6 +178,14 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
 
                     await _apparelProDbContext.SaveChangesAsync();
                     await transaction.CommitAsync();
+
+                    // Dispatched only after commit succeeds - never before,
+                    // so a rollback earlier in this transaction can never
+                    // leave a "shipment recorded" event fired for something
+                    // that didn't happen.
+                    await _dispatcher.DispatchAsync(new PartShipmentRecordedEvent(
+                        request.BuyerCode, request.Order, request.TypeCode, request.StyleCode));
+
                     return true;
                 }
                 catch (Exception)
