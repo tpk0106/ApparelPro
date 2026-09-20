@@ -56,11 +56,11 @@ namespace ApparelPro.WebApi.Controllers
 
 
             // DEBUG: Log all claims to see what's actually in the token
-            var allClaims = HttpContext.User.Claims.Select(c => $"{c.Type} = {c.Value}").ToList();
-            Console.WriteLine("=== TOKEN CLAIMS ===");
-            foreach (var claim in allClaims)
-                Console.WriteLine(claim);
-            Console.WriteLine("====================");
+            //var allClaims = HttpContext.User.Claims.Select(c => $"{c.Type} = {c.Value}").ToList();
+            //Console.WriteLine("=== TOKEN CLAIMS ===");
+            //foreach (var claim in allClaims)
+            //    Console.WriteLine(claim);
+            //Console.WriteLine("====================");
 
             var userId = HttpContext.User.FindFirst(ClaimTypes.Name)?.Value;
 
@@ -158,24 +158,24 @@ namespace ApparelPro.WebApi.Controllers
         {
             // === TEMP DEBUG: GetSessionAsync ===
             var logger = HttpContext.RequestServices.GetRequiredService<ILogger<AiChatController>>();
-            logger.LogWarning("=== GetSessionAsync TOKEN CLAIMS ===");
-            logger.LogWarning("IsAuthenticated: {IsAuth}", HttpContext.User.Identity?.IsAuthenticated);
-            logger.LogWarning("AuthType: {AuthType}", HttpContext.User.Identity?.AuthenticationType);
+            //logger.LogWarning("=== GetSessionAsync TOKEN CLAIMS ===");
+            //logger.LogWarning("IsAuthenticated: {IsAuth}", HttpContext.User.Identity?.IsAuthenticated);
+            //logger.LogWarning("AuthType: {AuthType}", HttpContext.User.Identity?.AuthenticationType);
 
-            foreach (var claim in HttpContext.User.Claims)
-            {
-                logger.LogWarning("  Claim: {Type} = {Value}", claim.Type, claim.Value);
-            }
+            //foreach (var claim in HttpContext.User.Claims)
+            //{
+            //    logger.LogWarning("  Claim: {Type} = {Value}", claim.Type, claim.Value);
+            //}
 
-            var authHeader = HttpContext.Request.Headers["Authorization"].FirstOrDefault();
-            logger.LogWarning("Authorization header present: {HasAuth}, Value prefix: {Prefix}",
-                !string.IsNullOrEmpty(authHeader),
-                authHeader?.Length > 15 ? authHeader[..15] + "..." : authHeader ?? "(null)");
+            //var authHeader = HttpContext.Request.Headers["Authorization"].FirstOrDefault();
+            //logger.LogWarning("Authorization header present: {HasAuth}, Value prefix: {Prefix}",
+            //    !string.IsNullOrEmpty(authHeader),
+            //    authHeader?.Length > 15 ? authHeader[..15] + "..." : authHeader ?? "(null)");
             // === END TEMP DEBUG ===
 
             var userId = HttpContext.User.FindFirst(ClaimTypes.Name)?.Value;
 
-            logger.LogWarning("ClaimTypes.Name resolved to: '{UserId}'", userId ?? "(null)");
+          //  logger.LogWarning("ClaimTypes.Name resolved to: '{UserId}'", userId ?? "(null)");
 
             if (string.IsNullOrWhiteSpace(userId))
             {
