@@ -1,9 +1,11 @@
 ﻿using apparelPro.BusinessLogic.Services.Models.OrderManagement.Stylewise_Events;
+using ApparelPro.Data.Configurations.AI;
 using ApparelPro.Data.Configurations.Dashboard;
+using ApparelPro.Data.Configurations.GeneralInventory;
+using ApparelPro.Data.Configurations.ImportExport;
 using ApparelPro.Data.Configurations.OrderManagement;
 using ApparelPro.Data.Configurations.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Configurations.OrderManagement.Shipment;
-using ApparelPro.Data.Configurations.GeneralInventory;
 using ApparelPro.Data.Configurations.OrderManagement.Stylewise_events;
 using ApparelPro.Data.Configurations.OrderManagement.SubContracting;
 using ApparelPro.Data.Configurations.OrderwiseInventory;
@@ -12,21 +14,21 @@ using ApparelPro.Data.Configurations.References;
 using ApparelPro.Data.Configurations.Registration;
 using ApparelPro.Data.Configurations.SystemConfiguration;
 using ApparelPro.Data.Configurations.Toolbar;
-using ApparelPro.Data.Configurations.ImportExport;
+using ApparelPro.Data.DomainEvents;
+using ApparelPro.Data.Models.AI;
 using ApparelPro.Data.Models.Dashboard;
-using ApparelPro.Data.Models.Toolbar;
+using ApparelPro.Data.Models.GeneralInventory;
 using ApparelPro.Data.Models.ImportExport;
 using ApparelPro.Data.Models.OrderManagement;
 using ApparelPro.Data.Models.OrderManagement.MaterialConsumption;
 using ApparelPro.Data.Models.OrderManagement.Shipments;
 using ApparelPro.Data.Models.OrderManagement.SubContracting;
 using ApparelPro.Data.Models.OrderwiseInventory;
-using ApparelPro.Data.Models.GeneralInventory;
 using ApparelPro.Data.Models.Production;
 using ApparelPro.Data.Models.References;
 using ApparelPro.Data.Models.Registration;
 using ApparelPro.Data.Models.SystemConfiguration;
-using ApparelPro.Data.DomainEvents;
+using ApparelPro.Data.Models.Toolbar;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApparelPro.Data
@@ -199,9 +201,13 @@ namespace ApparelPro.Data
         public virtual DbSet<DailyProductionTimeTicketEntry> DailyProductionTimeTicketEntries { get; set; } = null!;
         public virtual DbSet<EstimatedProductionEntry> EstimatedProductionEntries { get; set; } = null!;
         public virtual DbSet<Section> Sections { get; set; } = null!;
-        public virtual DbSet<DailyProductionEntry> DailyProductionEntries { get; set; } = null!;
+        public virtual DbSet<DailyProductionEntry> DailyProductionEntries { get; set; } = null!;            
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        // Inside the class body:
+        public DbSet<AiChatSession> AiChatSessions { get; set; }
+        public DbSet<AiChatMessage> AiChatMessages { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
@@ -328,6 +334,9 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new EstimatedProductionEntryConfig());
             modelBuilder.ApplyConfiguration(new SectionConfig());
             modelBuilder.ApplyConfiguration(new DailyProductionEntryConfig());
+
+            modelBuilder.ApplyConfiguration(new AiChatSessionConfiguration());
+            modelBuilder.ApplyConfiguration(new AiChatMessageConfiguration());
         }
 
         //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

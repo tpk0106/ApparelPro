@@ -29,6 +29,7 @@
   <ItemGroup>
     <ProjectReference Include="..\apparelPro.BusinessLogic\apparelPro.BusinessLogic.csproj" />
     <ProjectReference Include="..\ApparelPro.Data\ApparelPro.Data.csproj" />
+    <ProjectReference Include="..\ApparelPro.AI\ApparelPro.AI.csproj" />
   </ItemGroup>
 
   <ItemGroup>

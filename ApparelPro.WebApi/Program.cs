@@ -1,13 +1,13 @@
+using ApparelPro.AI.Services;
+using ApparelPro.AI;
 using ApparelPro.Data;
 using ApparelPro.Data.Models.Registration;
 using ApparelPro.WebApi.Extensions;
 using ApparelPro.WebApi.Misc;
-using Azure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
@@ -16,8 +16,6 @@ using Serilog.Events;
 using Serilog.Sinks.MSSqlServer;
 using System.Text.Json;
 using static ApparelPro.WebApi.Misc.ByteArrayConverter;
-using static QuestPDF.Helpers.Colors;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -87,6 +85,12 @@ try
     ServiceExtensions.ConfigureParamsData(builder.Configuration);
 
     ServiceExtensions.ConfgureAppsettings(builder.Services, builder.Configuration);
+
+
+    // AI service
+    builder.Services.AddApparelProAI(builder.Configuration);
+
+    builder.Services.AddScoped<IAiChatService, AiChatService>();
 
     //builder.Services.AddDbContextPool<ApparelProDbContext>(options => options.UseSqlServer())
 
