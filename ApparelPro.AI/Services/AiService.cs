@@ -10,6 +10,11 @@ namespace ApparelPro.AI.Services;
 /// <summary>
 /// Core AI service that routes requests to the active provider.
 /// Inject IAiService in your controllers — never reference this class directly.
+///
+/// Prompt tuning notes (2024):
+/// - Summarise MaxTokens raised 800 → 1000 for field-aware prompts.
+/// - Analyse uses configurable AnalysisMaxTokens (default 2500).
+/// - Temperature lowered across modes for more factual, consistent output.
 /// </summary>
 public sealed class AiService : IAiService
 {
@@ -60,8 +65,8 @@ public sealed class AiService : IAiService
         {
             SystemPrompt = PromptTemplates.SummariseSystem,
             UserMessage = userMessage,
-            MaxTokens = 800,
-            Temperature = 0.2
+            MaxTokens = 1000,       // Raised from 800 — field-aware prompts need more room
+            Temperature = 0.2       // Low for factual summaries
         };
 
         _logger.LogInformation(
@@ -101,8 +106,8 @@ public sealed class AiService : IAiService
         {
             SystemPrompt = PromptTemplates.AnalyseSystem,
             UserMessage = userMessage,
-            MaxTokens = _settings.AnalysisMaxTokens,  // 2048 by default — configurable
-            Temperature = 0.3  // Slightly higher for richer analytical reasoning
+            MaxTokens = _settings.AnalysisMaxTokens,  // 2500 default — configurable
+            Temperature = 0.25  // Lowered from 0.3 — factual analysis benefits from consistency
         };
 
         _logger.LogInformation(

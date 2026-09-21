@@ -155,7 +155,7 @@ public sealed class AiChatService : IAiChatService
             SystemPrompt = systemPrompt,
             UserMessage = conversationMessage,
             MaxTokens = _settings.ChatMaxTokens,   // configurable, default 1500
-            Temperature = 0.4                       // balanced for chat
+            Temperature = 0.3                      // balanced for chat
         };
 
         var aiResponse = await _aiService.CompleteAsync(request, cancellationToken);

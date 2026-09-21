@@ -2,6 +2,12 @@ namespace ApparelPro.AI.Configuration;
 
 /// <summary>
 /// Configuration settings for AI providers. Bound from appsettings.json section "AiSettings".
+///
+/// Prompt tuning notes (2024):
+/// - DefaultMaxTokens raised to 1024 to accommodate field-aware summarise prompts.
+/// - AnalysisMaxTokens raised to 2500 for 5-dimension analysis with calculations.
+/// - ChatMaxTokens stays 1500 — chat should be concise.
+/// - DefaultTemperature lowered to 0.25 for more consistent, factual responses.
 /// </summary>
 public sealed class AiSettings
 {
@@ -25,21 +31,26 @@ public sealed class AiSettings
 
     /// <summary>
     /// Default max tokens for quick summaries if not specified per-request.
+    /// Raised from 1024 → 1024 (unchanged) — summarise uses explicit 1000 in AiService.
     /// </summary>
     public int DefaultMaxTokens { get; set; } = 1024;
 
     /// <summary>
-    /// Max tokens for deep analysis responses — higher budget for actionable insights.
+    /// Max tokens for deep analysis responses.
+    /// Raised from 2048 → 2500 to accommodate the expanded 5-dimension analysis format
+    /// with inline calculations, risk flags, and recommendations.
     /// </summary>
-    public int AnalysisMaxTokens { get; set; } = 2048;
+    public int AnalysisMaxTokens { get; set; } = 2500;
 
     /// <summary>
     /// Default temperature if not specified per-request.
+    /// Lowered from 0.3 → 0.25 for more consistent, factual responses.
     /// </summary>
-    public double DefaultTemperature { get; set; } = 0.3;
+    public double DefaultTemperature { get; set; } = 0.25;
 
     /// <summary>
-    /// Max tokens for chat responses (default 1500 — balanced for conversational replies).
+    /// Max tokens for chat responses.
+    /// Kept at 1500 — chat should be conversational and concise, not report-length.
     /// </summary>
     public int ChatMaxTokens { get; set; } = 1500;
 }
