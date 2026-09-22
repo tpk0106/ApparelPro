@@ -15,6 +15,7 @@ namespace ApparelPro.AI.Services;
 /// <summary>
 /// Multi-turn AI chat service.
 /// Manages session lifecycle, message persistence, and AI completion with conversation history.
+/// Supports provider override for voice chat (always OpenAI).
 /// </summary>
 public sealed class AiChatService : IAiChatService
 {
@@ -69,6 +70,7 @@ public sealed class AiChatService : IAiChatService
         string? entityType,
         string? entityKey,
         string message,
+        string? preferredProvider = null,
         CancellationToken cancellationToken = default)
     {
         AiChatSession session;
@@ -98,6 +100,17 @@ public sealed class AiChatService : IAiChatService
 
             var entityData = await ResolveEntityDataAsync(
                 entityType.Trim(), entityKey.Trim(), cancellationToken);
+
+            // ── Detach read-only entities loaded during resolution ──
+            // ResolveEntityDataAsync loads Style, Buyer, Ledger etc. as tracked
+            // entities. If they stay tracked, SaveChangesAsync tries to persist
+            // them and hits DbUpdateConcurrencyException. We only need the
+            // serialised JSON snapshot — detach everything that isn't an AI entity.
+            foreach (var entry in _apparelProDbContext.ChangeTracker.Entries().ToList())
+            {
+                if (entry.Entity is not AiChatSession and not AiChatMessage)
+                    entry.State = EntityState.Detached;
+            }
 
             session = new AiChatSession
             {
@@ -138,6 +151,13 @@ public sealed class AiChatService : IAiChatService
         var systemPrompt = ChatPromptTemplates.BuildChatSystemPrompt(
             session.EntityType, session.EntityDataSnapshot ?? "{}");
 
+        // Voice mode: append spoken-language formatting rules so the AI
+        // responds in natural speech rather than markdown/lists.
+        if (!string.IsNullOrWhiteSpace(preferredProvider))
+        {
+            systemPrompt += ChatPromptTemplates.VoiceModeAddendum;
+        }
+
         // Get recent history (excluding the just-added user message)
         var history = session.Messages
             .Where(m => m.MessageId != userMessage.MessageId)
@@ -155,10 +175,13 @@ public sealed class AiChatService : IAiChatService
             SystemPrompt = systemPrompt,
             UserMessage = conversationMessage,
             MaxTokens = _settings.ChatMaxTokens,   // configurable, default 1500
-            Temperature = 0.3                      // balanced for chat
+            Temperature = 0.4                       // balanced for chat
         };
 
-        var aiResponse = await _aiService.CompleteAsync(request, cancellationToken);
+        // Use preferred provider if specified (e.g. "OpenAI" for voice mode)
+        var aiResponse = !string.IsNullOrWhiteSpace(preferredProvider)
+            ? await _aiService.CompleteAsync(request, preferredProvider, cancellationToken)
+            : await _aiService.CompleteAsync(request, cancellationToken);
 
         // ─── Persist the assistant response ──────────────────
         var assistantMessage = new AiChatMessage
@@ -175,11 +198,44 @@ public sealed class AiChatService : IAiChatService
         // Update session timestamp
         session.LastMessageAt = DateTime.UtcNow;
 
-        await _apparelProDbContext.SaveChangesAsync(cancellationToken);
+        // ── Save with concurrency-conflict retry ────────────────
+        // Voice mode fires rapid sequential requests against the same session.
+        // If the session row was updated between our load and our save (e.g.
+        // a RowVersion / timestamp column advanced by the previous request),
+        // EF Core throws DbUpdateConcurrencyException. The standard
+        // "client wins" pattern: reload the original values from the DB so
+        // EF Core's WHERE clause matches the current row, then retry once.
+        try
+        {
+            await _apparelProDbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogWarning(
+                "Concurrency conflict saving chat session {SessionId} — retrying with refreshed values.",
+                session.SessionId);
+
+            foreach (var entry in ex.Entries)
+            {
+                var dbValues = await entry.GetDatabaseValuesAsync(cancellationToken);
+                if (dbValues == null)
+                {
+                    // Row was deleted — detach so the retry doesn't try to update it
+                    entry.State = EntityState.Detached;
+                    continue;
+                }
+
+                // Overwrite the "original" snapshot with what's actually in the DB
+                // so EF Core's next UPDATE … WHERE matches the current row.
+                entry.OriginalValues.SetValues(dbValues);
+            }
+
+            await _apparelProDbContext.SaveChangesAsync(cancellationToken);
+        }
 
         _logger.LogInformation(
-            "Chat message processed for session {SessionId}. Tokens: {Tokens}",
-            session.SessionId, aiResponse.TotalTokens);
+            "Chat message processed for session {SessionId}. Provider: {Provider}, Tokens: {Tokens}",
+            session.SessionId, aiResponse.Provider, aiResponse.TotalTokens);
 
         return new AiChatResponse
         {
@@ -366,10 +422,23 @@ public sealed class AiChatService : IAiChatService
                 return JsonSerializer.Serialize(supplier, JsonOptions);
             }
 
+            case "GENERAL":
+            case "VOICE":
+            {
+                // Voice / general-purpose chat — no entity resolution needed.
+                // The AI will respond as a general ApparelPro assistant.
+                var generalData = new
+                {
+                    Mode = entityType.ToUpperInvariant() == "VOICE" ? "Voice" : "General",
+                    Note = "General conversation — no specific entity context."
+                };
+                return JsonSerializer.Serialize(generalData, JsonOptions);
+            }
+
             default:
                 throw new ArgumentException(
                     $"Unsupported entity type: '{entityType}'. " +
-                    "Supported types: Style, PurchaseOrder, Supplier.");
+                    "Supported types: Style, PurchaseOrder, Supplier, General, Voice.");
         }
     }
 }

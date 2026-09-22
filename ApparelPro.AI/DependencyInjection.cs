@@ -21,29 +21,14 @@ public static class DependencyInjection
         services.Configure<AiSettings>(options =>
      configuration.GetSection(AiSettings.SectionName).Bind(options));
 
-        // Register both providers — the AiService selects the active one at runtime
-        //services.AddSingleton<IAiProvider, AnthropicAiProvider>();
-        //services.AddSingleton<IAiProvider, OpenAiProvider>();
+        // Register BOTH providers so voice mode can override to OpenAI at runtime.
+        // The AiService selects the active one based on config or the preferredProvider parameter.
+        services.AddSingleton<IAiProvider, AnthropicAiProvider>();
+        services.AddSingleton<IAiProvider, OpenAiProvider>();
 
-
-        //var aiSection = new AiSettings();
-        var aiSection = new AiSettings { ActiveProvider = "Anthropic" };
-        configuration.GetSection(AiSettings.SectionName).Bind(aiSection);
-
-        //var activeProvider = aiSection.ActiveProvider?.ToUpperInvariant() ?? "ANTHROPIC";
-
-        var activeProvider = configuration
-            .GetSection(AiSettings.SectionName)["ActiveProvider"]?
-            .ToUpperInvariant() ?? "ANTHROPIC";
-
-        if (activeProvider == "ANTHROPIC")
-            services.AddSingleton<IAiProvider, AnthropicAiProvider>();
-        else
-            services.AddSingleton<IAiProvider, OpenAiProvider>();
-
-
-        // Register the core service
+        // Register the core AI services
         services.AddSingleton<IAiService, AiService>();
+        services.AddScoped<IAiChatService, AiChatService>();
 
         return services;
     }

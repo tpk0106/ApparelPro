@@ -68,6 +68,32 @@ public static class ChatPromptTemplates
         """;
 
     /// <summary>
+    /// Addendum appended to the system prompt when the request originates from
+    /// voice mode (speech-to-text → AI → text-to-speech).  Instructs the model
+    /// to produce text that sounds natural when spoken aloud.
+    /// </summary>
+    public const string VoiceModeAddendum = """
+
+        IMPORTANT — VOICE MODE:
+        The user is speaking to you through a microphone and will HEAR your response
+        read aloud by a text-to-speech engine. You MUST format your response for
+        natural spoken conversation:
+
+        - Do NOT use markdown formatting: no **, no *, no #, no numbered lists, no bullet points.
+        - Do NOT use special characters or symbols that sound unnatural when read aloud.
+        - Use flowing, conversational sentences instead of lists. For example, instead of
+          "1. Fabric Green Seas..." say "The first item is Fabric Green Seas...".
+        - Keep responses brief and to the point — aim for 3-5 spoken sentences max.
+        - Use natural transitions: "also", "next", "in addition", "finally".
+        - Round numbers for speech: say "about five thousand pieces" instead of "5,000 pcs".
+        - Avoid abbreviations that sound odd when spoken. Say "yards" not "yds",
+          "free on board" not "FOB" (unless the user used the abbreviation first).
+        - When listing items, group them naturally: "There are 3 fabrics, 2 interlinings,
+          and several trims including..." rather than listing every single item.
+        - End with a brief, natural closing like "Would you like more detail on any of these?"
+        """;
+
+    /// <summary>
     /// Builds the full system prompt with entity context injected.
     /// </summary>
     /// <param name="entityType">The entity type (e.g. "STYLE").</param>

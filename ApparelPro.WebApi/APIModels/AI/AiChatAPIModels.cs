@@ -35,6 +35,14 @@ public class AiChatSendMessageAPIModel
     [MinLength(1)]
     [MaxLength(4000)]
     public string Message { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional AI provider override. When set (e.g. "OpenAI"), forces the backend
+    /// to use that provider instead of the configured default.
+    /// Used by voice chat to always route through OpenAI.
+    /// </summary>
+    [MaxLength(50)]
+    public string? PreferredProvider { get; set; }
 }
 
 // ─── Response Models ─────────────────────────────────────

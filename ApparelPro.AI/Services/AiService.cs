@@ -15,6 +15,7 @@ namespace ApparelPro.AI.Services;
 /// - Summarise MaxTokens raised 800 → 1000 for field-aware prompts.
 /// - Analyse uses configurable AnalysisMaxTokens (default 2500).
 /// - Temperature lowered across modes for more factual, consistent output.
+/// - Added provider override support for voice chat (always OpenAI).
 /// </summary>
 public sealed class AiService : IAiService
 {
@@ -122,11 +123,44 @@ public sealed class AiService : IAiService
         AiCompletionRequest request,
         CancellationToken cancellationToken = default)
     {
-        if (!_providers.TryGetValue(_settings.ActiveProvider, out var provider))
+        return await CompleteWithProviderAsync(
+            request, _settings.ActiveProvider, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<AiCompletionResponse> CompleteAsync(
+        AiCompletionRequest request,
+        string preferredProvider,
+        CancellationToken cancellationToken = default)
+    {
+        // Use the preferred provider if registered; otherwise fall back to active
+        var providerName = _providers.ContainsKey(preferredProvider)
+            ? preferredProvider
+            : _settings.ActiveProvider;
+
+        if (providerName != preferredProvider)
+        {
+            _logger.LogWarning(
+                "Preferred provider '{PreferredProvider}' is not registered. " +
+                "Falling back to active provider '{ActiveProvider}'.",
+                preferredProvider, _settings.ActiveProvider);
+        }
+
+        return await CompleteWithProviderAsync(request, providerName, cancellationToken);
+    }
+
+    // ─── Private: resolve provider and execute ───────────
+
+    private async Task<AiCompletionResponse> CompleteWithProviderAsync(
+        AiCompletionRequest request,
+        string providerName,
+        CancellationToken cancellationToken)
+    {
+        if (!_providers.TryGetValue(providerName, out var provider))
         {
             var available = string.Join(", ", _providers.Keys);
             throw new InvalidOperationException(
-                $"AI provider '{_settings.ActiveProvider}' is not registered. " +
+                $"AI provider '{providerName}' is not registered. " +
                 $"Available providers: {available}. " +
                 $"Check the 'AiSettings:ActiveProvider' configuration.");
         }
@@ -139,7 +173,7 @@ public sealed class AiService : IAiService
         {
             _logger.LogError(ex,
                 "AI completion failed via {Provider}. Model: {Model}",
-                provider.ProviderName, _settings.ActiveProvider);
+                provider.ProviderName, providerName);
             throw;
         }
     }

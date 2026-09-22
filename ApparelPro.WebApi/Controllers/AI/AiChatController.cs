@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using ApparelPro.AI.Services;
+using ApparelPro.AI.Abstractions;
 using ApparelPro.WebApi.Misc;
 using ApparelPro.WebApi.APIModels.AI;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -76,6 +76,7 @@ namespace ApparelPro.WebApi.Controllers
                     request.EntityType,
                     request.EntityKey,
                     request.Message,
+                    request.PreferredProvider,
                     cancellationToken);
 
                 var result = new AiChatMessageAPIModel_Response

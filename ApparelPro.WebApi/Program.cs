@@ -88,9 +88,7 @@ try
 
 
     // AI service
-    builder.Services.AddApparelProAI(builder.Configuration);
-
-    builder.Services.AddScoped<IAiChatService, AiChatService>();
+    builder.Services.AddApparelProAI(builder.Configuration);    
 
     //builder.Services.AddDbContextPool<ApparelProDbContext>(options => options.UseSqlServer())
 
