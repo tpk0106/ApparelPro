@@ -79,7 +79,11 @@ public sealed class AiChatService : IAiChatService
         if (sessionId.HasValue && sessionId.Value != Guid.Empty)
         {
             // ─── Continue existing session ───────────────────
+            // AsNoTracking: we only need the history for prompt context.
+            // This prevents change-tracker conflicts when rapid voice
+            // requests hit the same session concurrently.
             session = await _apparelProDbContext.AiChatSessions
+                .AsNoTracking()
                 .Include(s => s.Messages.OrderBy(m => m.CreatedAt))
                 .FirstOrDefaultAsync(
                     s => s.SessionId == sessionId.Value
@@ -145,7 +149,13 @@ public sealed class AiChatService : IAiChatService
             TokensUsed = 0,
             CreatedAt = DateTime.UtcNow
         };
+        // Add to in-memory collection for conversation history building
         session.Messages.Add(userMessage);
+
+        // For continuing sessions (AsNoTracking), register directly with
+        // the DbContext so the INSERT goes through SaveChangesAsync.
+        if (!isNewSession)
+            _apparelProDbContext.AiChatMessages.Add(userMessage);
 
         // ─── Build conversation context ──────────────────────
         var systemPrompt = ChatPromptTemplates.BuildChatSystemPrompt(
@@ -193,44 +203,34 @@ public sealed class AiChatService : IAiChatService
             TokensUsed = aiResponse.TotalTokens,
             CreatedAt = DateTime.UtcNow
         };
-        session.Messages.Add(assistantMessage);
-
-        // Update session timestamp
-        session.LastMessageAt = DateTime.UtcNow;
-
-        // ── Save with concurrency-conflict retry ────────────────
-        // Voice mode fires rapid sequential requests against the same session.
-        // If the session row was updated between our load and our save (e.g.
-        // a RowVersion / timestamp column advanced by the previous request),
-        // EF Core throws DbUpdateConcurrencyException. The standard
-        // "client wins" pattern: reload the original values from the DB so
-        // EF Core's WHERE clause matches the current row, then retry once.
-        try
+        // For continuing sessions, register directly with the DbContext.
+        // For new sessions, the navigation property keeps it tracked.
+        if (isNewSession)
         {
-            await _apparelProDbContext.SaveChangesAsync(cancellationToken);
+            session.Messages.Add(assistantMessage);
+            session.LastMessageAt = DateTime.UtcNow;
         }
-        catch (DbUpdateConcurrencyException ex)
+        else
         {
-            _logger.LogWarning(
-                "Concurrency conflict saving chat session {SessionId} — retrying with refreshed values.",
-                session.SessionId);
+            session.Messages.Add(assistantMessage); // in-memory only (AsNoTracking)
+            _apparelProDbContext.AiChatMessages.Add(assistantMessage);
+        }
 
-            foreach (var entry in ex.Entries)
-            {
-                var dbValues = await entry.GetDatabaseValuesAsync(cancellationToken);
-                if (dbValues == null)
-                {
-                    // Row was deleted — detach so the retry doesn't try to update it
-                    entry.State = EntityState.Detached;
-                    continue;
-                }
+        // ── Persist ─────────────────────────────────────────────
+        // New session: single save inserts session + both messages.
+        // Continuing session: save inserts only the two new messages
+        // (session is untracked), then ExecuteUpdateAsync atomically
+        // bumps LastMessageAt — no change-tracker conflict possible.
+        await _apparelProDbContext.SaveChangesAsync(cancellationToken);
 
-                // Overwrite the "original" snapshot with what's actually in the DB
-                // so EF Core's next UPDATE … WHERE matches the current row.
-                entry.OriginalValues.SetValues(dbValues);
-            }
-
-            await _apparelProDbContext.SaveChangesAsync(cancellationToken);
+        if (!isNewSession)
+        {
+            await _apparelProDbContext.AiChatSessions
+                .Where(s => s.SessionId == session.SessionId)
+                .ExecuteUpdateAsync(
+                    setters => setters.SetProperty(
+                        s => s.LastMessageAt, DateTime.UtcNow),
+                    cancellationToken);
         }
 
         _logger.LogInformation(
