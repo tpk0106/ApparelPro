@@ -80,11 +80,23 @@ namespace ApparelPro.WebApi.Controllers
                 return NotFound(ex.Message);
             }
 
-            var response = await _aiService.SummariseEntityAsync(
-                request.EntityType,
-                entityData,
-                request.UserQuery,
-                cancellationToken);
+            AiCompletionResponse response;
+            try
+            {
+                response = await _aiService.SummariseEntityAsync(
+                    request.EntityType,
+                    entityData,
+                    request.UserQuery,
+                    cancellationToken);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(502, $"AI provider request failed: {ex.Message}");
+            }
 
             var result = new AiSummariseAPIModel_Response
             {
@@ -92,6 +104,11 @@ namespace ApparelPro.WebApi.Controllers
                 EntityType = request.EntityType,
                 EntityKey = request.EntityKey,
                 Provider = response.Provider,
+                Model = response.Model,
+                InputTokens = response.InputTokens,
+                OutputTokens = response.OutputTokens,
+                TotalTokens = response.TotalTokens,
+                EstimatedCost = response.EstimatedCost,
                 GeneratedAt = DateTimeOffset.UtcNow
             };
 
@@ -151,6 +168,7 @@ namespace ApparelPro.WebApi.Controllers
                 InputTokens = response.InputTokens,
                 OutputTokens = response.OutputTokens,
                 TotalTokens = response.TotalTokens,
+                EstimatedCost = response.EstimatedCost,
                 GeneratedAt = DateTimeOffset.UtcNow
             };
 

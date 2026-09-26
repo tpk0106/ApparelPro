@@ -92,6 +92,10 @@ public sealed class OpenAiProvider : IAiProvider
             "OpenAI response received. Input: {InputTokens}, Output: {OutputTokens}",
             inputTokens, outputTokens);
 
+        // GPT-4o pricing: $2.50/MTok input, $10/MTok output
+        var estimatedCost = (inputTokens / 1_000_000m * 2.50m)
+                          + (outputTokens / 1_000_000m * 10m);
+
         return new AiCompletionResponse
         {
             Content = content,
@@ -99,7 +103,8 @@ public sealed class OpenAiProvider : IAiProvider
             Model = _settings.OpenAI.Model,
             InputTokens = inputTokens,
             OutputTokens = outputTokens,
-            TotalTokens = inputTokens + outputTokens
+            TotalTokens = inputTokens + outputTokens,
+            EstimatedCost = Math.Round(estimatedCost, 6)
         };
     }
 }

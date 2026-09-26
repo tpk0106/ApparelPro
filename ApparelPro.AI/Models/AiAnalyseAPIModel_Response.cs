@@ -48,6 +48,11 @@ public sealed class AiAnalyseAPIModel_Response
     public int TotalTokens { get; set; }
 
     /// <summary>
+    /// Estimated cost in USD for this completion.
+    /// </summary>
+    public decimal EstimatedCost { get; set; }
+
+    /// <summary>
     /// When this analysis was generated.
     /// </summary>
     public DateTimeOffset GeneratedAt { get; set; }

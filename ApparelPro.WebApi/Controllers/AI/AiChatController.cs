@@ -90,6 +90,7 @@ namespace ApparelPro.WebApi.Controllers
                     InputTokens = response.InputTokens,
                     OutputTokens = response.OutputTokens,
                     TotalTokens = response.TotalTokens,
+                    EstimatedCost = response.EstimatedCost,
                     CreatedAt = response.CreatedAt,
                     IsNewSession = response.IsNewSession
                 };
@@ -103,6 +104,16 @@ namespace ApparelPro.WebApi.Controllers
             catch (KeyNotFoundException ex)
             {
                 return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // AI provider not configured (e.g. missing OpenAI API key for voice mode)
+                return BadRequest(ex.Message);
+            }
+            catch (HttpRequestException ex)
+            {
+                // AI provider API call failed (network, auth, rate limit, etc.)
+                return StatusCode(502, $"AI provider request failed: {ex.Message}");
             }
         }
 

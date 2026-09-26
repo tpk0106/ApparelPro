@@ -248,6 +248,7 @@ public sealed class AiChatService : IAiChatService
             InputTokens = aiResponse.InputTokens,
             OutputTokens = aiResponse.OutputTokens,
             TotalTokens = aiResponse.TotalTokens,
+            EstimatedCost = aiResponse.EstimatedCost,
             CreatedAt = assistantMessage.CreatedAt,
             IsNewSession = isNewSession
         };

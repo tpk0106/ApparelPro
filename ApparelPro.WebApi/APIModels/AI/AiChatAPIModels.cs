@@ -61,6 +61,7 @@ public class AiChatMessageAPIModel_Response
     public int InputTokens { get; set; }
     public int OutputTokens { get; set; }
     public int TotalTokens { get; set; }
+    public decimal EstimatedCost { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public bool IsNewSession { get; set; }
 }

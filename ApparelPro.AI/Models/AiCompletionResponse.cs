@@ -34,4 +34,10 @@ public sealed class AiCompletionResponse
     /// Output tokens generated.
     /// </summary>
     public int OutputTokens { get; init; }
+
+    /// <summary>
+    /// Estimated cost in USD for this completion, based on provider pricing.
+    /// Calculated from token counts using approximate per-token rates.
+    /// </summary>
+    public decimal EstimatedCost { get; init; }
 }

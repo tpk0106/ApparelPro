@@ -100,6 +100,10 @@ public sealed class AnthropicAiProvider : IAiProvider
             "Anthropic response received. Input: {InputTokens}, Output: {OutputTokens}",
             inputTokens, outputTokens);
 
+        // Claude Sonnet pricing: $3/MTok input, $15/MTok output
+        var estimatedCost = (inputTokens / 1_000_000m * 3m)
+                          + (outputTokens / 1_000_000m * 15m);
+
         return new AiCompletionResponse
         {
             Content = text,
@@ -107,7 +111,8 @@ public sealed class AnthropicAiProvider : IAiProvider
             Model = _settings.Anthropic.Model,
             InputTokens = inputTokens,
             OutputTokens = outputTokens,
-            TotalTokens = inputTokens + outputTokens
+            TotalTokens = inputTokens + outputTokens,
+            EstimatedCost = Math.Round(estimatedCost, 6)
         };
     }
 }

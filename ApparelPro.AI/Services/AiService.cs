@@ -146,7 +146,23 @@ public sealed class AiService : IAiService
                 preferredProvider, _settings.ActiveProvider);
         }
 
-        return await CompleteWithProviderAsync(request, providerName, cancellationToken);
+        try
+        {
+            return await CompleteWithProviderAsync(request, providerName, cancellationToken);
+        }
+        catch (InvalidOperationException) when (
+            providerName != _settings.ActiveProvider)
+        {
+            // Preferred provider is registered but not configured (e.g. missing API key).
+            // Fall back to the active provider instead of crashing.
+            _logger.LogWarning(
+                "Preferred provider '{PreferredProvider}' is not configured. " +
+                "Falling back to active provider '{ActiveProvider}'.",
+                providerName, _settings.ActiveProvider);
+
+            return await CompleteWithProviderAsync(
+                request, _settings.ActiveProvider, cancellationToken);
+        }
     }
 
     // ─── Private: resolve provider and execute ───────────
@@ -167,7 +183,16 @@ public sealed class AiService : IAiService
 
         try
         {
-            return await provider.CompleteAsync(request, cancellationToken);
+            var response = await provider.CompleteAsync(request, cancellationToken);
+
+            _logger.LogInformation(
+                "AI completion succeeded via {Provider}. " +
+                "Input: {InputTokens}, Output: {OutputTokens}, Total: {TotalTokens}, " +
+                "Estimated cost: ${EstimatedCost:F6}",
+                response.Provider, response.InputTokens, response.OutputTokens,
+                response.TotalTokens, response.EstimatedCost);
+
+            return response;
         }
         catch (Exception ex)
         {
