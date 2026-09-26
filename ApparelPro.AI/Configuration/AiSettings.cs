@@ -30,10 +30,11 @@ public sealed class AiSettings
     public OpenAiSettings OpenAI { get; set; } = new();
 
     /// <summary>
-    /// Default max tokens for quick summaries if not specified per-request.
-    /// Raised from 1024 → 1024 (unchanged) — summarise uses explicit 1000 in AiService.
+    /// Default max tokens for summarise responses.
+    /// Raised from 1024 → 2500 to accommodate the upgraded summarise prompt
+    /// which now includes analysis, risk flags, and recommendations.
     /// </summary>
-    public int DefaultMaxTokens { get; set; } = 1024;
+    public int DefaultMaxTokens { get; set; } = 2500;
 
     /// <summary>
     /// Max tokens for deep analysis responses.
