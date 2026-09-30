@@ -236,13 +236,18 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
         // Administrator accounts access to Trim Sheet Report even after this catalog entry was
         // seeded (FIXED 2026-08-07).
         private static readonly string[] TrimSheetReportRoles = { "Merchandiser", "Merchandiser Manager", "Merchandising Manager", "Executive Director", "Administrator" };
-        // Estimated Profit section only - NOT wired as a policy. Documented here for the
-        // catalog audit trail; TrimSheetReportController checks these same 3 roles inline via
-        // User.IsInRole(...), matching how MaterialConsumptionController's own higher-authority
-        // check is done (a hardcoded inline check, not a second [Authorize] policy) rather than
-        // referencing this private array across layers. Mirrors legacy's separate
-        // access('trimprof') gate on top of general Trim Sheet viewing. Per explicit project
-        // decision (2026-08-07): Merchandiser Manager, Merchandising Manager, Executive Director.
+        // 🎓 Estimated Profit section within Trim Sheet — NOW wired as a proper permission
+        // ("trim-sheet-profit") so it appears in the Permission Matrix UI and admins can
+        // grant/revoke per role without a code change. Mirrors legacy's separate
+        // access('trimprof') gate on top of general Trim Sheet viewing.
+        // Originally hardcoded as an inline User.IsInRole() check in TrimSheetReportController
+        // (matching MaterialConsumptionController's pattern); promoted to a full catalog entry
+        // 2026-09-30 after discovering that Administrator accounts couldn't see the profit
+        // section in production despite having full report access.
+        // Default roles: the original 3 (Merchandiser Manager, Merchandising Manager,
+        // Executive Director) PLUS Administrator — since admins should see everything by default,
+        // and individual revocation is now possible through the Permission Matrix.
+        private static readonly string[] TrimSheetProfitRoles = { "Merchandiser Manager", "Merchandising Manager", "Executive Director", "Administrator" };
         private static readonly string[] ColorSizeBreakdownBulkSaveRoles = { "Merchandiser", "Merchandiser Manager", "Order Entry Operator" };
         // Production Control module: three real roles created by
         // ApparelProSeedController.LoadData (2026-08-16) - "Production", referenced here
@@ -386,7 +391,8 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
             new("garment-additional-cost-manage", "Additional Costs per Garment - Add / Update / Delete", "Order Management", "GarmentAdditionalCostController POST/DELETE endpoints", MerchandisingOnlyRoles),
             new("sub-contract-view", "Sub Contracts - View / Lookup", "Order Management", "SubContractController GET endpoints (list) - built 2026-08-09 from od_subc1.prg", OrderwiseInventoryStandardRoles),
             new("sub-contract-manage", "Sub Contracts - Add / Update / Delete", "Order Management", "SubContractController POST/DELETE endpoints", MerchandisingOnlyRoles),
-            new("trim-sheet-report", "Trim Sheet Report", "Reports", "TrimSheetReportController - class-level [Authorize]. The Estimated Profit section within it has its own narrower role check (TrimSheetProfitRoles) inline in the controller, not this policy.", TrimSheetReportRoles),
+            new("trim-sheet-report", "Trim Sheet Report", "Reports", "TrimSheetReportController - class-level [Authorize]. The Estimated Profit section within it is gated by the separate 'trim-sheet-profit' permission below.", TrimSheetReportRoles),
+            new("trim-sheet-profit", "Trim Sheet - Estimated Profit", "Reports", "Narrower permission controlling the Estimated Profit section inside the Trim Sheet report. Mirrors legacy access('trimprof'). TrimSheetReportController checks this via IAuthorizationService.AuthorizeAsync.", TrimSheetProfitRoles),
             new("order-detail-report", "Order Detail Report", "Reports", "OrderDetailReportController - both endpoints ([HttpGet(\"details\")], [HttpGet(\"pdf\")]) carry this policy. Same viewing audience as Trim Sheet Report.", TrimSheetReportRoles),
             new("color-size-report", "Colour/Size Report", "Reports", "ColorSizeReportController - both endpoints ([HttpGet(\"details\")], [HttpGet(\"pdf\")]) carry this policy. Same viewing audience as Trim Sheet Report / Order Detail Report.", TrimSheetReportRoles),
             new("purchase-order-list-report", "List of P/O's Report", "Reports", "PurchaseOrderListReportController - all three endpoints ([HttpGet(\"po-numbers\")], [HttpGet(\"details\")], [HttpGet(\"pdf\")]) carry this policy. Same viewing audience as the other Order Management reports.", TrimSheetReportRoles),
