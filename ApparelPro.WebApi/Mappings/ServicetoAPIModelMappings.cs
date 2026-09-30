@@ -115,6 +115,9 @@ using ApparelPro.WebApi.APIModels.Reference;
 using ApparelPro.WebApi.APIModels.Registration;
 using ApparelPro.WebApi.APIModels.SystemConfiguration;
 using ApparelPro.WebApi.Reports.Models;
+using apparelPro.BusinessLogic.Services.Models.AI.IReportRegistryService;
+using ApparelPro.WebApi.APIModels.AI;
+
 using AutoMapper;
 
 namespace ApparelPro.WebApi.Mappings
@@ -1203,6 +1206,8 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<ProductionProgressGraphServiceModel, ProductionProgressGraphAPIModel>().MaxDepth(2);
 
             CreateMap<EndOfProductionStatusServiceModel, EndOfProductionStatusAPIModel>().MaxDepth(2);
+
+            CreateMap<ReportRegistryServiceModel, ReportRegistryAPIModel>().MaxDepth(2).ReverseMap();
         }
 
         public class PaginationResultToPaginationAPITypeConverter<sourceT, destT> : ITypeConverter<PaginationResult<sourceT>, PaginationAPIModel<destT>>

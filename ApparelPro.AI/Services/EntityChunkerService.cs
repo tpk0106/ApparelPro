@@ -93,9 +93,23 @@ public sealed class EntityChunkerService
     /// from the data layer — it doesn't need a reference to ApparelPro.Data.
     /// </summary>
     /// <param name="styleCode">The style's primary key (e.g., "S001").</param>
+    /// <param name="buyerCode">
+    /// 🆕 The buyer's numeric primary key (e.g., 1).
+    /// 🎓 WHY INCLUDE THE NUMERIC CODE?
+    /// Report generation endpoints need numeric IDs, not display names.
+    /// For example, the Trim Sheet endpoint expects: ?buyerCode=1&amp;styleCode=ANCHORAGE
+    /// Without this code in the chunk text, Claude has to GUESS the numeric ID
+    /// from the buyer name — and gets it wrong (e.g., guessing buyerCode=5 for
+    /// "LONDON FOG INDUSTRIES INC." when it's actually 1).
+    /// By including "BuyerCode: 1" in the chunk, Claude can extract it accurately.
+    /// </param>
     /// <param name="buyerName">The buyer's display name (e.g., "NEXT").</param>
     /// <param name="order">The order reference (e.g., "ORD-2024-001").</param>
     /// <param name="orderDate">When the order was placed.</param>
+    /// <param name="typeCode">
+    /// 🆕 The garment type's numeric primary key (e.g., 2 for "Mens Jacket").
+    /// Same reasoning as buyerCode — report endpoints need the numeric ID.
+    /// </param>
     /// <param name="garmentType">Type of garment (e.g., "T-Shirt").</param>
     /// <param name="quantity">Order quantity.</param>
     /// <param name="unitPrice">Price per unit.</param>
@@ -111,9 +125,11 @@ public sealed class EntityChunkerService
     /// <returns>List of text chunks, each within the configured token limit.</returns>
     public List<EntityChunk> ChunkStyle(
         string styleCode,
+        int buyerCode,
         string buyerName,
         string order,
         DateOnly orderDate,
+        int typeCode,
         string? garmentType,
         decimal? quantity,
         decimal? unitPrice,
@@ -126,12 +142,25 @@ public sealed class EntityChunkerService
         // It provides context so each chunk is self-contained.
         // If someone reads chunk 2 without chunk 0, they still know
         // which style this is about.
+        //
+        // 🎓 WHY INCLUDE NUMERIC CODES (BuyerCode, TypeCode)?
+        // When Claude detects a report request, it needs to extract the exact
+        // parameter values for the report endpoint. Without the numeric codes
+        // in the chunk text, Claude can only see the display names ("LONDON FOG
+        // INDUSTRIES INC.", "Mens Jacket") and has to GUESS the numeric IDs —
+        // which it gets wrong. Including "BuyerCode: 1" and "TypeCode: 2"
+        // gives Claude the exact values to extract for report parameters.
         var header = new StringBuilder();
-        header.AppendLine($"Style {styleCode} for Buyer {buyerName}.");
+        header.AppendLine($"Style {styleCode} for Buyer {buyerName} (BuyerCode: {buyerCode}).");
         header.AppendLine($"Order: {order}, dated {orderDate:yyyy-MM-dd}.");
 
+        // 🎓 Include both the garment type NAME and its numeric CODE.
+        // The name is for human readability in the RAG answer text.
+        // The code is for Claude to extract when building report parameters.
         if (!string.IsNullOrWhiteSpace(garmentType))
-            header.AppendLine($"Garment type: {garmentType}.");
+            header.AppendLine($"Garment type: {garmentType} (TypeCode: {typeCode}).");
+        else
+            header.AppendLine($"TypeCode: {typeCode}.");
 
         if (quantity.HasValue)
         {

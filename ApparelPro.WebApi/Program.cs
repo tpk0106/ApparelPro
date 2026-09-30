@@ -16,6 +16,7 @@ using Serilog.Events;
 using Serilog.Sinks.MSSqlServer;
 using System.Text.Json;
 using static ApparelPro.WebApi.Misc.ByteArrayConverter;
+using apparelPro.BusinessLogic.Services.Implementation.AI;
 
 var builder = WebApplication.CreateBuilder(args);
 

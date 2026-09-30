@@ -5,6 +5,8 @@ using ApparelPro.AI.BackgroundJobs;
 using ApparelPro.AI.Configuration;
 using ApparelPro.AI.Providers;
 using ApparelPro.AI.Services;
+using apparelPro.BusinessLogic.Services.Implementation.AI;
+using apparelPro.BusinessLogic.Services;
 
 namespace ApparelPro.AI;
 
@@ -103,6 +105,18 @@ public static class DependencyInjection
         // AddHostedService registers it as a long-running background task.
         // The job uses IServiceScopeFactory internally to create scoped DbContext instances.
         services.AddHostedService<EmbeddingSyncJob>();
+
+        //     // 🎓 ReportRegistry: Read-only catalogue of RAG-detectable reports.
+        //     // Registered as Transient — same pattern as BuyerService and other
+        //     // reference services. Transient is fine because:
+        //     //   • No expensive state to initialise
+        //     //   • Small service with simple DB queries
+        //     //   • ApparelProDbContext (scoped) is safely consumed by transient
+        services.AddTransient(typeof(IReportRegistryService), typeof(ReportRegistryService));
+        //
+        //     // 🎓 Future AI services will be added here:
+        // services.AddTransient(typeof(ISopService), typeof(SopService));
+       //  services.AddTransient(typeof(IReportIntentService), typeof(ReportIntentService));
 
         return services;
     }

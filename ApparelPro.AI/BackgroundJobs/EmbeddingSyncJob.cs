@@ -528,11 +528,17 @@ public sealed class EmbeddingSyncJob : BackgroundService
             //   - Style with 20+ materials → 2-3 chunks (materials overflow)
             // Each chunk includes the style header for context, so any single
             // chunk found during RAG search is self-contained.
+            // 🎓 Pass both numeric codes (BuyerCode, TypeCode) alongside the display names.
+            // The chunker includes them in the chunk text so Claude can extract
+            // exact parameter values when detecting report intent — without these,
+            // Claude guesses the IDs from names and gets them wrong.
             var chunks = chunker.ChunkStyle(
                 styleCode: style.StyleCode,
+                buyerCode: style.BuyerCode,
                 buyerName: buyerName,
                 order: style.Order,
                 orderDate: style.OrderDate,
+                typeCode: style.TypeCode,
                 garmentType: garmentType,
                 quantity: style.Quantity,
                 unitPrice: style.UnitPrice,

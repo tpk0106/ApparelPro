@@ -207,7 +207,10 @@ namespace ApparelPro.Data
         public DbSet<AiChatSession> AiChatSessions { get; set; }
         public DbSet<AiChatMessage> AiChatMessages { get; set; }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+        // AI                                          
+        public virtual DbSet<ReportRegistry> ReportRegistries { get; set; } = null!;
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
@@ -337,6 +340,9 @@ namespace ApparelPro.Data
 
             modelBuilder.ApplyConfiguration(new AiChatSessionConfiguration());
             modelBuilder.ApplyConfiguration(new AiChatMessageConfiguration());
+
+            // AI                                         
+            modelBuilder.ApplyConfiguration(new ReportRegistryConfig());
         }
 
         //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

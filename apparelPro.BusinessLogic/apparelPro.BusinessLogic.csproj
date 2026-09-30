@@ -31,6 +31,7 @@
     <Folder Include="Services\interfaces\OrderManagement\" />
     <Folder Include="Services\interfaces\Reports\OrderManagement\" />
     <Folder Include="Services\Models\GeneralInventory\" />
+    <Folder Include="Services\Models\AI\" />
     <Folder Include="Services\Models\OrderManagement\ISupplierPurchaseOrder\" />
     <Folder Include="Services\Reports\Models\" />
   </ItemGroup>

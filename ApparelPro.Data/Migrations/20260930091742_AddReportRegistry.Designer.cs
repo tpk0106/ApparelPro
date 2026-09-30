@@ -4,6 +4,7 @@ using ApparelPro.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ApparelPro.Data.Migrations
 {
     [DbContext(typeof(ApparelProDbContext))]
-    partial class ApparelProDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260930091742_AddReportRegistry")]
+    partial class AddReportRegistry
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -168,21 +171,6 @@ namespace ApparelPro.Data.Migrations
                     b.HasIndex("IsActive");
 
                     b.ToTable("ReportRegistries", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            ReportCode = "TrimSheet",
-                            Category = "OrderManagement",
-                            CommonNames = "trim sheet, material consumption, material consumption report, BOM report, bill of materials, costing sheet, trim costing, material cost breakdown, fabric and trim breakdown, garment costing",
-                            Description = "Material consumption and costing breakdown for a style — shows all trims, fabrics, and accessories with quantities, unit prices, supplier assignments, stock group subtotals, and estimated profit margin.",
-                            DisplayName = "Trim Sheet Report",
-                            DisplayOrder = 1,
-                            EndpointTemplate = "api/trim-sheet-report/pdf",
-                            IsActive = true,
-                            ParamSources = "{\"buyerCode\":{\"entity\":\"Style\",\"field\":\"BuyerCode\",\"type\":\"int\",\"description\":\"Buyer code from the Style entity\"},\"order\":{\"entity\":\"Style\",\"field\":\"Order\",\"type\":\"string\",\"description\":\"Purchase order number from the Style entity\"},\"typeCode\":{\"entity\":\"Style\",\"field\":\"TypeCode\",\"type\":\"int\",\"description\":\"Garment type code from the Style entity\"},\"styleCode\":{\"entity\":\"Style\",\"field\":\"StyleCode\",\"type\":\"string\",\"description\":\"Style code — the primary identifier the user mentions\"}}",
-                            RequiredParams = "[\"buyerCode\",\"order\",\"typeCode\",\"styleCode\"]"
-                        });
                 });
 
             modelBuilder.Entity("ApparelPro.Data.Models.Dashboard.OrderPipelineStageHistory", b =>

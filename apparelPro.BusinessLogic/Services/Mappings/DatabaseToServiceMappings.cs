@@ -77,6 +77,9 @@ using apparelPro.BusinessLogic.Services.Models.ImportExport.IDocumentTypeService
 using ApparelPro.WebApi.APIModels.OrderManagement;
 using AutoMapper;
 
+   using ApparelPro.Data.Models.AI;
+   using apparelPro.BusinessLogic.Services.Models.AI.IReportRegistryService;
+
 namespace apparelPro.BusinessLogic.Services.Mappings
 {
     public class DatabaseToServiceMappings : Profile
@@ -649,7 +652,9 @@ namespace apparelPro.BusinessLogic.Services.Mappings
             CreateMap<UpdateSectionServiceModel, Section>().MaxDepth(2);
 
             CreateMap<DailyProductionEntryServiceModel, DailyProductionEntry>().MaxDepth(2).ReverseMap();
-            CreateMap<CreateDailyProductionEntryServiceModel, DailyProductionEntry>().MaxDepth(2);
+            CreateMap<CreateDailyProductionEntryServiceModel, DailyProductionEntry>().MaxDepth(2);         
+
+            CreateMap<ReportRegistry, ReportRegistryServiceModel>().MaxDepth(2).ReverseMap();
         }
     }
 }

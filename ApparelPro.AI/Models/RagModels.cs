@@ -29,12 +29,23 @@ namespace ApparelPro.AI.Models;
 /// This is the difference between RAG and hallucination:
 ///   Hallucination: "Your cotton consumption is 2.5 yards" (where did that come from??)
 ///   RAG with sources: "Based on Style S001 (score: 0.92), cotton consumption is 2.5 yards"
+///
+/// 🎓 WHAT CHANGED — REPORT INTENT DETECTION:
+/// When the user asks something like "Can I get the Trim Sheet for style ANCHORAGE?",
+/// Claude now detects this as a REPORT REQUEST and includes intent data in its response.
+/// The frontend checks DetectedReportIntent — if it's not null, the UI can auto-trigger
+/// the PDF generation flow instead of just showing a text answer.
 /// </summary>
 public sealed class RagQueryResponse
 {
     /// <summary>
     /// Claude's generated answer, grounded in the retrieved context.
     /// If no relevant data was found, this contains a "no data found" message.
+    ///
+    /// 🎓 WHEN A REPORT INTENT IS DETECTED:
+    /// The Answer will STILL contain a helpful text response, something like:
+    ///   "I found Style ANCHORAGE under buyer NEXT. I can generate the Trim Sheet report for you."
+    /// The frontend can show this text AND trigger the PDF generation using DetectedReportIntent.
     /// </summary>
     public required string Answer { get; init; }
 
@@ -93,6 +104,31 @@ public sealed class RagQueryResponse
     /// Total tokens consumed (input + output) for cost tracking.
     /// </summary>
     public int TotalTokens { get; init; }
+
+    /// <summary>
+    /// 🆕 When Claude detects the user is requesting a REPORT (not just asking a question),
+    /// this contains the detected intent: which report, and the extracted parameters.
+    ///
+    /// 🎓 HOW THE FRONTEND USES THIS:
+    ///   if (response.detectedReportIntent != null) {
+    ///     // User asked for a report! Auto-trigger PDF generation:
+    ///     const { reportCode, parameters, endpointTemplate } = response.detectedReportIntent;
+    ///     // Call the report endpoint with the extracted parameters
+    ///     const pdfUrl = buildReportUrl(endpointTemplate, parameters);
+    ///     window.open(pdfUrl);
+    ///   } else {
+    ///     // Normal RAG answer — display the text response
+    ///     showAnswer(response.answer);
+    ///   }
+    ///
+    /// 🎓 WHY NULLABLE?
+    /// Most RAG queries are informational questions, NOT report requests.
+    /// "Which styles use cotton?" → DetectedReportIntent = null (just a question)
+    /// "Generate the trim sheet for ANCHORAGE" → DetectedReportIntent = { ... }
+    ///
+    /// Null means "no report intent detected — this is a regular RAG answer."
+    /// </summary>
+    public ReportIntentDetection? DetectedReportIntent { get; init; }
 }
 
 /// <summary>
@@ -174,4 +210,101 @@ public sealed class RagQueryRequest
     /// Valid values: "Style", "PurchaseOrder", "Buyer", "Supplier"
     /// </summary>
     public string? EntityTypeFilter { get; init; }
+}
+
+/// <summary>
+/// 🆕 Represents a detected report generation intent from Claude's RAG response.
+///
+/// 🎓 WHAT IS THIS?
+/// When the user types something like:
+///   "Can I get the Trim Sheet for style ANCHORAGE?"
+///   "Generate the material consumption report for order PO-2024-001"
+///   "Show me the BOM report for COTTON-POLO"
+///
+/// Claude recognises this as a REPORT REQUEST (not a data question) and outputs
+/// a structured intent block. RagService parses that block into this model.
+///
+/// 🎓 THE FLOW:
+///   1. User asks: "Get me the trim sheet for ANCHORAGE"
+///   2. RAG finds Style ANCHORAGE in the vector store (with BuyerCode, Order, etc.)
+///   3. Claude sees the report catalogue in its system prompt
+///   4. Claude recognises "trim sheet" matches "TrimSheet" report
+///   5. Claude extracts the required parameters from the RAG context
+///   6. Claude outputs |||REPORT_INTENT||| JSON block
+///   7. RagService parses it into this model
+///   8. Frontend receives it and calls the PDF endpoint automatically
+///
+/// 🎓 WHY A SEPARATE MODEL (NOT JUST A STRING)?
+/// Typed models give the frontend:
+///   - IntelliSense/autocomplete in TypeScript (after codegen)
+///   - Compile-time safety — can't misspell "reportCode" as "reportcode"
+///   - Clear contract — the frontend team knows exactly what to expect
+/// </summary>
+public sealed class ReportIntentDetection
+{
+    /// <summary>
+    /// The report code from the ReportRegistry table (e.g., "TrimSheet").
+    ///
+    /// 🎓 THIS IS THE KEY:
+    /// The frontend uses this to look up the report in the registry API
+    /// (GET /api/report-registry/{reportCode}) if it needs additional metadata.
+    /// But normally, everything needed is already in this model.
+    /// </summary>
+    public required string ReportCode { get; init; }
+
+    /// <summary>
+    /// Human-readable display name (e.g., "Trim Sheet Report").
+    /// The frontend can show this in a confirmation dialog:
+    ///   "Generate Trim Sheet Report for Style ANCHORAGE?"
+    /// </summary>
+    public required string DisplayName { get; init; }
+
+    /// <summary>
+    /// The API endpoint template for generating this report (e.g., "api/trim-sheet-report/pdf").
+    ///
+    /// 🎓 HOW THE FRONTEND USES THIS:
+    /// The endpoint template is a relative URL. The frontend combines it with
+    /// the extracted parameters to build the full request:
+    ///   fetch(`${baseUrl}/${endpointTemplate}?buyerCode=5&order=PO001&typeCode=1&styleCode=ANCHORAGE`)
+    /// </summary>
+    public required string EndpointTemplate { get; init; }
+
+    /// <summary>
+    /// The extracted parameter values, ready to pass to the report endpoint.
+    ///
+    /// 🎓 EXAMPLE FOR TRIM SHEET:
+    /// {
+    ///   "buyerCode": "5",
+    ///   "order": "PO-2024-001",
+    ///   "typeCode": "1",
+    ///   "styleCode": "ANCHORAGE"
+    /// }
+    ///
+    /// 🎓 WHY Dictionary&lt;string, string&gt;?
+    /// Parameters vary by report — TrimSheet needs 4 params, another report
+    /// might need 2 or 6. A dictionary is flexible and serialises naturally
+    /// to a JSON object the frontend can iterate over.
+    ///
+    /// 🎓 WHY ALL STRINGS?
+    /// HTTP query parameters are strings. The backend endpoint does the
+    /// parsing/conversion (int.Parse for buyerCode, etc.). Keeping them
+    /// as strings here avoids type conversion at this layer.
+    /// </summary>
+    public Dictionary<string, string> Parameters { get; init; } = new();
+
+    /// <summary>
+    /// Claude's confidence that this is truly a report request (0.0 to 1.0).
+    ///
+    /// 🎓 WHY INCLUDE CONFIDENCE?
+    /// Sometimes the user's intent is ambiguous:
+    ///   "Tell me about the trim sheet for ANCHORAGE" — is this a report request or a data question?
+    ///   Confidence 0.9 → Probably wants the PDF
+    ///   Confidence 0.5 → Might just want info ABOUT the trim sheet
+    ///
+    /// The frontend can use this threshold:
+    ///   confidence >= 0.8 → Auto-generate the PDF
+    ///   confidence 0.5–0.8 → Show a "Did you want to generate this report?" prompt
+    ///   confidence < 0.5 → Just show the text answer (shouldn't happen — we filter these out)
+    /// </summary>
+    public double Confidence { get; init; }
 }
