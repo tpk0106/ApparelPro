@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -14,6 +14,38 @@
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.*" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.*" />
 	  <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="10.0.9" />
+
+    <!--
+      🆕 RAG: Qdrant .NET client for vector database operations.
+
+      🎓 WHAT IS THIS PACKAGE?
+      Qdrant.Client is the official .NET client for the Qdrant vector database.
+      It uses gRPC under the hood for high-performance communication.
+
+      🎓 WHY VERSION 1.*?
+      The wildcard (1.*) means "use the latest 1.x version" — this gives you
+      patch and minor updates automatically while staying on the same major version.
+      Same pattern as the existing OpenAI package reference.
+
+      🎓 TRANSITIVE DEPENDENCIES:
+      This package brings in:
+        - Grpc.Net.Client (gRPC communication)
+        - Google.Protobuf (serialisation)
+      These are standard .NET packages, no conflicts with existing dependencies.
+    -->
+    <PackageReference Include="Qdrant.Client" Version="1.*" />
+
+    <!--
+      🆕 RAG: Required for BackgroundService (EmbeddingSyncJob).
+
+      🎓 WHAT IS THIS PACKAGE?
+      Microsoft.Extensions.Hosting.Abstractions provides the BackgroundService
+      base class and IHostedService interface used by EmbeddingSyncJob.
+      This is already transitively referenced by ASP.NET Core, but we
+      add it explicitly because ApparelPro.AI is a CLASS LIBRARY, not a
+      web project — it doesn't automatically get ASP.NET Core dependencies.
+    -->
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.*" />
   </ItemGroup>
 
   <ItemGroup>
