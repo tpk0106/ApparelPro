@@ -52,6 +52,13 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.ITrimSheetRep
 
         // Null when the style has not yet been Trim Sheet approved.
         public TrimSheetApprovalStampServiceModel? ApprovalStamp { get; set; }
+
+        // 🎓 PHASE 2 STEP 5 — SOP → PDF INJECTION:
+        // Carries context-matched Standard Operating Procedures into the PDF engine.
+        // Populated by TrimSheetReportService via ISopService.GetActiveSopsForContextAsync.
+        // Empty list (not null) when no SOPs match the report's buyer/supplier context —
+        // the PDF engine simply skips the "Terms & Conditions" section in that case.
+        public List<TrimSheetSopItemServiceModel> ApplicableSops { get; set; } = new();
     }
 
     public class TrimSheetLineServiceModel
@@ -116,5 +123,31 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.ITrimSheetRep
     {
         public string ApprovedByUserId { get; set; } = "";
         public DateOnly ApprovedDate { get; set; }
+    }
+
+    // 🎓 PHASE 2 STEP 5 — Lightweight projection of SopServiceModel for PDF rendering.
+    // Only carries the fields the "Terms & Conditions" section actually prints —
+    // no audit fields, no applicability rules, no PK. This keeps the report model
+    // self-contained without dragging in the full AI/ISopService namespace.
+    public class TrimSheetSopItemServiceModel
+    {
+        // 🎓 SopCode: displayed as a reference identifier in the PDF margin
+        // (e.g., "SOP-TRIM-001") so the reader can look up the full procedure.
+        public string SopCode { get; set; } = "";
+
+        // 🎓 Title: rendered as the bold heading for each SOP block in the PDF.
+        public string Title { get; set; } = "";
+
+        // 🎓 Description: one-line summary rendered in italic below the title,
+        // giving context before the reader hits the full text.
+        public string Description { get; set; } = "";
+
+        // 🎓 FullText: the complete procedure body — rendered as the main content
+        // block under each SOP. May contain multiple paragraphs.
+        public string FullText { get; set; } = "";
+
+        // 🎓 Category: used for grouping SOPs visually in the PDF
+        // (e.g., "Quality", "Shipping", "Packaging").
+        public string Category { get; set; } = "";
     }
 }

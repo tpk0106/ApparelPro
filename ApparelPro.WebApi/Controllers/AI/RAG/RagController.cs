@@ -126,7 +126,11 @@ public class RagController : ControllerBase
         // This prevents confusing "no results" when the user typos "Stlye".
         if (!string.IsNullOrWhiteSpace(request.EntityTypeFilter))
         {
-            var validTypes = new[] { "Style", "PurchaseOrder", "Buyer", "Supplier" };
+            // 🎓 Valid entity types that exist in the Qdrant vector store.
+            // Each one corresponds to an entity synced by EmbeddingSyncJob:
+            //   Style, PurchaseOrder, Buyer, Supplier → original four entity types
+            //   Sop → Standard Operating Procedures (added in Phase 2 Step 6)
+            var validTypes = new[] { "Style", "PurchaseOrder", "Buyer", "Supplier", "Sop" };
             if (!validTypes.Contains(request.EntityTypeFilter, StringComparer.OrdinalIgnoreCase))
             {
                 return BadRequest(

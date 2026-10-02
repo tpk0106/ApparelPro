@@ -188,6 +188,91 @@ namespace apparelPro.BusinessLogic.Reports.OrderManagement.TrimSheet
                         {
                             column.Item().Text("Not yet approved.").FontSize(9).Italic().FontColor(Colors.Grey.Darken1);
                         }
+
+                        // ═══════════════════════════════════════════════════════════════
+                        // 🎓 PHASE 2 STEP 5 — "Terms & Conditions" section.
+                        //
+                        // Renders context-matched SOPs as a formal T&C appendix at the
+                        // bottom of the Trim Sheet PDF. Only appears when at least one
+                        // SOP matched the report's buyer/supplier/report-type context
+                        // via GetActiveSopsForContextAsync.
+                        //
+                        // LAYOUT per SOP:
+                        //   ┌─────────────────────────────────────────────────┐
+                        //   │ [SOP-TRIM-001] Title of the Procedure          │ Bold heading
+                        //   │ Category: Quality                              │ Muted label
+                        //   │ One-line description / summary                 │ Italic
+                        //   │                                                │
+                        //   │ Full procedure text, may span multiple lines.  │ Body
+                        //   │ Paragraph breaks preserved via Split('\n').     │
+                        //   └─────────────────────────────────────────────────┘
+                        //
+                        // The section title uses the same Blue.Darken4 accent as the
+                        // report header to maintain visual consistency.
+                        // ═══════════════════════════════════════════════════════════════
+                        if (report.ApplicableSops.Count > 0)
+                        {
+                            // 🎓 Section divider — a thick blue line matching the header
+                            // to visually separate the financial content above from the
+                            // procedural/compliance content below.
+                            column.Item().PaddingTop(16).LineHorizontal(1.5f).LineColor(Colors.Blue.Darken4);
+
+                            column.Item().PaddingTop(8).Text("Terms & Conditions")
+                                .FontSize(12).Bold().FontColor(Colors.Blue.Darken4);
+
+                            column.Item().PaddingTop(2).Text(
+                                "The following Standard Operating Procedures apply to this order based on the buyer, supplier, and report context.")
+                                .FontSize(8).Italic().FontColor(Colors.Grey.Darken2);
+
+                            foreach (var sop in report.ApplicableSops)
+                            {
+                                // 🎓 Each SOP rendered as a bordered block with light
+                                // background to distinguish individual procedures visually.
+                                column.Item().PaddingTop(8).Border(0.5f).BorderColor(Colors.Grey.Medium)
+                                    .Background(Colors.Grey.Lighten4).Padding(8).Column(sopColumn =>
+                                {
+                                    // 🎓 SOP header: code + title on the same line.
+                                    // Code in brackets serves as a reference identifier
+                                    // so the reader can look up the full procedure in the
+                                    // SOP management screen if needed.
+                                    sopColumn.Item().Text($"[{sop.SopCode}] {sop.Title}")
+                                        .FontSize(9).Bold();
+
+                                    // 🎓 Category label — muted, small, right below the title.
+                                    if (!string.IsNullOrWhiteSpace(sop.Category))
+                                    {
+                                        sopColumn.Item().PaddingTop(2).Text($"Category: {sop.Category}")
+                                            .FontSize(7).FontColor(Colors.Grey.Darken1);
+                                    }
+
+                                    // 🎓 Description — one-line summary in italic.
+                                    if (!string.IsNullOrWhiteSpace(sop.Description))
+                                    {
+                                        sopColumn.Item().PaddingTop(3).Text(sop.Description)
+                                            .FontSize(8).Italic();
+                                    }
+
+                                    // 🎓 Full text body — the complete procedure content.
+                                    // Split by newlines to preserve paragraph structure
+                                    // from the SOP's FullText field (admin may have entered
+                                    // multi-paragraph instructions).
+                                    if (!string.IsNullOrWhiteSpace(sop.FullText))
+                                    {
+                                        sopColumn.Item().PaddingTop(4).LineHorizontal(0.5f)
+                                            .LineColor(Colors.Grey.Lighten1);
+
+                                        var paragraphs = sop.FullText.Split('\n',
+                                            StringSplitOptions.RemoveEmptyEntries);
+
+                                        foreach (var paragraph in paragraphs)
+                                        {
+                                            sopColumn.Item().PaddingTop(3).Text(paragraph.Trim())
+                                                .FontSize(8);
+                                        }
+                                    }
+                                });
+                            }
+                        }
                     });
 
                     page.Footer().Row(row =>

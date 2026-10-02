@@ -114,8 +114,13 @@ public static class DependencyInjection
         //     //   • ApparelProDbContext (scoped) is safely consumed by transient
         services.AddTransient(typeof(IReportRegistryService), typeof(ReportRegistryService));
         //
+        // 🎓 SOP (Standard Operating Procedures) — Phase 2.
+        // Registered as Transient — same pattern as ReportRegistryService.
+        // SopService provides full CRUD for SOPs and the context-aware query
+        // used by the PDF engine to inject SOPs into reports.
+        services.AddTransient(typeof(ISopService), typeof(SopService));
+
         //     // 🎓 Future AI services will be added here:
-        // services.AddTransient(typeof(ISopService), typeof(SopService));
        //  services.AddTransient(typeof(IReportIntentService), typeof(ReportIntentService));
 
         return services;

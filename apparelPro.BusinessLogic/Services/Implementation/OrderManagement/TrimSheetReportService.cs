@@ -1,4 +1,5 @@
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.ITrimSheetReportService;
+using apparelPro.BusinessLogic.Services.Models.AI.ISopService;
 using ApparelPro.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,16 +16,24 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
         private readonly IStyleApprovalService _styleApprovalService;
         private readonly ICurrencyConversionService _currencyConversionService;
 
+        // 🎓 PHASE 2 STEP 5 — ISopService injection:
+        // Used to call GetActiveSopsForContextAsync("TrimSheet", buyerCode, supplierCodes)
+        // which evaluates applicability rules, exclusion overrides, and date-bounded
+        // validity to find SOPs that belong on this specific Trim Sheet PDF.
+        private readonly ISopService _sopService;
+
         public TrimSheetReportService(
             ApparelProDbContext apparelProDbContext,
             IMaterialConsumptionService materialConsumptionService,
             IStyleApprovalService styleApprovalService,
-            ICurrencyConversionService currencyConversionService)
+            ICurrencyConversionService currencyConversionService,
+            ISopService sopService)
         {
             _apparelProDbContext = apparelProDbContext;
             _materialConsumptionService = materialConsumptionService;
             _styleApprovalService = styleApprovalService;
             _currencyConversionService = currencyConversionService;
+            _sopService = sopService;
         }
 
         public async Task<TrimSheetReportServiceModel> GetTrimSheetReportAsync(int buyerCode, string order, int typeCode, string styleCode, bool includeProfit)
@@ -181,6 +190,67 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 };
             }
 
+            // 7. 🎓 PHASE 2 STEP 5 — SOP → PDF Injection:
+            // Query GetActiveSopsForContextAsync with the report type "TrimSheet" and
+            // the buyer code. Supplier codes are collected from the material lines —
+            // each distinct supplier on this Trim Sheet is passed so that supplier-
+            // specific SOPs (e.g., "Supplier X requires woven labels on poly bags")
+            // are included alongside buyer-wide and global SOPs.
+            //
+            // 🎓 WHY MULTIPLE SUPPLIER CALLS?
+            // GetActiveSopsForContextAsync matches ANY context key in its inclusion
+            // set. But it takes a single supplierCode parameter — so we call it once
+            // with null for the supplier (to get global + report-type + buyer SOPs),
+            // then once per distinct supplier to pick up supplier-specific SOPs.
+            // We deduplicate by SopId at the end.
+            var applicableSops = new List<TrimSheetSopItemServiceModel>();
+
+            // 🎓 First call: global + "TrimSheet" report type + buyer-specific SOPs.
+            var baseSops = await _sopService.GetActiveSopsForContextAsync(
+                "TrimSheet", buyerCode.ToString(), null);
+
+            foreach (var sop in baseSops)
+            {
+                applicableSops.Add(new TrimSheetSopItemServiceModel
+                {
+                    SopCode = sop.SopCode,
+                    Title = sop.Title,
+                    Description = sop.Description,
+                    FullText = sop.FullText,
+                    Category = sop.Category,
+                });
+            }
+
+            // 🎓 Per-supplier calls: pick up SOPs with Supplier applicability rules.
+            var distinctSupplierCodes = lines
+                .Select(l => l.SupplierCode)
+                .Where(sc => !string.IsNullOrEmpty(sc))
+                .Distinct()
+                .ToList();
+
+            foreach (var supplierCode in distinctSupplierCodes)
+            {
+                var supplierSops = await _sopService.GetActiveSopsForContextAsync(
+                    "TrimSheet", buyerCode.ToString(), supplierCode);
+
+                foreach (var sop in supplierSops)
+                {
+                    // 🎓 Deduplicate: the base call already found global/buyer/report SOPs,
+                    // so only add genuinely new supplier-specific ones.
+                    if (!applicableSops.Any(existing => existing.SopCode == sop.SopCode))
+                    {
+                        applicableSops.Add(new TrimSheetSopItemServiceModel
+                        {
+                            SopCode = sop.SopCode,
+                            Title = sop.Title,
+                            Description = sop.Description,
+                            FullText = sop.FullText,
+                            Category = sop.Category,
+                        });
+                    }
+                }
+            }
+
             return new TrimSheetReportServiceModel
             {
                 BuyerCode = buyerCode,
@@ -203,6 +273,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 ProductionLineSectionAvailable = false,
                 Profit = profit,
                 ApprovalStamp = approvalStamp,
+                ApplicableSops = applicableSops,
             };
         }
     }

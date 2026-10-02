@@ -79,6 +79,7 @@ using AutoMapper;
 
    using ApparelPro.Data.Models.AI;
    using apparelPro.BusinessLogic.Services.Models.AI.IReportRegistryService;
+   using apparelPro.BusinessLogic.Services.Models.AI.ISopService;
 
 namespace apparelPro.BusinessLogic.Services.Mappings
 {
@@ -655,6 +656,18 @@ namespace apparelPro.BusinessLogic.Services.Mappings
             CreateMap<CreateDailyProductionEntryServiceModel, DailyProductionEntry>().MaxDepth(2);         
 
             CreateMap<ReportRegistry, ReportRegistryServiceModel>().MaxDepth(2).ReverseMap();
+
+            // 🎓 SOP (Standard Operating Procedures) — Phase 2.
+            // Read model: Entity ↔ ServiceModel (bidirectional for queries)
+            CreateMap<StandardOperatingProcedure, SopServiceModel>().MaxDepth(2).ReverseMap();
+            // Create model: CreateServiceModel → Entity (one-way for inserts)
+            CreateMap<CreateSopServiceModel, StandardOperatingProcedure>().MaxDepth(2);
+            // Update model: UpdateServiceModel → Entity (one-way for updates)
+            CreateMap<UpdateSopServiceModel, StandardOperatingProcedure>().MaxDepth(2);
+
+            // 🎓 SopApplicability child entity mappings.
+            CreateMap<SopApplicability, SopApplicabilityServiceModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateSopApplicabilityServiceModel, SopApplicability>().MaxDepth(2);
         }
     }
 }

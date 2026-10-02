@@ -207,8 +207,15 @@ namespace ApparelPro.Data
         public DbSet<AiChatSession> AiChatSessions { get; set; }
         public DbSet<AiChatMessage> AiChatMessages { get; set; }
 
-        // AI                                          
+        // AI
         public virtual DbSet<ReportRegistry> ReportRegistries { get; set; } = null!;
+
+        // 🎓 SOP (Standard Operating Procedures) — Phase 2.
+        // StandardOperatingProcedures: The company rules catalogue.
+        // SopApplicabilities: Linking table controlling WHERE each SOP appears
+        // (which reports, buyers, suppliers, etc.).
+        public virtual DbSet<StandardOperatingProcedure> StandardOperatingProcedures { get; set; } = null!;
+        public virtual DbSet<SopApplicability> SopApplicabilities { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -341,8 +348,12 @@ namespace ApparelPro.Data
             modelBuilder.ApplyConfiguration(new AiChatSessionConfiguration());
             modelBuilder.ApplyConfiguration(new AiChatMessageConfiguration());
 
-            // AI                                         
+            // AI
             modelBuilder.ApplyConfiguration(new ReportRegistryConfig());
+
+            // 🎓 SOP (Standard Operating Procedures) — Phase 2.
+            modelBuilder.ApplyConfiguration(new StandardOperatingProcedureConfig());
+            modelBuilder.ApplyConfiguration(new SopApplicabilityConfig());
         }
 
         //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

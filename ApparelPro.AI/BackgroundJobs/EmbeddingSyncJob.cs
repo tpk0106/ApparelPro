@@ -277,6 +277,20 @@ public sealed class EmbeddingSyncJob : BackgroundService
             vectorStore: vectorStore,
             stoppingToken: stoppingToken);
 
+        // 🎓 PHASE 2 STEP 6 — SOP → RAG Embedding:
+        // Sync Standard Operating Procedures into the vector store so RAG can
+        // surface company rules when users ask about procedures, compliance,
+        // packaging requirements, quality standards, etc. Each SOP's metadata
+        // (category, applicability rules, date range) is included in the chunk
+        // text to improve retrieval relevance.
+        await SyncEntityTypeAsync<object>(
+            entityType: "Sop",
+            fetchEntities: async () => await FetchSopsForSyncAsync(scope, chunker, stoppingToken),
+            chunker: chunker,
+            embeddingService: embeddingService,
+            vectorStore: vectorStore,
+            stoppingToken: stoppingToken);
+
         // ── Report stats ─────────────────────────────
         var totalPoints = await vectorStore.GetPointCountAsync(stoppingToken);
         _logger.LogInformation(
@@ -848,6 +862,120 @@ public sealed class EmbeddingSyncJob : BackgroundService
         _logger.LogInformation(
             "Chunked {SupplierCount} suppliers into {ChunkCount} embedding chunks",
             supplierList.Count, allChunks.Count);
+
+        return allChunks;
+    }
+
+    /// <summary>
+    /// 🎓 PHASE 2 STEP 6: REAL DATA FETCH — Standard Operating Procedures (SOPs)
+    ///
+    /// This method brings company rules and procedures into the RAG pipeline.
+    /// When a user asks "what are the quality requirements for buyer NEXT?" or
+    /// "what procedures apply to trim sheet orders?", the SOP chunks in Qdrant
+    /// will surface relevant procedures alongside the order/style data.
+    ///
+    /// 🎓 WHAT WE LOAD:
+    /// 1. All StandardOperatingProcedures (active AND inactive — we include
+    ///    the IsActive flag in the chunk text so Claude knows the status,
+    ///    but inactive SOPs are still searchable for historical reference).
+    /// 2. All SopApplicabilities — the linking rules that say WHERE each SOP
+    ///    applies (which report types, buyers, suppliers, or globally).
+    ///
+    /// 🎓 WHY INCLUDE INACTIVE SOPs?
+    /// Unlike the PDF injection pipeline (which strictly filters for active,
+    /// date-valid SOPs), the RAG pipeline benefits from including all SOPs:
+    ///   - Users may ask "what was the old packaging policy?"
+    ///   - Claude can distinguish current vs expired policies from the metadata
+    ///   - The chunk text clearly states "Status: Inactive" or "Effective until: 2024-01-01"
+    ///
+    /// 🎓 APPLICABILITY RULES AS CHUNK CONTEXT:
+    /// Each SOP's applicability rules are converted to Dictionary&lt;string, string&gt;
+    /// and passed to ChunkSop, which includes them in the header text.
+    /// This means a search for "buyer 101 procedures" matches chunks whose
+    /// header contains "Applies to: Buyer = 101" — much better retrieval
+    /// than if we only embedded the procedure text itself.
+    ///
+    /// 🎓 NAVIGATION PROPERTY APPROACH:
+    /// Unlike Styles (which lack navigation properties to CostProfiles),
+    /// StandardOperatingProcedure HAS a navigation property to SopApplicabilities.
+    /// We use .Include() to eager-load applicability rules in a single query
+    /// rather than loading them separately and joining in memory.
+    /// </summary>
+    private async Task<List<EntityChunk>> FetchSopsForSyncAsync(
+        IServiceScope scope,
+        EntityChunkerService chunker,
+        CancellationToken stoppingToken)
+    {
+        // ── Step 1: Resolve DbContext from the scoped provider ──
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<ApparelProDbContext>();
+
+        // ── Step 2: Load all SOPs with their applicability rules ──
+        // 🎓 .Include(s => s.SopApplicabilities) eager-loads the child rows
+        // in a single query (LEFT JOIN). This is efficient here because:
+        //   - SOP count is typically small (tens, not thousands)
+        //   - Each SOP has a handful of applicability rules (not hundreds)
+        //   - We need the rules for EVERY SOP anyway (no filtering)
+        //
+        // 🎓 AsNoTracking(): Read-only — we never modify SOPs in the sync job.
+        var sops = await dbContext.StandardOperatingProcedures
+            .AsNoTracking()
+            .Include(s => s.SopApplicabilities)
+            .ToListAsync(stoppingToken);
+
+        _logger.LogInformation("Fetched {Count} SOPs from database", sops.Count);
+
+        // ── Step 3: Chunk each SOP ─────────────────────────────
+        var allChunks = new List<EntityChunk>();
+
+        foreach (var sop in sops)
+        {
+            // ── Build applicability rule dictionaries ────
+            // 🎓 The chunker expects IReadOnlyList<Dictionary<string, string>>
+            // because it's decoupled from the data layer. We convert the
+            // SopApplicability entities into simple string dictionaries here.
+            //
+            // Each dictionary has:
+            //   "Type": the ApplicabilityType (e.g., "ReportType", "Buyer", "All")
+            //   "Key": the ApplicabilityKey (e.g., "TrimSheet", "101", "*")
+            //   "IsExcluded": "true" or "false" — whether this is an exclusion override
+            List<Dictionary<string, string>>? applicabilityDicts = null;
+
+            if (sop.SopApplicabilities.Count > 0)
+            {
+                applicabilityDicts = sop.SopApplicabilities.Select(sa => new Dictionary<string, string>
+                {
+                    ["Type"] = sa.ApplicabilityType,
+                    ["Key"] = sa.ApplicabilityKey,
+                    ["IsExcluded"] = sa.IsExcluded.ToString().ToLowerInvariant()
+                }).ToList();
+            }
+
+            // ── Call the chunker ────────────────────────
+            // 🎓 ChunkSop produces 1+ chunks depending on FullText length:
+            //   - Short SOP (1 paragraph) → typically 1 chunk
+            //   - Long SOP (multi-page procedure) → multiple chunks with header repeated
+            //
+            // The entityKey is SopId (int → string), so the Qdrant point ID becomes:
+            //   "sop-42-chunk-0" — deterministic, so re-indexing overwrites correctly.
+            var chunks = chunker.ChunkSop(
+                sopId: sop.SopId,
+                sopCode: sop.SopCode,
+                title: sop.Title,
+                description: sop.Description,
+                fullText: sop.FullText,
+                category: sop.Category,
+                isActive: sop.IsActive,
+                effectiveFrom: sop.EffectiveFrom,
+                effectiveTo: sop.EffectiveTo,
+                applicabilityRules: applicabilityDicts);
+
+            allChunks.AddRange(chunks);
+        }
+
+        _logger.LogInformation(
+            "Chunked {SopCount} SOPs into {ChunkCount} embedding chunks",
+            sops.Count, allChunks.Count);
 
         return allChunks;
     }

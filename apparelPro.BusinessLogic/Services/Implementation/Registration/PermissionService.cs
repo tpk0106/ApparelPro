@@ -274,6 +274,13 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
         // screen can also reach the combined summary.
         private static readonly string[] DashboardViewRoles = { "Production Manager", "Production Entry Operator", "Factory Manager", "Merchandiser", "Merchandiser Manager", "Inventory", "Order Entry Operator", "Store Manager", "Administrator" };
 
+        // 🎓 SOP MANAGEMENT ROLES:
+        // Standard Operating Procedures are company-level configuration — only
+        // Merchandiser Manager and Administrator should create/edit/delete SOPs.
+        // Regular Merchandisers can VIEW SOPs via the reports they appear on,
+        // but the admin CRUD screen is restricted to these senior roles.
+        private static readonly string[] SopManagementRoles = { "Merchandiser Manager", "Administrator" };
+
         // ---------------------------------------------------------------------------
         // Default permission catalog - reproduces, section by section, the raw-Roles /
         // AccessPolicies-driven authorization your controllers already enforce today
@@ -557,6 +564,9 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
             new("value-declaration-manage", "Value Declaration Form - Add / Update / Delete", "Import / Export Documentation", "ValueDeclarationController PUT/DELETE endpoints", ImportExportRoles),
             new("export-license-view", "Export License - View", "Import / Export Documentation", "ExportLicenseController GET endpoints - matches the real Sri Lanka Import & Export Control Department application form, not legacy ie_elic2 (a quota-based print artifact for the old MFA quota system)", ImportExportRoles),
             new("export-license-manage", "Export License - Add / Update / Delete", "Import / Export Documentation", "ExportLicenseController PUT/DELETE endpoints", ImportExportRoles),
+
+            // AI — Standard Operating Procedures (Phase 2)
+            new("sop-management", "Standard Operating Procedures - Management", "AI", "SopController - full CRUD for managing SOPs and their applicability rules. Controls who can create, edit, and delete SOPs via the admin UI.", SopManagementRoles),
         };
 
         private sealed record PermissionCatalogEntry(string Key, string DisplayName, string Category, string? Description, string[] DefaultRoleNames);

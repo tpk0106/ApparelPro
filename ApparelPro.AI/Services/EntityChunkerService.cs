@@ -364,6 +364,135 @@ public sealed class EntityChunkerService
     }
 
     /// <summary>
+    /// Convert a StandardOperatingProcedure entity into embeddable text chunks.
+    ///
+    /// 🎓 WHY CHUNK SOPs?
+    /// SOPs are company rules and procedures — exactly the kind of institutional
+    /// knowledge that RAG excels at surfacing. When someone asks "what are the
+    /// packaging requirements for buyer NEXT?", RAG should find the relevant SOP
+    /// and include it in Claude's context alongside the order/style data.
+    ///
+    /// 🎓 SOP CHUNKING STRATEGY:
+    /// Unlike Styles (which have many material child rows), SOPs have:
+    ///   - A header (SopCode, Title, Category, date range, active status)
+    ///   - One potentially long body (FullText — may be paragraphs of procedure text)
+    ///   - Applicability rules (detail lines showing WHERE this SOP applies)
+    ///
+    /// We treat FullText paragraphs as detail lines rather than one big block.
+    /// This way, if an SOP has 3 pages of procedure text, it gets split into
+    /// manageable chunks with the header repeated for context — just like
+    /// ChunkStyle splits material lines across chunks.
+    ///
+    /// 🎓 APPLICABILITY RULES IN THE CHUNK TEXT:
+    /// Including the applicability rules (e.g., "Applies to: Buyer 101, ReportType TrimSheet")
+    /// is critical for RAG relevance. When someone asks about a specific buyer's SOPs,
+    /// the applicability text in the chunk helps the embedding match that query.
+    /// </summary>
+    /// <param name="sopId">The SOP's primary key (used as entityKey for the Qdrant point ID).</param>
+    /// <param name="sopCode">The human-readable SOP code (e.g., "SOP-TRIM-001").</param>
+    /// <param name="title">Short descriptive title of the SOP.</param>
+    /// <param name="description">One-paragraph summary of what the SOP covers.</param>
+    /// <param name="fullText">The complete procedure text (may be multi-paragraph).</param>
+    /// <param name="category">Classification category (e.g., "Quality", "Shipping").</param>
+    /// <param name="isActive">Whether the SOP is currently enabled.</param>
+    /// <param name="effectiveFrom">When this SOP takes effect.</param>
+    /// <param name="effectiveTo">When this SOP expires (null = no expiry).</param>
+    /// <param name="applicabilityRules">
+    /// List of applicability rules, each as a dictionary:
+    ///   { "Type": "ReportType", "Key": "TrimSheet", "IsExcluded": "false" }
+    /// These tell us WHERE this SOP is used — included in chunk text for RAG matching.
+    /// </param>
+    /// <returns>List of text chunks, each within the configured token limit.</returns>
+    public List<EntityChunk> ChunkSop(
+        int sopId,
+        string sopCode,
+        string title,
+        string? description,
+        string? fullText,
+        string? category,
+        bool isActive,
+        DateTime effectiveFrom,
+        DateTime? effectiveTo,
+        IReadOnlyList<Dictionary<string, string>>? applicabilityRules = null)
+    {
+        // ── Build the header ─────────────────────────
+        // 🎓 THE HEADER: Contains all the metadata that identifies this SOP.
+        // Every chunk starts with this, so a search result always knows
+        // which SOP it belongs to and whether it's currently active.
+        var header = new StringBuilder();
+        header.AppendLine($"Standard Operating Procedure [{sopCode}]: {title}.");
+
+        if (!string.IsNullOrWhiteSpace(category))
+            header.AppendLine($"Category: {category}.");
+
+        header.AppendLine($"Status: {(isActive ? "Active" : "Inactive")}.");
+        header.AppendLine($"Effective from: {effectiveFrom:yyyy-MM-dd}.");
+
+        if (effectiveTo.HasValue)
+            header.AppendLine($"Effective until: {effectiveTo.Value:yyyy-MM-dd}.");
+        else
+            header.AppendLine("No expiry date (permanent).");
+
+        // 🎓 Include the description in the header — it's a concise summary
+        // that helps the embedding capture the SOP's intent even in chunk 0.
+        if (!string.IsNullOrWhiteSpace(description))
+            header.AppendLine($"Summary: {description}");
+
+        // 🎓 Applicability rules go in the header because they're short and
+        // critical for matching — when someone asks "SOPs for buyer NEXT",
+        // having "Applies to: Buyer 101" in every chunk improves recall.
+        if (applicabilityRules is not null && applicabilityRules.Count > 0)
+        {
+            header.AppendLine("Applicability:");
+            foreach (var rule in applicabilityRules)
+            {
+                var type = rule.GetValueOrDefault("Type", "Unknown");
+                var key = rule.GetValueOrDefault("Key", "?");
+                var isExcluded = rule.GetValueOrDefault("IsExcluded", "false");
+
+                // 🎓 Show "Excludes" vs "Applies to" to make the semantics clear
+                // in the embedded text — Claude needs to understand whether this
+                // SOP is INCLUDED or EXCLUDED for a given context.
+                var prefix = isExcluded.Equals("true", StringComparison.OrdinalIgnoreCase)
+                    ? "Excludes"
+                    : "Applies to";
+                header.AppendLine($"  {prefix}: {type} = {key}.");
+            }
+        }
+
+        var headerText = header.ToString().TrimEnd();
+
+        // ── Build detail lines from FullText ─────────
+        // 🎓 FULL TEXT → DETAIL LINES:
+        // The FullText field may contain multiple paragraphs of procedure text.
+        // We split on blank lines (double newlines) or single newlines to produce
+        // individual detail lines. This lets the BuildChunks engine pack them
+        // into token-limited chunks with the header repeated for context.
+        //
+        // If FullText is empty or null, the SOP header alone becomes the chunk
+        // (some SOPs may only have a title + description, no detailed procedure).
+        var detailLines = new List<string>();
+        if (!string.IsNullOrWhiteSpace(fullText))
+        {
+            var paragraphs = fullText.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var paragraph in paragraphs)
+            {
+                var trimmed = paragraph.Trim();
+                if (!string.IsNullOrWhiteSpace(trimmed))
+                    detailLines.Add(trimmed);
+            }
+        }
+
+        // ── Assemble chunks ──────────────────────────
+        return BuildChunks(
+            entityType: "Sop",
+            entityKey: sopId.ToString(),
+            headerText: headerText,
+            detailLines: detailLines,
+            detailSectionTitle: "Procedure");
+    }
+
+    /// <summary>
     /// Generic text chunker for any entity type not explicitly handled above.
     ///
     /// 🎓 EXTENSIBILITY:

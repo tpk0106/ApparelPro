@@ -116,6 +116,7 @@ using ApparelPro.WebApi.APIModels.Registration;
 using ApparelPro.WebApi.APIModels.SystemConfiguration;
 using ApparelPro.WebApi.Reports.Models;
 using apparelPro.BusinessLogic.Services.Models.AI.IReportRegistryService;
+using apparelPro.BusinessLogic.Services.Models.AI.ISopService;
 using ApparelPro.WebApi.APIModels.AI;
 
 using AutoMapper;
@@ -1208,6 +1209,22 @@ namespace ApparelPro.WebApi.Mappings
             CreateMap<EndOfProductionStatusServiceModel, EndOfProductionStatusAPIModel>().MaxDepth(2);
 
             CreateMap<ReportRegistryServiceModel, ReportRegistryAPIModel>().MaxDepth(2).ReverseMap();
+
+            // 🎓 SOP (Standard Operating Procedures) — Phase 2.
+            // Read model: ServiceModel ↔ APIModel (bidirectional)
+            CreateMap<SopServiceModel, SopAPIModel>().MaxDepth(2).ReverseMap();
+            // Create model: CreateAPIModel → CreateServiceModel (one-way)
+            CreateMap<CreateSopAPIModel, CreateSopServiceModel>().MaxDepth(2);
+            // Update model: UpdateAPIModel → UpdateServiceModel (one-way)
+            CreateMap<UpdateSopAPIModel, UpdateSopServiceModel>().MaxDepth(2);
+
+            // 🎓 SopApplicability child mappings.
+            CreateMap<SopApplicabilityServiceModel, SopApplicabilityAPIModel>().MaxDepth(2).ReverseMap();
+            CreateMap<CreateSopApplicabilityAPIModel, CreateSopApplicabilityServiceModel>().MaxDepth(2);
+
+            // 🎓 Pagination converter for SOP list endpoint.
+            CreateMap<PaginationResult<SopServiceModel>, PaginationAPIModel<SopAPIModel>>()
+                .ConvertUsing<PaginationResultToPaginationAPITypeConverter<SopServiceModel, SopAPIModel>>();
         }
 
         public class PaginationResultToPaginationAPITypeConverter<sourceT, destT> : ITypeConverter<PaginationResult<sourceT>, PaginationAPIModel<destT>>
