@@ -53,12 +53,11 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.ITrimSheetRep
         // Null when the style has not yet been Trim Sheet approved.
         public TrimSheetApprovalStampServiceModel? ApprovalStamp { get; set; }
 
-        // 🎓 PHASE 2 STEP 5 — SOP → PDF INJECTION:
-        // Carries context-matched Standard Operating Procedures into the PDF engine.
-        // Populated by TrimSheetReportService via ISopService.GetActiveSopsForContextAsync.
-        // Empty list (not null) when no SOPs match the report's buyer/supplier context —
-        // the PDF engine simply skips the "Terms & Conditions" section in that case.
-        public List<TrimSheetSopItemServiceModel> ApplicableSops { get; set; } = new();
+        // 🎓 SOP INTEGRATION (Phase 2 Step 5):
+        // SOPs matched by GetActiveSopsForContextAsync("TrimSheet", buyerCode, null).
+        // These are injected into the PDF as a "Terms & Conditions" section at the
+        // bottom of the report. Empty list when no SOPs match the context.
+        public List<TrimSheetSopDisplayModel> Sops { get; set; } = new();
     }
 
     public class TrimSheetLineServiceModel
@@ -125,29 +124,22 @@ namespace apparelPro.BusinessLogic.Services.Models.OrderManagement.ITrimSheetRep
         public DateOnly ApprovedDate { get; set; }
     }
 
-    // 🎓 PHASE 2 STEP 5 — Lightweight projection of SopServiceModel for PDF rendering.
-    // Only carries the fields the "Terms & Conditions" section actually prints —
-    // no audit fields, no applicability rules, no PK. This keeps the report model
-    // self-contained without dragging in the full AI/ISopService namespace.
-    public class TrimSheetSopItemServiceModel
+    /// <summary>
+    /// 🎓 LIGHTWEIGHT SOP DISPLAY MODEL FOR PDF:
+    /// We intentionally do NOT reuse SopServiceModel here because:
+    ///   • The report model lives in OrderManagement, not AI — no cross-namespace dependency
+    ///   • The PDF only needs 4 fields (code, title, description, category), not
+    ///     the full 14+ fields including audit timestamps and applicability rules
+    ///   • This keeps the JSON payload small when the report is also served via API
+    ///
+    /// The TrimSheetReportService maps from SopServiceModel → TrimSheetSopDisplayModel
+    /// when populating the report.
+    /// </summary>
+    public class TrimSheetSopDisplayModel
     {
-        // 🎓 SopCode: displayed as a reference identifier in the PDF margin
-        // (e.g., "SOP-TRIM-001") so the reader can look up the full procedure.
         public string SopCode { get; set; } = "";
-
-        // 🎓 Title: rendered as the bold heading for each SOP block in the PDF.
         public string Title { get; set; } = "";
-
-        // 🎓 Description: one-line summary rendered in italic below the title,
-        // giving context before the reader hits the full text.
         public string Description { get; set; } = "";
-
-        // 🎓 FullText: the complete procedure body — rendered as the main content
-        // block under each SOP. May contain multiple paragraphs.
-        public string FullText { get; set; } = "";
-
-        // 🎓 Category: used for grouping SOPs visually in the PDF
-        // (e.g., "Quality", "Shipping", "Packaging").
         public string Category { get; set; } = "";
     }
 }

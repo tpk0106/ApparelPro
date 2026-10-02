@@ -210,35 +210,76 @@ namespace apparelPro.BusinessLogic.Services.Implementation.AI
                         $"SOP with ID {updateSopServiceModel.SopId} not found.");
                 }
 
-                // 🎓 Map scalar properties from the update model onto the tracked entity.
-                // AutoMapper's Map(source, destination) updates the destination in-place
-                // without creating a new instance — preserving EF Core's change tracking.
+                // ═══════════════════════════════════════════════════════════
+                // 🎓 CRITICAL FIX — SAFE CHILD-REPLACEMENT WITH AUTOMAPPER
+                //
+                // PROBLEM:
+                // AutoMapper's Map(source, destination) maps ALL properties,
+                // INCLUDING the SopApplicabilities navigation collection.
+                // This causes TWO bugs:
+                //
+                //   BUG 1 — "Temporary value" crash:
+                //   AutoMapper REPLACES the tracked DB entities (real PKs)
+                //   with brand-new entities (temp PK = 0). If RemoveRange
+                //   is called on these ghosts, EF Core throws:
+                //     "SopApplicability.SopApplicabilityId has a temporary
+                //      value while attempting to change state to 'Deleted'."
+                //
+                //   BUG 2 — Ghost insertion (duplicate rows):
+                //   The ghost entities sit in the tracked navigation property.
+                //   When SaveChangesAsync runs, EF Core's DetectChanges walks
+                //   the navigation and finds them as new Added entities. It
+                //   INSERTs them alongside the intended deletes, creating
+                //   duplicate applicability rules in the database.
+                //
+                // SOLUTION:
+                //   1. Capture original DB children BEFORE AutoMapper
+                //   2. Run AutoMapper (maps scalars + creates ghosts)
+                //   3. IMMEDIATELY detach ghosts from change tracker
+                //   4. Delete originals (Phase 1) — clean save, no ghosts
+                //   5. Add new rules (Phase 2) — only the intended inserts
+                // ═══════════════════════════════════════════════════════════
+
+                // ── Step 1: Snapshot original DB entities ────────────────
+                // 🎓 These have REAL PKs from the database and are properly
+                // tracked by EF Core. We'll delete these in Phase 1.
+                var originalRules = existing.SopApplicabilities.ToList();
+
+                // ── Step 2: Map scalar properties via AutoMapper ─────────
+                // 🎓 This maps Title, Description, IsActive, Category, etc.
+                // SIDE EFFECT: Also overwrites SopApplicabilities with ghost
+                // entities (temp PKs). We handle that in Step 3.
                 _mapper.Map(updateSopServiceModel, existing);
 
                 // 🎓 Server-set audit fields.
                 existing.ModifiedAt = DateTime.UtcNow;
 
-                // 🎓 REPLACE-CHILDREN FIX — TWO-PHASE SAVE:
-                // EF Core tracks new entities with temporary PKs (SopApplicabilityId = 0).
-                // If we RemoveRange the old children AND add new children in the SAME
-                // SaveChangesAsync call, EF gets confused — it tries to delete entities
-                // that still have temporary keys, throwing:
-                //   "The property 'SopApplicability.SopApplicabilityId' has a temporary
-                //    value while attempting to change the entity's state to 'Deleted'."
+                // ── Step 3: DETACH ghost entities from change tracker ────
+                // 🎓 CRITICAL: Must happen BEFORE any SaveChangesAsync call.
+                // Without this, EF Core's DetectChanges would find the ghost
+                // entities in the navigation property and INSERT them as new
+                // rows — creating duplicate applicability rules.
                 //
-                // The fix: flush the deletes first (Phase 1), THEN add the new children
-                // and save again (Phase 2). Both phases run inside the same transaction,
-                // so if anything fails the entire operation rolls back atomically.
+                // We snapshot the ghosts, clear the navigation, then set each
+                // ghost's state to Detached so EF Core forgets about them.
+                var ghostEntities = existing.SopApplicabilities.ToList();
+                existing.SopApplicabilities.Clear();
+                foreach (var ghost in ghostEntities)
+                {
+                    _apparelProDbContext.Entry(ghost).State = EntityState.Detached;
+                }
 
-                // ── Phase 1: Delete existing applicability rules ──────────
-                _apparelProDbContext.SopApplicabilities.RemoveRange(existing.SopApplicabilities);
+                // ── Phase 1: Delete ORIGINAL applicability rules ─────────
+                // 🎓 Using originalRules (real PKs captured in Step 1).
+                // The ghost entities are already detached, so SaveChangesAsync
+                // only processes the deletes — no surprise inserts.
+                _apparelProDbContext.SopApplicabilities.RemoveRange(originalRules);
                 await _apparelProDbContext.SaveChangesAsync();
 
-                // 🎓 Clear the navigation collection so EF Core doesn't hold
-                // stale references to the just-deleted entities in memory.
-                existing.SopApplicabilities.Clear();
-
-                // ── Phase 2: Add new applicability rules ──────────────────
+                // ── Phase 2: Add new applicability rules ─────────────────
+                // 🎓 Build fresh SopApplicability entities from the update
+                // model's rule list. These are the ONLY entities that should
+                // be inserted — with correct SopId and IsExcluded values.
                 foreach (var rule in updateSopServiceModel.SopApplicabilities)
                 {
                     existing.SopApplicabilities.Add(new SopApplicability

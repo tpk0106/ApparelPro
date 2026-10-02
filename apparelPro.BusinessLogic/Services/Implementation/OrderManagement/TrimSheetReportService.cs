@@ -1,5 +1,4 @@
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.ITrimSheetReportService;
-using apparelPro.BusinessLogic.Services.Models.AI.ISopService;
 using ApparelPro.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,17 +8,23 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
     // TrimSheetReportServiceModel for what legacy sections this does NOT yet cover
     // (Sub Contract costs, Production Line costs - neither exists anywhere in this
     // system yet, confirmed 2026-08-07).
+    //
+    // 🎓 SOP INTEGRATION (Phase 2 Step 5, 2026-10-02):
+    // This service now injects ISopService to fetch context-matched SOPs when
+    // building the report. The SOP engine determines which SOPs apply based on:
+    //   • ReportType = "TrimSheet" (this report's code from ReportRegistry)
+    //   • Buyer = buyerCode (the buyer this report is generated for)
+    //   • Effective date range (only current, active SOPs)
+    //   • Exclusion overrides (buyer-specific opt-outs)
+    // Matched SOPs appear as "Terms & Conditions" in the PDF.
     public class TrimSheetReportService : ITrimSheetReportService
     {
         private readonly ApparelProDbContext _apparelProDbContext;
         private readonly IMaterialConsumptionService _materialConsumptionService;
         private readonly IStyleApprovalService _styleApprovalService;
         private readonly ICurrencyConversionService _currencyConversionService;
-
-        // 🎓 PHASE 2 STEP 5 — ISopService injection:
-        // Used to call GetActiveSopsForContextAsync("TrimSheet", buyerCode, supplierCodes)
-        // which evaluates applicability rules, exclusion overrides, and date-bounded
-        // validity to find SOPs that belong on this specific Trim Sheet PDF.
+        // 🎓 ISopService — injected to fetch context-matched SOPs for the PDF footer.
+        // Registered in DependencyInjection.cs as Transient (same as ReportRegistryService).
         private readonly ISopService _sopService;
 
         public TrimSheetReportService(
@@ -190,65 +195,41 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 };
             }
 
-            // 7. 🎓 PHASE 2 STEP 5 — SOP → PDF Injection:
-            // Query GetActiveSopsForContextAsync with the report type "TrimSheet" and
-            // the buyer code. Supplier codes are collected from the material lines —
-            // each distinct supplier on this Trim Sheet is passed so that supplier-
-            // specific SOPs (e.g., "Supplier X requires woven labels on poly bags")
-            // are included alongside buyer-wide and global SOPs.
+            // 7. 🎓 SOP INJECTION (Phase 2 Step 5):
+            // Fetch all active SOPs that match this report's context:
+            //   • reportCode: "TrimSheet" — matches SopApplicability rows with
+            //     ApplicabilityType="ReportType", ApplicabilityKey="TrimSheet"
+            //   • buyerCode: the buyer code as string — matches Buyer applicability rules
+            //   • supplierCode: null — Trim Sheet is not supplier-scoped
             //
-            // 🎓 WHY MULTIPLE SUPPLIER CALLS?
-            // GetActiveSopsForContextAsync matches ANY context key in its inclusion
-            // set. But it takes a single supplierCode parameter — so we call it once
-            // with null for the supplier (to get global + report-type + buyer SOPs),
-            // then once per distinct supplier to pick up supplier-specific SOPs.
-            // We deduplicate by SopId at the end.
-            var applicableSops = new List<TrimSheetSopItemServiceModel>();
-
-            // 🎓 First call: global + "TrimSheet" report type + buyer-specific SOPs.
-            var baseSops = await _sopService.GetActiveSopsForContextAsync(
-                "TrimSheet", buyerCode.ToString(), null);
-
-            foreach (var sop in baseSops)
+            // 🎓 WHY buyerCode.ToString()?
+            // GetActiveSopsForContextAsync takes string parameters because SopApplicability
+            // stores ApplicabilityKey as nvarchar (supports buyer codes, supplier codes,
+            // report names — all different types). The buyer code is stored as "101" in the
+            // applicability table, matching the int→string conversion here.
+            //
+            // 🎓 GRACEFUL DEGRADATION:
+            // If the SOP service throws (e.g., table doesn't exist yet during migration),
+            // we catch and continue with an empty SOP list — the rest of the report still
+            // generates correctly. SOPs are supplementary, not critical to the report.
+            var sops = new List<TrimSheetSopDisplayModel>();
+            try
             {
-                applicableSops.Add(new TrimSheetSopItemServiceModel
+                var matchedSops = await _sopService.GetActiveSopsForContextAsync(
+                    "TrimSheet", buyerCode.ToString(), null);
+
+                sops = matchedSops.Select(sop => new TrimSheetSopDisplayModel
                 {
                     SopCode = sop.SopCode,
                     Title = sop.Title,
                     Description = sop.Description,
-                    FullText = sop.FullText,
                     Category = sop.Category,
-                });
+                }).ToList();
             }
-
-            // 🎓 Per-supplier calls: pick up SOPs with Supplier applicability rules.
-            var distinctSupplierCodes = lines
-                .Select(l => l.SupplierCode)
-                .Where(sc => !string.IsNullOrEmpty(sc))
-                .Distinct()
-                .ToList();
-
-            foreach (var supplierCode in distinctSupplierCodes)
+            catch
             {
-                var supplierSops = await _sopService.GetActiveSopsForContextAsync(
-                    "TrimSheet", buyerCode.ToString(), supplierCode);
-
-                foreach (var sop in supplierSops)
-                {
-                    // 🎓 Deduplicate: the base call already found global/buyer/report SOPs,
-                    // so only add genuinely new supplier-specific ones.
-                    if (!applicableSops.Any(existing => existing.SopCode == sop.SopCode))
-                    {
-                        applicableSops.Add(new TrimSheetSopItemServiceModel
-                        {
-                            SopCode = sop.SopCode,
-                            Title = sop.Title,
-                            Description = sop.Description,
-                            FullText = sop.FullText,
-                            Category = sop.Category,
-                        });
-                    }
-                }
+                // 🎓 Swallow silently — SOPs are optional content.
+                // This lets the report work even before the SOP migration is applied.
             }
 
             return new TrimSheetReportServiceModel
@@ -273,7 +254,7 @@ namespace apparelPro.BusinessLogic.Services.Implementation.OrderManagement
                 ProductionLineSectionAvailable = false,
                 Profit = profit,
                 ApprovalStamp = approvalStamp,
-                ApplicableSops = applicableSops,
+                Sops = sops,
             };
         }
     }
