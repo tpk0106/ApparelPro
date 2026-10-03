@@ -281,6 +281,17 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
         // but the admin CRUD screen is restricted to these senior roles.
         private static readonly string[] SopManagementRoles = { "Merchandiser Manager", "Administrator" };
 
+        // 🎓 ANOMALY DETECTION ROLES (Phase 3):
+        // Anomaly alerts are system-generated warnings about unusual material
+        // consumption, price spikes, and waste/damage patterns. Viewing alerts
+        // is available to the same broad set as OrderwiseInventoryStandard plus
+        // Administrator (anyone who works with styles/materials should see them).
+        // Triggering a full scan is an admin action — computationally expensive
+        // (scans every active style) — so restricted to Merchandiser Manager +
+        // Administrator, matching SopManagementRoles precedent.
+        private static readonly string[] AnomalyAlertViewRoles = { "Inventory", "Merchandiser", "Merchandiser Manager", "Order Entry Operator", "Administrator" };
+        private static readonly string[] AnomalyAlertManageRoles = { "Merchandiser Manager", "Administrator" };
+
         // ---------------------------------------------------------------------------
         // Default permission catalog - reproduces, section by section, the raw-Roles /
         // AccessPolicies-driven authorization your controllers already enforce today
@@ -567,6 +578,20 @@ namespace apparelPro.BusinessLogic.Services.Implementation.Registration
 
             // AI — Standard Operating Procedures (Phase 2)
             new("sop-management", "Standard Operating Procedures - Management", "AI", "SopController - full CRUD for managing SOPs and their applicability rules. Controls who can create, edit, and delete SOPs via the admin UI.", SopManagementRoles),
+
+            // AI — Anomaly Detection & Alerts (Phase 3)
+            // 🎓 VIEW: All GET endpoints on AnomalyAlertController — paginated alert list,
+            // unread count (bell badge), recent alerts (bell dropdown), and style-specific
+            // alerts. Also covers the style-specific scan trigger (POST scan/style) because
+            // it runs automatically when a user opens a style detail page — conceptually a
+            // "read" action that refreshes data for the style the user is already viewing.
+            new("anomaly-alert-view", "Anomaly Alerts - View / Style Scan", "AI", "AnomalyAlertController GET endpoints (alerts, alerts/unread-count, alerts/recent, alerts/style) + POST scan/style. Powers the notification bell icon, dropdown panel, and style-specific anomaly banners.", AnomalyAlertViewRoles),
+            // 🎓 MANAGE: Full scan trigger and status updates. Full scan is computationally
+            // expensive (every active style), so restricted to senior roles. Status updates
+            // (acknowledge/resolve/dismiss) are also here because they change alert state —
+            // if a future requirement wants all viewers to acknowledge alerts, just move the
+            // PUT endpoint's policy to "anomaly-alert-view" in this catalog and re-seed.
+            new("anomaly-alert-manage", "Anomaly Alerts - Full Scan / Status Update", "AI", "AnomalyAlertController POST scan (full scan trigger) + PUT alerts/{id}/status (acknowledge, resolve, dismiss). Restricted to Merchandiser Manager and Administrator.", AnomalyAlertManageRoles),
         };
 
         private sealed record PermissionCatalogEntry(string Key, string DisplayName, string Category, string? Description, string[] DefaultRoleNames);

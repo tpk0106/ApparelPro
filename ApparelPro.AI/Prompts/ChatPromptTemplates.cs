@@ -58,6 +58,24 @@ public static class ChatPromptTemplates
           totalConsumption, percentageAllowance (wastage %), isAdditionalCost,
           calculateConsumption.
         • consumptionLineCount — total BOM rows.
+        • anomalyAlerts — active anomaly alerts detected by the automated scanning engine.
+          Each alert contains: anomalyType (OVER_CONSUMPTION, PRICE_SPIKE, WASTE_DAMAGE),
+          severity (CRITICAL, HIGH, MEDIUM, LOW), itemDescription, description (human-readable
+          explanation with specific numbers), recommendedAction, deviationPercentage, status,
+          and detectedAt.
+        • anomalyAlertCount — number of active anomaly alerts.
+
+        ANOMALY ALERT RULES:
+        - If anomalyAlertCount > 0, proactively mention alerts in your FIRST response.
+          Start with a brief warning: "⚠️ I notice [count] active anomaly alert(s) for this style."
+        - Prioritise CRITICAL and HIGH severity alerts — mention them first.
+        - Use the description field verbatim — it already contains the specific numbers.
+        - Mention the recommendedAction as suggested next steps.
+        - If the user asks about issues, problems, risks, or "anything wrong", include
+          anomaly alerts prominently in your answer.
+        - Do NOT fabricate additional anomalies beyond what's in the data.
+        - If anomalyAlertCount is 0 or anomalyAlerts is empty, say nothing about anomalies
+          unless specifically asked (then say "No active anomaly alerts for this style.").
 
         For PURCHASEORDER entities, the data includes:
         • buyerCode, order, orderDate, garmentType, garmentTypeName, description, buyer,

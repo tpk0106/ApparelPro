@@ -30,11 +30,10 @@ public sealed class AiSettings
     public OpenAiSettings OpenAI { get; set; } = new();
 
     /// <summary>
-    /// Default max tokens for summarise responses.
-    /// Raised from 1024 → 2500 to accommodate the upgraded summarise prompt
-    /// which now includes analysis, risk flags, and recommendations.
+    /// Default max tokens for quick summaries if not specified per-request.
+    /// Raised from 1024 → 1024 (unchanged) — summarise uses explicit 1000 in AiService.
     /// </summary>
-    public int DefaultMaxTokens { get; set; } = 2500;
+    public int DefaultMaxTokens { get; set; } = 1024;
 
     /// <summary>
     /// Max tokens for deep analysis responses.
@@ -54,6 +53,22 @@ public sealed class AiSettings
     /// Kept at 1500 — chat should be conversational and concise, not report-length.
     /// </summary>
     public int ChatMaxTokens { get; set; } = 1500;
+
+    // ─── 🆕 Phase 3: Anomaly Detection ──────────────────
+
+    /// <summary>
+    /// How often (in minutes) the AnomalyDetectionJob background service
+    /// runs a full anomaly scan across all active styles.
+    ///
+    /// 🎓 WHY 30 MINUTES DEFAULT?
+    /// - Material consumption data doesn't change every second — it updates
+    ///   when warehouse staff record fabric issues or goods receipts.
+    /// - 30 minutes strikes a balance between timely detection and DB load.
+    /// - Too frequent (5 min): unnecessary load, no new data to scan.
+    /// - Too infrequent (4 hrs): anomalies sit undetected for half a shift.
+    /// - Configurable via appsettings.json: "AiSettings": { "AnomalyScanIntervalMinutes": 30 }
+    /// </summary>
+    public int AnomalyScanIntervalMinutes { get; set; } = 30;
 }
 
 public sealed class AnthropicSettings

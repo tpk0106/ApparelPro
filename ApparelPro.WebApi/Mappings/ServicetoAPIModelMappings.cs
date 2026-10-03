@@ -1,4 +1,5 @@
-﻿using apparelPro.BusinessLogic.Services.Implementation.Shared;
+﻿using ApparelPro.Data.Models.AI;
+using apparelPro.BusinessLogic.Services.Implementation.Shared;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IColorSizeDetailsService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IColorQuantityRatioService;
 using apparelPro.BusinessLogic.Services.Models.OrderManagement.IMaterialConsumptionService;
@@ -1225,6 +1226,14 @@ namespace ApparelPro.WebApi.Mappings
             // 🎓 Pagination converter for SOP list endpoint.
             CreateMap<PaginationResult<SopServiceModel>, PaginationAPIModel<SopAPIModel>>()
                 .ConvertUsing<PaginationResultToPaginationAPITypeConverter<SopServiceModel, SopAPIModel>>();
+
+            // ─── 🆕 Phase 3: Anomaly Detection mappings ──────────────────
+            // 🎓 Entity → API model (one-way, read-only — alerts are system-generated).
+            // No service model layer needed — AnomalyDetectionService returns entities directly.
+            // Full model for style detail pages and alert detail views:
+            CreateMap<AnomalyAlert, AnomalyAlertAPIModel>().MaxDepth(2);
+            // Summary model for the bell icon notification dropdown (compact):
+            CreateMap<AnomalyAlert, AnomalyAlertSummaryAPIModel>().MaxDepth(2);
         }
 
         public class PaginationResultToPaginationAPITypeConverter<sourceT, destT> : ITypeConverter<PaginationResult<sourceT>, PaginationAPIModel<destT>>

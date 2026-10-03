@@ -82,6 +82,51 @@ public static class RagPromptTemplates
         8. Format currency to 2 decimal places and percentages to 1 decimal place.
         9. When showing calculations, state the formula briefly:
            "Total: 1,500 pcs × $4.50 FOB = $6,750.00"
+
+        STANDARD OPERATING PROCEDURES (SOPs):
+        The retrieved context may include SOP chunks alongside transactional entity data.
+        SOPs are PROCEDURAL / COMPLIANCE documents — they describe rules, processes, and
+        standards that the organisation follows. They are NOT transactional records like
+        Styles, Purchase Orders, or Suppliers.
+
+        When SOP chunks appear in the context, follow these rules:
+
+        10. IDENTIFY SOPs by their header format:
+            "Standard Operating Procedure [SOP-XXX]: Title"
+            Each SOP chunk includes: SopCode, Title, Category, Active/Inactive status,
+            effective date range, and optionally applicability rules (which buyers,
+            garment types, or report contexts the SOP applies to).
+
+        11. CITE SOPs by their SopCode:
+            "According to SOP [SOP-005] (Fabric Inspection)..." or
+            "SOP [SOP-012] requires that..."
+            Never cite SOPs as if they were transactional entities — they are governance
+            documents, not data records.
+
+        12. PRESENT SOPs as requirements or guidelines, not data summaries:
+            ✅ "SOP [SOP-005] requires a minimum 4-point inspection for all woven fabrics."
+            ❌ "The SOP record shows a 4-point inspection requirement."
+            SOPs carry authority — present them as the rules they are, not observations.
+
+        13. DISTINGUISH SOP content from entity data clearly:
+            If the context includes BOTH entity data (e.g., a Style's BOM) AND SOP
+            procedures (e.g., a fabric inspection SOP), structure your response so
+            the factual data and the procedural requirements are clearly separated.
+            For example: "Style ANCHOR has 12 BOM lines... Note: SOP [SOP-005]
+            requires all fabric lines to pass a 4-point inspection before cutting."
+
+        14. CHECK SOP STATUS before citing:
+            Each SOP chunk states "Status: Active" or "Status: Inactive" and its
+            effective date range. If an SOP is Inactive or expired, you MUST note this:
+            "SOP [SOP-003] previously required... (Note: this SOP is currently Inactive)."
+            Never present an inactive SOP's procedures as current requirements.
+
+        15. APPLICABILITY RULES:
+            SOPs may include "Applies to: Buyer = NEXT" or "Excludes: GarmentType = Knit".
+            Use these to determine whether the SOP is relevant to the user's question.
+            If the user asks about buyer NEXT and the SOP applies to buyer NEXT,
+            proactively mention the relevant procedures. If the SOP excludes the
+            entity in question, do NOT cite it as applicable.
         """;
 
     /// <summary>
@@ -118,6 +163,41 @@ public static class RagPromptTemplates
         8. Format currency to 2 decimal places and percentages to 1 decimal place.
         9. When showing calculations, state the formula briefly:
            "Total: 1,500 pcs × $4.50 FOB = $6,750.00"
+
+        STANDARD OPERATING PROCEDURES (SOPs):
+        The retrieved context may include SOP chunks alongside transactional entity data.
+        SOPs are PROCEDURAL / COMPLIANCE documents — they describe rules, processes, and
+        standards that the organisation follows. They are NOT transactional records like
+        Styles, Purchase Orders, or Suppliers.
+
+        When SOP chunks appear in the context, follow these rules:
+
+        10. IDENTIFY SOPs by their header format:
+            "Standard Operating Procedure [SOP-XXX]: Title"
+            Each SOP chunk includes: SopCode, Title, Category, Active/Inactive status,
+            effective date range, and optionally applicability rules (which buyers,
+            garment types, or report contexts the SOP applies to).
+
+        11. CITE SOPs by their SopCode:
+            "According to SOP [SOP-005] (Fabric Inspection)..." or
+            "SOP [SOP-012] requires that..."
+            Never cite SOPs as if they were transactional entities — they are governance
+            documents, not data records.
+
+        12. PRESENT SOPs as requirements or guidelines, not data summaries:
+            SOPs carry authority — present them as the rules they are, not observations.
+
+        13. DISTINGUISH SOP content from entity data clearly:
+            If the context includes BOTH entity data AND SOP procedures, structure your
+            response so the factual data and the procedural requirements are clearly separated.
+
+        14. CHECK SOP STATUS before citing:
+            If an SOP is Inactive or expired, you MUST note this when referencing it.
+            Never present an inactive SOP's procedures as current requirements.
+
+        15. APPLICABILITY RULES:
+            SOPs may include "Applies to:" or "Excludes:" rules for specific buyers,
+            garment types, or contexts. Use these to determine relevance to the question.
         """;
 
     /// <summary>
@@ -358,6 +438,14 @@ public static class RagPromptTemplates
     ///   - Weight higher-scored chunks more in its answer
     ///   - Mention lower-scored chunks as "possibly relevant" rather than definitive
     ///   - Understand which chunks are truly about the topic vs. tangentially related
+    ///
+    /// 🎓 SOP CHUNK FORMAT IN CONTEXT:
+    /// SOP chunks arrive with entityType "Sop" in the metadata. Their text starts:
+    ///   "Standard Operating Procedure [SOP-XXX]: Title"
+    /// followed by Category, Status, effective dates, applicability rules, and then
+    /// the "Procedure:" section with the SOP body text. The system prompt rules 10-15
+    /// tell Claude how to handle these — cite by SopCode, present as compliance
+    /// requirements, check active status, and respect applicability rules.
     /// </summary>
     /// <param name="retrievedChunks">
     /// The formatted context chunks with their source metadata.
@@ -398,7 +486,9 @@ public static class RagPromptTemplates
     public static string BuildNoResultsMessage(string question, string? entityTypeFilter)
     {
         var filterNote = string.IsNullOrWhiteSpace(entityTypeFilter)
-            ? "all entity types (Styles, Purchase Orders, Buyers, Suppliers)"
+            // 🎓 Include SOPs in the entity type list so users know SOP content
+            // is also searchable — they might be asking about procedures, not just data.
+            ? "all entity types (Styles, Purchase Orders, Buyers, Suppliers, SOPs)"
             : $"**{entityTypeFilter}** records";
 
         return $"""

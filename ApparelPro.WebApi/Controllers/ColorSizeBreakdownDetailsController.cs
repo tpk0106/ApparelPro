@@ -1,12 +1,10 @@
 ﻿using apparelPro.BusinessLogic.Services;
-using apparelPro.BusinessLogic.Services.Implementation.OrderManagement;
 using ApparelPro.Data.Models.OrderManagement;
 using ApparelPro.WebApi.APIModels;
 using ApparelPro.WebApi.APIModels.OrderManagement;
 using ApparelPro.WebApi.Misc;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using ApparelPro.WebApi.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -161,6 +159,5 @@ namespace ApparelPro.WebApi.Controllers
                 return StatusCode(500, new { Error = $"Failed to read saved color/size matrix records: {ex.Message}" });
             }
         }
-
     }
 }

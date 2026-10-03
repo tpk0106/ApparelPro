@@ -140,6 +140,80 @@ public static class PromptTemplates
         """;
 
     /// <summary>
+    /// 🎓 User prompt template for Buyer entity summarisation.
+    /// Buyers are the customers who place garment orders — they are central to every
+    /// style and purchase order in the system. This template references the actual
+    /// Buyer entity fields: buyerCode, name, status, telephoneNos, mobileNos, fax,
+    /// cusdec (customs declaration reference), and addresses (collection).
+    /// Placeholders: {0} = serialised Buyer JSON data, {1} = optional user query.
+    /// </summary>
+    public const string SummariseBuyer = """
+        Summarise this buyer profile for a merchandiser or order-entry operator.
+
+        The JSON contains a buyer record with fields: buyerCode (unique identifier),
+        name (buyer/brand name), status (Active or Inactive), telephoneNos (landline),
+        mobileNos (mobile number), fax, cusdec (customs declaration reference used
+        in export documentation), and addresses (collection — each address has:
+        streetAddress, city, state, postCode, countryCode, addressType
+        [Residential/Postal/Corporate/Billing/Delivery], and default flag).
+
+        Include in your summary:
+        1. Buyer identity: code, name, and status. If Inactive, flag this prominently —
+           an inactive buyer should not receive new orders.
+        2. Contact channels: phone, mobile, fax — note which are available.
+           Flag if ALL contact fields are empty (no way to reach this buyer).
+        3. Addresses: list each address with its type (Corporate, Delivery, etc.).
+           Flag if no addresses are on file — this blocks shipping documentation.
+        4. Customs: if cusdec is set, note the customs declaration reference.
+           This is used for export clearance paperwork.
+        5. Data completeness: flag any critical gaps that would block order processing
+           (no contact info, no delivery address, inactive status).
+
+        Buyer Data:
+        {0}
+
+        {1}
+        """;
+
+    /// <summary>
+    /// 🎓 User prompt template for StockItem entity summarisation.
+    /// StockItems are the materials and trims used in garment manufacturing — fabric,
+    /// buttons, zippers, thread, labels, etc. They sit under a parent Stock category
+    /// (e.g., Stock "01" = Fabric, StockItem "01FB" = Cotton Poplin under Fabric).
+    /// This template references: stockCode (parent category key), itemCode (item key),
+    /// description (item name), and the parent stock's description (category name).
+    /// Placeholders: {0} = serialised StockItem JSON data, {1} = optional user query.
+    /// </summary>
+    public const string SummariseStockItem = """
+        Summarise this stock item (material/trim) for a merchandiser or inventory officer.
+
+        The JSON contains a stock item with fields: stockCode (parent stock category code —
+        e.g. "01" for Fabric, "02" for Buttons), itemCode (unique item identifier within
+        that category — e.g. "01FB" for a specific fabric type), description (the item's
+        full name/description), and stock (the parent category object with its own
+        stockCode and description — e.g. "Fabric" or "Trims").
+
+        Include in your summary:
+        1. Item identity: itemCode, description, and parent stock category
+           (stockCode + stock description). Format as: "Item [itemCode] — [description]
+           under category [stock.description] ([stockCode])".
+        2. Classification: based on the stockCode and description, identify whether
+           this is a fabric, trim, accessory, packing material, or other category.
+           Use garment industry terminology.
+        3. Data completeness: flag if description is empty or generic.
+           A well-described item helps procurement officers source accurately.
+        4. Note: this is the master item record only. Consumption quantities, suppliers,
+           and pricing are tracked at the style BOM level (materialConsumptionLedger).
+           If the user asks about consumption or cost, explain this data lives in
+           individual style records.
+
+        Stock Item Data:
+        {0}
+
+        {1}
+        """;
+
+    /// <summary>
     /// Generic entity summarisation fallback.
     /// Placeholders: {0} = entity type, {1} = serialised data, {2} = optional user query.
     /// </summary>
@@ -158,12 +232,20 @@ public static class PromptTemplates
     /// <summary>
     /// Resolves the correct user prompt template for a given entity type.
     /// </summary>
+    /// <summary>
+    /// 🎓 Resolves the correct user prompt template for a given entity type.
+    /// Each entity type gets a specialised template that references its exact JSON fields,
+    /// so the AI knows precisely what data structure it's working with. Unrecognised types
+    /// fall through to SummariseGeneric which handles any entity shape gracefully.
+    /// </summary>
     public static string GetSummariseTemplate(string entityType) =>
         entityType.ToUpperInvariant() switch
         {
             "STYLE" => SummariseStyle,
             "PURCHASEORDER" or "PO" => SummarisePurchaseOrder,
             "SUPPLIER" => SummariseSupplier,
+            "BUYER" => SummariseBuyer,             // 🎓 NEW — dedicated buyer template with contact/address analysis
+            "STOCKITEM" or "ITEM" => SummariseStockItem, // 🎓 NEW — material/trim master record template
             _ => SummariseGeneric
         };
 
@@ -356,6 +438,127 @@ public static class PromptTemplates
         """;
 
     /// <summary>
+    /// 🎓 Analysis template for Buyer entity.
+    /// Deeper than summarise — assesses the buyer record's completeness, communication
+    /// risk, and readiness for order processing. References actual Buyer entity fields:
+    /// buyerCode, name, status, telephoneNos, mobileNos, fax, cusdec, addresses.
+    /// Placeholders: {0} = serialised Buyer JSON data, {1} = optional user query.
+    /// </summary>
+    public const string AnalyseBuyer = """
+        Perform a deep analysis of this buyer profile for merchandising and order management.
+
+        The JSON contains: buyerCode, name, status (Active/Inactive), telephoneNos,
+        mobileNos, fax, cusdec (customs declaration reference), addresses (collection —
+        each with: streetAddress, city, state, postCode, countryCode, addressType
+        [Residential/Postal/Corporate/Billing/Delivery], default).
+
+        Analyse these dimensions:
+
+        **A. Buyer Status & Order Readiness**
+        - Is the buyer Active or Inactive? An Inactive buyer should NOT receive new orders.
+        - Is the buyerCode in a low range (early customer, long relationship) or high
+          (recently added)? Lower codes typically indicate established partnerships.
+        - Is the cusdec (customs declaration reference) set? This is required for
+          export documentation — missing cusdec blocks shipment clearance.
+
+        **B. Contact Completeness & Communication Risk**
+        - Count available contact channels: telephoneNos, mobileNos, fax.
+        - Rate communication risk:
+          🟢 LOW = 2+ channels available (phone + mobile, or phone + fax).
+          🟡 MEDIUM = only 1 channel available.
+          🔴 HIGH = zero contact information on file.
+        - In garment manufacturing, unreachable buyers during approval windows
+          (sample approval, shipment confirmation) cause costly production delays.
+
+        **C. Address Analysis**
+        - How many addresses are on file? List each with its type.
+        - Is there a Corporate address? (Head office for contracts/invoicing.)
+        - Is there a Delivery address? (Required for shipping documentation.)
+        - Is there a Billing address? (Required for invoicing.)
+        - Flag if no default address is set — the system needs one for auto-population.
+        - Flag if addresses span multiple countries (multi-region buyer).
+
+        **D. Data Gaps & Risk Assessment**
+        - Rate overall buyer record as 🟢 LOW / 🟡 MEDIUM / 🔴 HIGH risk.
+        - What additional data would strengthen this record?
+          (Credit terms, payment history, preferred shipping method, brand guidelines,
+          quality standards, seasonal ordering patterns.)
+        - Note: the buyer's order history and style portfolio are not included in
+          this snapshot. A full buyer assessment would require PO and style data.
+
+        End with 2-4 prioritised recommendations.
+
+        Buyer Data:
+        {0}
+
+        {1}
+        """;
+
+    /// <summary>
+    /// 🎓 Analysis template for StockItem entity.
+    /// Analyses the material/trim master record. StockItems are lightweight reference
+    /// records — the real depth (consumption, pricing, suppliers) lives in style BOMs.
+    /// This template focuses on classification, naming quality, and what data would
+    /// be needed for a fuller material assessment.
+    /// Placeholders: {0} = serialised StockItem JSON data, {1} = optional user query.
+    /// </summary>
+    public const string AnalyseStockItem = """
+        Perform a deep analysis of this stock item (material/trim) for inventory
+        and procurement strategy.
+
+        The JSON contains: stockCode (parent stock category code), itemCode (unique
+        item identifier), description (item name), stock (parent category object with
+        stockCode and description).
+
+        Note: This is the master item record only. Consumption data, supplier assignments,
+        pricing, and wastage allowances are tracked at the style BOM level
+        (materialConsumptionLedger). Analyse what's available and clearly state what
+        additional data would strengthen the analysis.
+
+        Analyse these dimensions:
+
+        **A. Item Classification**
+        - Identify the material category from stockCode and stock.description:
+          Is this a fabric, trim, accessory, packing material, label, or other?
+        - Based on the itemCode pattern and description, assess whether this is a
+          commodity item (basic thread, standard buttons) or a specialty item
+          (custom-dyed fabric, branded labels) — specialty items typically have
+          longer lead times and fewer supplier options.
+        - Use garment industry terminology: "shell fabric" (main body), "lining",
+          "interlining", "fusible", "trim" (buttons/zippers/hooks), "packing"
+          (polybags, hangers, cartons), "labels" (care/size/brand labels).
+
+        **B. Description Quality**
+        - Is the description specific enough for procurement?
+          Good: "100% Cotton Poplin 58\" 120GSM" — specifies composition, width, weight.
+          Poor: "Fabric" — too vague to source accurately.
+        - Does it include key attributes a buyer would need?
+          For fabrics: composition, width, weight (GSM), weave/knit type.
+          For trims: material, size, colour, finish.
+        - Flag if description is empty, generic, or uses only a code — recommend
+          enriching it with sourcing-relevant details.
+
+        **C. Code Structure Analysis**
+        - Does the itemCode follow a logical pattern within its stockCode group?
+          (e.g., "01FB", "01LN" under stock "01" = Fabric → FB=Fabric Body, LN=Lining.)
+        - Is the stockCode/itemCode combination clear enough for warehouse staff
+          to locate and issue the correct material?
+
+        **D. Data Gaps & Recommendations**
+        - What additional data would be needed for a full material assessment?
+          (Preferred suppliers, unit cost range, minimum order quantity, lead time,
+          available colours/widths, quality grade, country of origin,
+          stock-on-hand across warehouses.)
+        - Rate the item record's completeness as 🟢 / 🟡 / 🔴.
+        - Recommend 2-4 actions to strengthen this record.
+
+        Stock Item Data:
+        {0}
+
+        {1}
+        """;
+
+    /// <summary>
     /// Generic analysis fallback.
     /// Placeholders: {0} = entity type, {1} = serialised data, {2} = optional user query.
     /// </summary>
@@ -381,12 +584,19 @@ public static class PromptTemplates
     /// <summary>
     /// Resolves the correct analysis template for a given entity type.
     /// </summary>
+    /// <summary>
+    /// 🎓 Resolves the correct analysis template for a given entity type.
+    /// Analysis templates go deeper than summarise — they guide the AI to calculate
+    /// metrics, identify risks, and produce prioritised recommendations.
+    /// </summary>
     public static string GetAnalyseTemplate(string entityType) =>
         entityType.ToUpperInvariant() switch
         {
             "STYLE" => AnalyseStyle,
             "PURCHASEORDER" or "PO" => AnalysePurchaseOrder,
             "SUPPLIER" => AnalyseSupplier,
+            "BUYER" => AnalyseBuyer,               // 🎓 NEW — contact risk + order readiness assessment
+            "STOCKITEM" or "ITEM" => AnalyseStockItem, // 🎓 NEW — material classification + description quality
             _ => AnalyseGeneric
         };
 }

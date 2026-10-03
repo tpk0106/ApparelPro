@@ -217,6 +217,12 @@ namespace ApparelPro.Data
         public virtual DbSet<StandardOperatingProcedure> StandardOperatingProcedures { get; set; } = null!;
         public virtual DbSet<SopApplicability> SopApplicabilities { get; set; } = null!;
 
+        // 🎓 Phase 3 — Anomaly Detection & Alerts.
+        // AnomalyAlerts: Detected anomalies (over-consumption, price spikes, waste/damage).
+        // AnomalyRules: Configurable detection thresholds per anomaly type.
+        public virtual DbSet<AnomalyAlert> AnomalyAlerts { get; set; } = null!;
+        public virtual DbSet<AnomalyRule> AnomalyRules { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -354,6 +360,10 @@ namespace ApparelPro.Data
             // 🎓 SOP (Standard Operating Procedures) — Phase 2.
             modelBuilder.ApplyConfiguration(new StandardOperatingProcedureConfig());
             modelBuilder.ApplyConfiguration(new SopApplicabilityConfig());
+
+            // 🎓 Phase 3 — Anomaly Detection & Alerts.
+            modelBuilder.ApplyConfiguration(new AnomalyAlertConfiguration());
+            modelBuilder.ApplyConfiguration(new AnomalyRuleConfiguration());
         }
 
         //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

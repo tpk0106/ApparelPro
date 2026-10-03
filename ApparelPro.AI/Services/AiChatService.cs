@@ -26,6 +26,10 @@ public sealed class AiChatService : IAiChatService
     private readonly IPurchaseOrderService _purchaseOrderService;
     private readonly ISupplierService _supplierService;
     private readonly IBuyerService _buyerService;
+    // 🎓 🆕 Phase 3: Anomaly detection service for injecting active alerts into chat context.
+    // When a user chats about a STYLE, we fetch any active anomaly alerts and include
+    // them in the entity data snapshot so the AI can proactively mention issues.
+    private readonly IAnomalyDetectionService _anomalyDetectionService;
     private readonly AiSettings _settings;
     private readonly ILogger<AiChatService> _logger;
 
@@ -49,6 +53,7 @@ public sealed class AiChatService : IAiChatService
         IPurchaseOrderService purchaseOrderService,
         ISupplierService supplierService,
         IBuyerService buyerService,
+        IAnomalyDetectionService anomalyDetectionService,  // 🆕 Phase 3
         IOptions<AiSettings> settings,
         ILogger<AiChatService> logger)
     {
@@ -59,6 +64,7 @@ public sealed class AiChatService : IAiChatService
         _purchaseOrderService = purchaseOrderService;
         _supplierService = supplierService;
         _buyerService = buyerService;
+        _anomalyDetectionService = anomalyDetectionService;  // 🆕 Phase 3
         _settings = settings.Value;
         _logger = logger;
     }
@@ -374,12 +380,42 @@ public sealed class AiChatService : IAiChatService
                     .GetLedgerEntriesByStyleAsync(
                         buyerCode, parts[1], typeCode, parts[3]);
 
+                // 🆕 Phase 3: Fetch active anomaly alerts for this style.
+                // 🎓 WHY INJECT ANOMALIES INTO THE SNAPSHOT?
+                // When the user asks "how is this style doing?" or "any issues?",
+                // the AI can proactively surface anomaly alerts like:
+                //   "⚠️ I notice 2 active alerts for this style:
+                //    1. OVER_CONSUMPTION on Fabric XYZ — 23% above planned + allowance
+                //    2. PRICE_SPIKE on Zipper ABC — 35% above historical average"
+                //
+                // The anomaly service is singleton with its own scope factory,
+                // so calling it from this scoped service is safe.
+                var anomalyAlerts = await _anomalyDetectionService.GetActiveAlertsForStyleAsync(
+                    buyerCode, parts[1], typeCode, parts[3], cancellationToken);
+
+                // 🎓 Build a compact anomaly summary for the AI prompt.
+                // Full entity data would be too verbose — just the essentials.
+                var anomalySummary = anomalyAlerts.Select(a => new
+                {
+                    a.AnomalyType,
+                    a.Severity,
+                    a.ItemDescription,
+                    a.Description,
+                    a.RecommendedAction,
+                    a.DeviationPercentage,
+                    a.Status,
+                    DetectedAt = a.DetectedAt.ToString("yyyy-MM-dd HH:mm")
+                }).ToList();
+
                 var combined = new
                 {
                     StyleDetails = style,
                     BuyerName = buyer?.Name,
                     MaterialConsumptionLedger = ledger,
-                    ConsumptionLineCount = ledger?.Count ?? 0
+                    ConsumptionLineCount = ledger?.Count ?? 0,
+                    // 🆕 Phase 3: Active anomaly alerts for AI context injection
+                    AnomalyAlerts = anomalySummary,
+                    AnomalyAlertCount = anomalySummary.Count
                 };
 
                 return JsonSerializer.Serialize(combined, JsonOptions);

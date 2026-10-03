@@ -120,6 +120,22 @@ public static class DependencyInjection
         // used by the PDF engine to inject SOPs into reports.
         services.AddTransient(typeof(ISopService), typeof(SopService));
 
+        // ── 🆕 Phase 3: Anomaly Detection ──────────────────
+        // 🎓 ANOMALY DETECTION SERVICE:
+        // Scans material consumption data for threshold breaches and creates
+        // AnomalyAlert rows. Singleton because it manages its own scoped
+        // DbContext instances via IServiceScopeFactory (same pattern as the
+        // embedding services above).
+        services.AddSingleton<IAnomalyDetectionService, AnomalyDetectionService>();
+
+        // 🎓 ANOMALY DETECTION JOB:
+        // Periodic background scanner — calls RunFullScanAsync() every
+        // AnomalyScanIntervalMinutes (default 30 min, configurable in appsettings.json).
+        // AddHostedService registers it as a long-running background task,
+        // same as EmbeddingSyncJob. The two jobs run independently —
+        // a Qdrant outage won't block anomaly scanning, and vice versa.
+        services.AddHostedService<AnomalyDetectionJob>();
+
         //     // 🎓 Future AI services will be added here:
        //  services.AddTransient(typeof(IReportIntentService), typeof(ReportIntentService));
 
