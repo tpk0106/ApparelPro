@@ -54,6 +54,30 @@ public sealed class AiSettings
     /// </summary>
     public int ChatMaxTokens { get; set; } = 1500;
 
+    // ─── 🆕 Phase 2: Cross-Entity Analytics ────────────
+
+    /// <summary>
+    /// Max tokens for cross-entity analytics responses.
+    ///
+    /// 🎓 WHY 3500 (HIGHER THAN AnalysisMaxTokens)?
+    /// Cross-entity analytics covers MULTIPLE entities at once — the AI needs
+    /// more room to build:
+    ///   - Executive Summary (2-3 sentences)
+    ///   - Key Metrics (tables + calculations)
+    ///   - Patterns & Trends (3-5 findings with magnitude)
+    ///   - Outliers & Risks (flagged items with severity ratings)
+    ///   - Strategic Recommendations (3-5 ranked actions)
+    ///
+    /// Single-entity analysis (2500 tokens) covers ONE style/order.
+    /// Cross-entity analytics (3500 tokens) covers ALL styles/orders —
+    /// the extra 1000 tokens are for the additional comparisons, rankings,
+    /// and cross-cutting patterns that single-entity analysis doesn't need.
+    ///
+    /// Configurable via appsettings.json:
+    ///   "AiSettings": { "AnalyticsMaxTokens": 3500 }
+    /// </summary>
+    public int AnalyticsMaxTokens { get; set; } = 3500;
+
     // ─── 🆕 Phase 3: Anomaly Detection ──────────────────
 
     /// <summary>

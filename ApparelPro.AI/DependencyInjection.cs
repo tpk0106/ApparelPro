@@ -120,6 +120,20 @@ public static class DependencyInjection
         // used by the PDF engine to inject SOPs into reports.
         services.AddTransient(typeof(ISopService), typeof(SopService));
 
+        // ── 🆕 Phase 2: Cross-Entity Analytics ──────────────
+        // 🎓 CROSS-ENTITY ANALYTICS SERVICE:
+        // Aggregates data across multiple entities (styles, buyers, suppliers,
+        // orders) from EF Core and sends it to the AI with category-specific
+        // prompts for strategic analysis.
+        //
+        // 🎓 WHY TRANSIENT (not singleton)?
+        // Unlike AnomalyDetectionService (singleton + IServiceScopeFactory for
+        // background scanning), this service is called per-request from the
+        // controller. Transient lets it directly inject the scoped DbContext —
+        // same pattern as StyleDetailsService, BuyerService, and other
+        // business services.
+        services.AddTransient<ICrossEntityAnalyticsService, CrossEntityAnalyticsService>();
+
         // ── 🆕 Phase 3: Anomaly Detection ──────────────────
         // 🎓 ANOMALY DETECTION SERVICE:
         // Scans material consumption data for threshold breaches and creates
