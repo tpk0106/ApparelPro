@@ -115,6 +115,19 @@ public sealed class CrossEntityAnalyticsService : ICrossEntityAnalyticsService
 
         var userMessage = string.Format(template, aggregatedJson, userQuerySection);
 
+        // 🎓 LOG the prompt size — helps diagnose "ResponseEnded" errors when the
+        //    aggregated data is too large for the AI provider's request limits.
+        //    Claude Sonnet 4 context window is 200K tokens (~800KB text).
+        //    If the user message alone exceeds ~500KB, the HTTP connection may drop.
+        _logger.LogInformation(
+            "Analytics prompt size for {Category}: {SizeKB:F1} KB " +
+            "(system: {SystemKB:F1} KB, user: {UserKB:F1} KB, data: {DataKB:F1} KB)",
+            normalizedCategory,
+            (AnalyticsPromptTemplates.AnalyticsSystem.Length + userMessage.Length) / 1024.0,
+            AnalyticsPromptTemplates.AnalyticsSystem.Length / 1024.0,
+            userMessage.Length / 1024.0,
+            aggregatedJson.Length / 1024.0);
+
         // 🎓 STEP 4: Build the AI completion request
         //            Uses the analytics-specific system prompt (strategic analyst persona)
         //            and AnalyticsMaxTokens (3500) — analytics responses need more room

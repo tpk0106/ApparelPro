@@ -150,6 +150,24 @@ public static class DependencyInjection
         // a Qdrant outage won't block anomaly scanning, and vice versa.
         services.AddHostedService<AnomalyDetectionJob>();
 
+        // ── 🆕 Phase 5: Predictive & Prescriptive AI ──────────────
+        // 🎓 PREDICTIVE AI SERVICE:
+        // Aggregates HISTORICAL data across entities, computes trend signals
+        // (order velocity, shortage indicators, risk scores, cost savings),
+        // and sends them to the AI for forward-looking predictions.
+        //
+        // 🎓 WHY TRANSIENT (same as CrossEntityAnalyticsService)?
+        // Called per-request from PredictiveAiController. Transient lets it
+        // directly inject the scoped ApparelProDbContext — same pattern as
+        // CrossEntityAnalyticsService and other business services.
+        //
+        // 🎓 FOUR PREDICTION CATEGORIES:
+        //   DEMAND_FORECASTING  — predicts future order volumes
+        //   MATERIAL_SHORTAGE   — identifies materials at risk of shortage
+        //   SUPPLIER_RISK       — scores suppliers on multi-dimensional risk
+        //   COST_OPTIMIZATION   — quantifies cost reduction opportunities
+        services.AddTransient<IPredictiveAiService, PredictiveAiService>();
+
         //     // 🎓 Future AI services will be added here:
        //  services.AddTransient(typeof(IReportIntentService), typeof(ReportIntentService));
 

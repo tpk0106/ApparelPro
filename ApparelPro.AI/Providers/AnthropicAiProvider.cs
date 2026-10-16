@@ -29,9 +29,15 @@ public sealed class AnthropicAiProvider : IAiProvider
         _settings = settings.Value;
         _logger = logger;
 
+        // 🎓 HttpClient timeout set to 5 minutes to accommodate large
+        //    cross-entity analytics prompts. The default 100s is often too
+        //    short when the request body contains 50+ styles' worth of
+        //    aggregated JSON data — Anthropic may need extra time to read
+        //    the full request and generate a response.
         _http = new HttpClient
         {
-            BaseAddress = new Uri("https://api.anthropic.com")
+            BaseAddress = new Uri("https://api.anthropic.com"),
+            Timeout = TimeSpan.FromMinutes(5)
         };
         _http.DefaultRequestHeaders.Add("x-api-key", _settings.Anthropic.ApiKey);
         _http.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
@@ -61,6 +67,15 @@ public sealed class AnthropicAiProvider : IAiProvider
         };
 
         var json = JsonSerializer.Serialize(body);
+
+        // 🎓 Log the request payload size — helps diagnose "ResponseEnded" errors
+        //    which occur when the request body is too large for Anthropic to accept.
+        //    Typical safe limit: ~1MB. If this exceeds ~500KB, consider capping the
+        //    data sent in the analytics aggregation queries.
+        _logger.LogInformation(
+            "Anthropic request payload size: {SizeKB:F1} KB ({SizeBytes} bytes)",
+            json.Length / 1024.0, json.Length);
+
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
         using var response = await _http.PostAsync("/v1/messages", content, cancellationToken);
 
