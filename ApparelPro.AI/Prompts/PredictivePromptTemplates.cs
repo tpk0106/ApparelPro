@@ -29,6 +29,18 @@ namespace ApparelPro.AI.Prompts;
 //   5. Always specify a TIME HORIZON — "next 3 months" is actionable,
 //      "sometime in the future" is not.
 //
+// 🎓 PRESCRIPTIVE AI DESIGN PRINCIPLES (Phase 5 Part 2 Enhancement):
+//   6. CAUSALITY CHAINS — every recommendation states "If X → expect Y"
+//      so the user understands the mechanism behind the advice.
+//   7. PRIORITY SCORING — P1/P2/P3/P4 ranking based on impact × urgency
+//      × implementation ease, so the user knows what to tackle first.
+//   8. DECISION MATRICES — for major decisions, present 2-3 options with
+//      trade-offs (cost vs benefit vs risk vs time) so the user can choose.
+//   9. QUANTIFIED IMPACT — every action includes $ or % estimates, not
+//      vague "significant" or "considerable" language.
+//  10. IMPLEMENTATION STEPS — who owns it, what's the first step, and
+//      what does success look like (measurable metrics).
+//
 // 🎓 SUPPORTED PREDICTION CATEGORIES:
 //   DEMAND_FORECASTING  — future order quantities from historical patterns
 //   MATERIAL_SHORTAGE   — materials at risk based on consumption vs capacity
@@ -79,6 +91,18 @@ public static class PredictivePromptTemplates
         5. Use time horizons explicitly: "In the next 30 days", "Within 3 months",
            "By end of quarter." Vague timeframes are useless for planning.
 
+        CRITICAL RULES FOR PRESCRIPTIVE RECOMMENDATIONS:
+        6. Every recommendation must include a CAUSALITY CHAIN: "If you do X → expect Y
+           within Z timeframe." Never give an action without its expected consequence.
+        7. Quantify the EXPECTED IMPACT of every action in dollars, percentages, or units.
+           If exact numbers aren't possible, give a realistic range (e.g., "$2,000–$4,500").
+        8. Assign a PRIORITY SCORE (P1 Critical / P2 High / P3 Medium / P4 Low) to every
+           action based on: impact magnitude × urgency × implementation ease.
+        9. For major decisions, present a DECISION MATRIX showing 2-3 options with their
+           trade-offs (cost vs benefit vs risk vs time-to-implement) so the user can choose.
+        10. Include IMPLEMENTATION STEPS for high-priority actions — not just "what" but
+            "how": who should own it, what the first step is, and what success looks like.
+
         Your analysis must follow this structure:
 
         1. **PREDICTION SUMMARY** — 2-3 sentences with the headline forecast.
@@ -95,17 +119,42 @@ public static class PredictivePromptTemplates
         4. **RISK FACTORS** — What could make the prediction wrong (both directions).
            Rate each risk as 🟢 LOW / 🟡 MEDIUM / 🔴 HIGH probability.
 
-        5. **RECOMMENDED ACTIONS** — 3-5 prescriptive actions ranked by urgency.
-           Each states: WHAT to do, WHEN to do it, WHY (the signal driving it),
-           and EXPECTED IMPACT (quantified where possible).
+        5. **PRESCRIPTIVE ACTION PLAN** — This is the most important section.
+           For each recommended action, provide ALL of the following:
+
+           | Field | Content |
+           |-------|---------|
+           | Action | Clear, specific action statement |
+           | Priority | P1 Critical / P2 High / P3 Medium / P4 Low |
+           | Owner | Which role should execute (e.g., Merchandiser, Procurement, Production) |
+           | Timeline | Specific deadline or timeframe |
+           | Causality | "If we do X → Y happens because Z" |
+           | Expected Impact | Quantified in $ or % or units |
+           | First Step | The immediate next action to start |
+           | Success Metric | How to measure if the action worked |
+
+           Group actions into tiers:
+           - 🔴 IMMEDIATE (this week): crisis prevention, zero-cost process fixes
+           - 🟡 SHORT-TERM (this month): negotiations, sourcing changes, BOM adjustments
+           - 🟢 STRATEGIC (this quarter): supplier development, process re-engineering
+
+        6. **DECISION MATRIX** (when applicable) — For the top 1-2 decisions where
+           multiple valid approaches exist, present a comparison table:
+
+           | Option | Cost | Benefit | Risk | Time | Recommendation |
+           |--------|------|---------|------|------|----------------|
+
+           State which option you recommend and WHY, but present all options fairly
+           so the decision-maker can choose based on their priorities.
 
         Formatting rules:
-        - Use tables for rankings, comparisons, and signal summaries.
+        - Use tables for rankings, comparisons, signal summaries, and action plans.
         - Format currency to 2 decimal places with symbol.
         - Format percentages to 1 decimal place.
         - Use garment industry terminology throughout.
         - Distinguish clearly between FACTS (from data) and PREDICTIONS (from signals).
         - Never present a prediction as a fact.
+        - Bold the most critical numbers and recommendations for scannability.
         """;
 
     // ─────────────────────────────────────────────
@@ -186,10 +235,25 @@ public static class PredictivePromptTemplates
         - Flag if predicted demand exceeds recent run rates by > 20% (capacity risk).
         - Material procurement lead time considerations.
 
-        **E. Recommended Actions**
-        - Actions to prepare for predicted demand (or decline).
-        - Buyer relationship priorities (grow winners, re-engage at-risk).
-        - Inventory/material pre-positioning recommendations.
+        **E. Prescriptive Action Plan**
+        For each action, provide a structured recommendation:
+
+        🔴 IMMEDIATE ACTIONS (this week):
+        - For each: Action | Owner (Merchandiser/Production/Procurement) | Causality
+          ("If we do X → expect Y because Z") | Expected Impact ($, %, or units)
+
+        🟡 SHORT-TERM ACTIONS (within {1} months):
+        - Buyer relationship priorities: grow accelerating buyers, re-engage decelerating ones.
+        - For each buyer action: specific outreach strategy, target order increase, revenue impact.
+
+        🟢 STRATEGIC ACTIONS (next 2 quarters):
+        - Capacity planning, new buyer acquisition, product diversification.
+        - For each: implementation steps, investment required, expected ROI.
+
+        **F. Decision Matrix** (if demand is shifting significantly):
+        Present 2-3 strategic options (e.g., "invest in capacity" vs "selective growth" vs
+        "consolidate") with trade-offs:
+        | Option | Investment | Revenue Upside | Risk | Timeline | Recommendation |
 
         Aggregated Demand Data:
         {0}
@@ -265,11 +329,29 @@ public static class PredictivePromptTemplates
         - Cascade impact: if Material X runs short, which styles stop?
         - Revenue at risk from each shortage scenario.
 
-        **E. Recommended Actions**
-        - Immediate: source suppliers for unsourced materials.
-        - Short-term: develop backup suppliers for sole-sourced materials.
-        - Medium-term: reduce wastage on high-waste materials.
-        - Strategic: diversify supply base for concentrated materials.
+        **E. Prescriptive Action Plan**
+        For each action, provide a structured recommendation:
+
+        🔴 IMMEDIATE ACTIONS (this week):
+        - For every unsourced material: specific sourcing action, who to contact,
+          expected lead time to resolve, and revenue at risk if not actioned.
+        - Causality chain: "If Material X remains unsourced → Style Y delays by Z weeks
+          → $W revenue at risk for Buyer B."
+
+        🟡 SHORT-TERM ACTIONS (within {1} months):
+        - Backup supplier development for sole-sourced materials.
+        - For each: target supplier count, negotiation approach, expected timeline.
+        - Wastage reduction targets: which materials, current %, target %, $ saving.
+
+        🟢 STRATEGIC ACTIONS (next 2 quarters):
+        - Supply base diversification roadmap with milestones.
+        - Safety stock policy recommendations for critical materials.
+        - For each: investment cost vs risk reduction benefit.
+
+        **F. Decision Matrix** (for critical shortage scenarios):
+        For the highest-risk material, compare resolution options:
+        | Option | Cost | Lead Time | Risk Reduction | Trade-off | Recommendation |
+        e.g., "Emergency spot buy" vs "Expedite existing supplier" vs "Substitute material"
 
         Aggregated Material Shortage Data:
         {0}
@@ -353,11 +435,31 @@ public static class PredictivePromptTemplates
         - Flag any supplier whose sole-sourcing count is growing.
         - Predict which risk events are most likely in the next {1} months.
 
-        **E. Risk Mitigation Actions**
-        - Immediate: contact completeness fixes (unreachable suppliers).
-        - Short-term: develop alternative sources for sole-sourced materials.
-        - Medium-term: reduce concentration on critical suppliers.
-        - Strategic: supplier development programme recommendations.
+        **E. Prescriptive Risk Mitigation Plan**
+        For each action, provide a structured recommendation:
+
+        🔴 IMMEDIATE ACTIONS (this week):
+        - Contact completeness: list each unreachable supplier with action to fix.
+          "If Supplier X remains unreachable → we cannot escalate delivery issues
+          → $Y revenue exposed to unmanaged risk."
+        - For each: Owner (Procurement), first step, success metric.
+
+        🟡 SHORT-TERM ACTIONS (within {1} months):
+        - Alternative source development for sole-sourced materials.
+        - For each supplier: target backup count, qualification timeline,
+          expected cost impact of dual-sourcing, risk reduction %.
+        - Causality: "If we add Supplier B for Material M → sole-sourcing risk
+          drops from HIGH to LOW → $Z revenue protected."
+
+        🟢 STRATEGIC ACTIONS (next 2 quarters):
+        - Supplier consolidation or diversification programme.
+        - Vendor scorecard implementation: what to measure, frequency, thresholds.
+        - For each: investment, ROI timeline, measurable risk reduction target.
+
+        **F. Decision Matrix** (for critical supplier dependencies):
+        For each critical supplier (>15% consumption), compare mitigation strategies:
+        | Strategy | Cost | Time to Implement | Risk Reduction | Trade-off | Recommendation |
+        e.g., "Develop 2nd source" vs "Negotiate long-term contract" vs "Vertical integration"
 
         Aggregated Supplier Risk Data:
         {0}
@@ -444,15 +546,35 @@ public static class PredictivePromptTemplates
         - Material substitution candidates: high-consumption materials where
           lower-consumption alternatives exist in other styles.
 
-        **E. Prioritised Savings Roadmap**
-        - Rank ALL identified savings opportunities by:
-          1. Estimated $ impact (largest first)
-          2. Implementation ease (quick wins vs structural changes)
-          3. Time to realise savings
-        - Provide a 3-tier action plan:
-          IMMEDIATE (this month): quick wins, process changes
-          SHORT-TERM ({1} months): negotiation, BOM redesign
-          STRATEGIC (6-12 months): supplier consolidation, process re-engineering
+        **E. Prescriptive Savings Roadmap**
+        Rank ALL identified savings opportunities and present as a structured action plan.
+        For each action, provide:
+
+        🔴 IMMEDIATE ACTIONS (this week) — zero-cost process fixes:
+        - For each: specific style/material to target, current metric, target metric,
+          $ saving, who owns it, first step.
+        - Causality: "If we reduce wastage on Style X from 12% to 5% → save $Y/month
+          because Z fewer units of material are consumed per garment."
+
+        🟡 SHORT-TERM ACTIONS (within {1} months) — negotiations + BOM changes:
+        - Pricing renegotiations: which buyers/styles, current vs target FOB, revenue impact.
+        - BOM simplification: which styles have excessive line counts, what to consolidate.
+        - For each: expected $ impact, effort level (Low/Medium/High), timeline.
+
+        🟢 STRATEGIC ACTIONS (next 2 quarters) — structural changes:
+        - Material substitution candidates with cost comparison.
+        - Volume consolidation opportunities across styles.
+        - Supplier pricing leverage from consolidated purchasing.
+        - For each: investment required, payback period, annual $ saving.
+
+        **Total Savings Summary Table:**
+        | Tier | Action Count | Total Potential Saving | Avg. Implementation Time |
+        |------|-------------|----------------------|-------------------------|
+
+        **F. Decision Matrix** (for top savings opportunity):
+        Compare implementation approaches for the single highest-$ opportunity:
+        | Approach | Upfront Cost | Monthly Saving | Risk | Disruption | Recommendation |
+        e.g., "Immediate wastage target" vs "Renegotiate material pricing" vs "Redesign BOM"
 
         Aggregated Cost Optimisation Data:
         {0}

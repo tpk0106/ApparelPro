@@ -78,6 +78,34 @@ public sealed class AiSettings
     /// </summary>
     public int AnalyticsMaxTokens { get; set; } = 3500;
 
+    // ─── 🆕 Phase 5: Predictive & Prescriptive AI ──────
+
+    /// <summary>
+    /// Max tokens for predictive + prescriptive AI responses.
+    ///
+    /// 🎓 WHY 5000 (HIGHER THAN AnalyticsMaxTokens)?
+    /// Prescriptive AI outputs are the most detailed in the system because
+    /// they include ALL of the following for each prediction category:
+    ///   - Prediction Summary (2-3 sentences)
+    ///   - Data Signals table (trend indicators with direction arrows)
+    ///   - Detailed Forecast (best/expected/worst scenarios with numbers)
+    ///   - Risk Factors (rated probabilities)
+    ///   - Prescriptive Action Plan with structured fields per action:
+    ///     Action, Priority (P1-P4), Owner, Timeline, Causality Chain,
+    ///     Expected Impact ($/%/units), First Step, Success Metric
+    ///   - Decision Matrix comparing 2-3 strategic options with trade-offs
+    ///
+    /// The extra 1500 tokens over AnalyticsMaxTokens (3500) accommodate:
+    ///   - Causality chains ("If X → Y because Z") for each action
+    ///   - Decision matrices with trade-off comparisons
+    ///   - Implementation steps with owner assignments
+    ///   - Quantified impact estimates per recommendation
+    ///
+    /// Configurable via appsettings.json:
+    ///   "AiSettings": { "PredictiveMaxTokens": 5000 }
+    /// </summary>
+    public int PredictiveMaxTokens { get; set; } = 5000;
+
     // ─── 🆕 Phase 3: Anomaly Detection ──────────────────
 
     /// <summary>
@@ -103,9 +131,12 @@ public sealed class AnthropicSettings
     public string ApiKey { get; set; } = string.Empty;
 
     /// <summary>
-    /// Model identifier (e.g. "claude-sonnet-4-20250514").
+    /// Model identifier.
+    /// 🎓 "claude-sonnet-4-6" is the current Sonnet 4 alias (Oct 2026).
+    /// The old dated ID "claude-sonnet-4-20250514" was deprecated by Anthropic.
+    /// This default is overridden by appsettings.json → AiSettings:Anthropic:Model.
     /// </summary>
-    public string Model { get; set; } = "claude-sonnet-4-20250514";
+    public string Model { get; set; } = "claude-sonnet-4-6";
 }
 
 public sealed class OpenAiSettings

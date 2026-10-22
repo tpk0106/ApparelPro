@@ -146,13 +146,19 @@ public sealed class PredictiveAiService : IPredictiveAiService
 
         // 🎓 STEP 5: Build the AI completion request
         //            Uses the prediction-specific system prompt (forecasting persona)
-        //            and AnalyticsMaxTokens (3500) — prediction responses need even
-        //            more room than analytics because they include scenarios and actions.
+        //            and PredictiveMaxTokens (5000) — prescriptive responses are the
+        //            longest in the system because they include:
+        //              - Predictions with confidence levels and scenarios
+        //              - Structured action plans with causality chains
+        //              - Decision matrices with trade-off comparisons
+        //              - Implementation steps with owner assignments
+        //            The extra 1500 tokens over AnalyticsMaxTokens (3500) prevent
+        //            the AI from truncating the prescriptive action plan section.
         var request = new AiCompletionRequest
         {
             SystemPrompt = PredictivePromptTemplates.PredictiveSystem,
             UserMessage = userMessage,
-            MaxTokens = _settings.AnalyticsMaxTokens,   // 🎓 Reuse analytics token limit
+            MaxTokens = _settings.PredictiveMaxTokens,   // 🎓 5000 — dedicated prescriptive token limit
             Temperature = 0.3  // 🎓 Slightly higher than analytics (0.25) — predictions
                                //    benefit from some creative reasoning about scenarios,
                                //    but we still want grounded, data-driven forecasts.
